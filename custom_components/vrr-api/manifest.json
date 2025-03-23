@@ -1,0 +1,9 @@
+{
+  "domain": "vrr",
+  "name": "VRR Departures",
+  "version": "1.0",
+  "documentation": "https://deinedokumentation.url",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
