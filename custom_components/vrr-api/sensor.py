@@ -3,17 +3,17 @@ from datetime import datetime
 import aiohttp
 
 from homeassistant.components.sensor import SensorEntity
+from .const import DEFAULT_PLACE, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-# Standardwerte für die dynamischen Parameter
-DEFAULT_PLACE = "Düsseldorf"
-DEFAULT_NAME = "Elbruchstrasse"
+# Basis-URL der API
+BASE_URL = "https://openservice-test.vrr.de/static03/XML_DM_REQUEST"
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the VRR sensor platform."""
-    place_dm = config.get("place_dm", DEFAULT_PLACE)
-    name_dm = config.get("name_dm", DEFAULT_NAME)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the VRR sensor from a config entry."""
+    place_dm = config_entry.data.get("place_dm", DEFAULT_PLACE)
+    name_dm = config_entry.data.get("name_dm", DEFAULT_NAME)
     async_add_entities([VRRSensor(place_dm, name_dm)], True)
 
 class VRRSensor(SensorEntity):
@@ -22,7 +22,7 @@ class VRRSensor(SensorEntity):
     def __init__(self, place_dm, name_dm):
         self._state = None
         self._attributes = {}
-        self._name = f"VRRSensor Abfahrten ({place_dm} - {name_dm})"
+        self._name = f"VRR Abfahrten ({place_dm} - {name_dm})"
         self.place_dm = place_dm
         self.name_dm = name_dm
 
@@ -32,18 +32,17 @@ class VRRSensor(SensorEntity):
 
     @property
     def state(self):
-        # Zum Beispiel die Zeit der nächsten Abfahrt
+        """Return the time of the next departure."""
         return self._state
 
     @property
     def extra_state_attributes(self):
-        # Alle ermittelten Abfahrten als Liste
+        """Return all departures as attributes."""
         return self._attributes
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        # Baue die URL dynamisch anhand der Konfiguration
-        base_url = "https://openservice-test.vrr.de/static03/XML_DM_REQUEST"
+        # Dynamisch die URL mit den konfigurierten Parametern zusammenbauen
         params = (
             f"outputFormat=RapidJSON&"
             f"place_dm={self.place_dm}&"
@@ -53,7 +52,7 @@ class VRRSensor(SensorEntity):
             f"useRealtime=1&"
             f"limit=4"
         )
-        url = f"{base_url}?{params}"
+        url = f"{BASE_URL}?{params}"
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
@@ -94,6 +93,5 @@ class VRRSensor(SensorEntity):
                 "description": transportation.get("description")
             })
 
-        # Setze den Zustand auf die Zeit der nächsten Abfahrt, sofern vorhanden
         self._state = departures[0]["departure_time"] if departures else "Keine Abfahrten"
         self._attributes = {"departures": departures}
