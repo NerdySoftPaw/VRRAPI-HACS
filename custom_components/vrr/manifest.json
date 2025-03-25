@@ -2,7 +2,7 @@
   "domain": "vrr",
   "name": "VRR Departures",
   "version": "1.4",
-  "documentation": "https://deinedokumentation.url",
+  "documentation": "https://github.com/NerdySoftPaw/VRRAPI-HACS/blob/main/README.md",
   "requirements": [],
   "dependencies": [],
   "codeowners": [],
