@@ -1,6 +1,6 @@
 {
 "name": "VRR Departures",
 "category": "integration",
-"description": "Fetches departure times from the Rheinbahn API and displays them as a sensor in Home Assistant",
+"description": "Fetches departure times from the VRR API and displays them as a sensor in Home Assistant",
 "domains": ["sensor"]
 }
