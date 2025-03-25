@@ -3,6 +3,7 @@ from datetime import datetime
 import aiohttp
 import asyncio
 import ssl
+import pytz
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import dt as dt_util
@@ -56,12 +57,12 @@ class VRRSensor(SensorEntity):
         url = f"{BASE_URL}?{params}"
         timeout = aiohttp.ClientTimeout(total=10)
 
-        # SSL-Context zum Testen (Achtung: In Produktion nicht Zertifikatsprüfung deaktivieren)
+        # SSL-Context zum Testen (Achtung: In Produktion nicht Zertifikatprüfung deaktivieren)
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
 
-        # Zusätzliche Header hinzufügen, um die Anfrage "browsernäher" zu gestalten
+        # Zusätzliche Header, um der Anfrage einen Browser-ähnlichen User-Agent zu geben
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; HomeAssistant/1.0)"
         }
@@ -90,6 +91,8 @@ class VRRSensor(SensorEntity):
             return
 
         departures = []
+        # Explizit die Zeitzone Europe/Berlin festlegen (das entspricht CEST/CET)
+        berlin_tz = pytz.timezone("Europe/Berlin")
         for stop in stop_events:
             realtime = "MONITORED" in stop.get("realtimeStatus", [])
             departure_time_str = (
@@ -98,9 +101,10 @@ class VRRSensor(SensorEntity):
                 else stop.get("departureTimePlanned")
             )
             try:
-                # Parse die UTC-Zeit und wandle sie in die lokale Zeitzone (z.B. CEST) um
+                # Parse die UTC-Zeit, die vom Server geliefert wird
                 departure_time = dt_util.parse_datetime(departure_time_str)
-                local_time = dt_util.as_local(departure_time)
+                # Konvertiere in die Europe/Berlin-Zeitzone
+                local_time = departure_time.astimezone(berlin_tz)
                 time_str = local_time.strftime("%H:%M:%S")
             except Exception:
                 time_str = departure_time_str
