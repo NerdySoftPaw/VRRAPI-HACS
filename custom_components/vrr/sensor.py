@@ -91,7 +91,7 @@ class VRRSensor(SensorEntity):
             self._last_api_reset = today
             
         # VRR API limits: 60 per minute, 1000 per hour, let's be conservative
-        if self._api_calls_today >= 800:  # Daily limit with buffer
+        if self._api_calls_today >= API_RATE_LIMIT_PER_DAY:  # Daily limit with buffer
             _LOGGER.warning("API rate limit approached, skipping update")
             return False
         return True
