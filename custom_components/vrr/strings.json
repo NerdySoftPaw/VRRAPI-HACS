@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "VRR Departure Configuration",
+        "description": "Configure your VRR departure sensor",
+        "data": {
+          "station_id": "Station ID (optional)",
+          "place_dm": "Place/City",
+          "name_dm": "Station Name", 
+          "departures": "Number of departures",
+          "scan_interval": "Update interval (seconds)",
+          "transportation_types": "Transportation types"
+        }
+      }
+    },
+    "error": {
+      "missing_location": "Please provide either a Station ID OR both Place and Station Name"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "VRR Departure Options",
+        "data": {
+          "departures": "Number of departures",
+          "scan_interval": "Update interval (seconds)",
+          "transportation_types": "Transportation types"
+        }
+      }
+    }
+  }
+}
