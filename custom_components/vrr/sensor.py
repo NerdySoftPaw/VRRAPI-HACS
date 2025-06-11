@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 import aiohttp
 import asyncio
 import ssl
@@ -309,10 +309,10 @@ class VRRSensor(SensorEntity):
         }
         
         # Add logging for unmapped classes to help with debugging
-        transport_type = type_mapping.get(product_class, "bus")
+        transport_type = type_mapping.get(product_class, "unknown")
         
         if product_class not in type_mapping:
-            _LOGGER.debug("Unknown transport class %s for line %s, defaulting to bus", 
+            _LOGGER.debug("Unknown transport class %s for line %s, defaulting to unknown", 
                         product_class, transportation.get("number", "unknown"))
         
         return transport_type
