@@ -18,7 +18,8 @@ from .const import (
     CONF_TRANSPORTATION_TYPES,
     TRANSPORTATION_TYPES,
     DEFAULT_DEPARTURES,
-    DEFAULT_SCAN_INTERVAL
+    DEFAULT_SCAN_INTERVAL,
+    API_RATE_LIMIT_PER_DAY
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ class VRRSensor(SensorEntity):
             self._last_api_reset = today
             
         # VRR API limits: 60 per minute, 1000 per hour, let's be conservative
-        if self._api_calls_today >= 800:  # Daily limit with buffer
+        if self._api_calls_today >= API_RATE_LIMIT_PER_DAY:  # Daily limit with buffer
             _LOGGER.warning("API rate limit approached, skipping update")
             return False
         return True
