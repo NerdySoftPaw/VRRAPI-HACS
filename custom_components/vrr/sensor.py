@@ -57,6 +57,7 @@ class VRRSensor(SensorEntity):
         # Setup entity
         self._attr_unique_id = f"vrr_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}"
         self._name = f"VRR {place_dm} - {name_dm}"
+        self._berlin_tz = pytz.timezone("Europe/Berlin")  # Zeitzone nur einmal laden
         
     @property
     def name(self):
@@ -177,7 +178,7 @@ class VRRSensor(SensorEntity):
             return
 
         departures = []
-        berlin_tz = pytz.timezone("Europe/Berlin")
+        berlin_tz = self._berlin_tz  # Verwende die Instanzvariable
         now = datetime.now(berlin_tz)
         
         for stop in stop_events:
