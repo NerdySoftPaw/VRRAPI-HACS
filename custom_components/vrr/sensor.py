@@ -3,7 +3,6 @@ from datetime import datetime
 import aiohttp
 import asyncio
 import ssl
-import pytz
 from typing import Any, Dict, List, Optional
 
 from homeassistant.components.sensor import SensorEntity
