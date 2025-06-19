@@ -1,9 +1,0 @@
-{
-  "domain": "kvv",
-  "name": "KVV Departures",
-  "version": "0.1.0",
-  "documentation": "https://github.com/youruser/kvv-ha",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": ["@youruser"]
-}
