@@ -2,9 +2,10 @@
   "config": {
     "step": {
       "user": {
-        "title": "VRR Departure Configuration",
-        "description": "Configure your VRR departure sensor",
+        "title": "VRR/KVV Departure Configuration",
+        "description": "Configure your VRR or KVV departure sensor",
         "data": {
+          "provider": "Provider (VRR or KVV)",
           "station_id": "Station ID (optional)",
           "place_dm": "Place/City",
           "name_dm": "Station Name", 
@@ -21,7 +22,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "VRR Departure Options",
+        "title": "VRR/KVV Departure Options",
         "data": {
           "departures": "Number of departures",
           "scan_interval": "Update interval (seconds)",

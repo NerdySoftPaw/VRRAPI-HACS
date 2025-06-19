@@ -9,11 +9,13 @@ from .const import (
     DEFAULT_NAME, 
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
+    CONF_PROVIDER,  # NEU
     CONF_STATION_ID,
     CONF_DEPARTURES,
     CONF_TRANSPORTATION_TYPES,
     CONF_SCAN_INTERVAL,
-    TRANSPORTATION_TYPES
+    TRANSPORTATION_TYPES,
+    PROVIDERS
 )
 
 class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,12 +37,13 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "missing_location"
             else:
                 # Create unique ID
+                provider = user_input.get(CONF_PROVIDER, "vrr")
                 if station_id:
-                    unique_id = f"vrr_{station_id}"
-                    title = f"VRR Station {station_id}"
+                    unique_id = f"{provider}_{station_id}"
+                    title = f"{provider.upper()} Station {station_id}"
                 else:
-                    unique_id = f"vrr_{place_dm}_{name_dm}".lower().replace(" ", "_")
-                    title = f"VRR {place_dm} - {name_dm}"
+                    unique_id = f"{provider}_{place_dm}_{name_dm}".lower().replace(" ", "_")
+                    title = f"{provider.upper()} {place_dm} - {name_dm}"
                 
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
@@ -50,16 +53,14 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        # Default transportation types selection
-        default_transport_types = list(TRANSPORTATION_TYPES.keys())
-
         schema = vol.Schema({
+            vol.Required(CONF_PROVIDER, default="vrr"): vol.In(PROVIDERS),
             vol.Optional(CONF_STATION_ID, default=""): str,
             vol.Optional("place_dm", default=DEFAULT_PLACE): str,
             vol.Optional("name_dm", default=DEFAULT_NAME): str,
             vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(int, vol.Range(min=30, max=600)),
-            vol.Optional(CONF_TRANSPORTATION_TYPES, default=default_transport_types): cv.multi_select(TRANSPORTATION_TYPES),
+            vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(list(TRANSPORTATION_TYPES.keys())),
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(int, vol.Range(min=10, max=3600)),
         })
 
         return self.async_show_form(

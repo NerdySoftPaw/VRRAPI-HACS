@@ -12,33 +12,41 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     DEFAULT_PLACE, 
     DEFAULT_NAME, 
+    CONF_PROVIDER,  # NEU
     CONF_STATION_ID,
     CONF_DEPARTURES,
     CONF_TRANSPORTATION_TYPES,
     TRANSPORTATION_TYPES,
     DEFAULT_DEPARTURES,
-    API_RATE_LIMIT_PER_DAY
+    API_RATE_LIMIT_PER_DAY,
+    API_BASE_URL_VRR,
+    API_BASE_URL_KVV,
+    PROVIDER_VRR,
+    PROVIDER_KVV,
+    KVV_TRANSPORTATION_TYPES
 )
 
 _LOGGER = logging.getLogger(__name__)
-BASE_URL = "https://openservice-test.vrr.de/static03/XML_DM_REQUEST"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the VRR sensor from a config entry."""
+    """Set up the VRR/KVV sensor from a config entry."""
+    provider = config_entry.data.get(CONF_PROVIDER, PROVIDER_VRR)
     place_dm = config_entry.data.get("place_dm", DEFAULT_PLACE)
     name_dm = config_entry.data.get("name_dm", DEFAULT_NAME)
     station_id = config_entry.data.get(CONF_STATION_ID)
     departures = config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
     transportation_types = config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
     
-    async_add_entities([VRRSensor(hass, place_dm, name_dm, station_id, departures, transportation_types)], True)
+    async_add_entities([
+        MultiProviderSensor(hass, provider, place_dm, name_dm, station_id, departures, transportation_types)
+    ], True)
 
-class VRRSensor(SensorEntity):
-    """Representation of a sensor showing upcoming departures from VRR."""
+class MultiProviderSensor(SensorEntity):
+    """Sensor für VRR oder KVV."""
 
-    def __init__(self, hass, place_dm: str, name_dm: str, station_id: Optional[str] = None, 
-                 departures: int = DEFAULT_DEPARTURES, transportation_types: List[str] = None):
+    def __init__(self, hass, provider, place_dm, name_dm, station_id=None, departures=DEFAULT_DEPARTURES, transportation_types=None):
         self._hass = hass
+        self._provider = provider
         self._state = None
         self._attributes = {}
         self._available = True
@@ -54,8 +62,8 @@ class VRRSensor(SensorEntity):
         self.transportation_types = transportation_types or list(TRANSPORTATION_TYPES.keys())
         
         # Setup entity
-        self._attr_unique_id = f"vrr_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}"
-        self._name = f"VRR {place_dm} - {name_dm}"
+        self._attr_unique_id = f"{provider}_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}"
+        self._name = f"{provider.upper()} {place_dm} - {name_dm}"
         
     @property
     def name(self):
@@ -110,11 +118,15 @@ class VRRSensor(SensorEntity):
             else:
                 self._available = False
         except Exception as e:
-            _LOGGER.error("Error updating VRR sensor: %s", e)
+            _LOGGER.error("Error updating VRR/KVV sensor: %s", e)
             self._available = False
 
     async def _fetch_departures(self) -> Optional[Dict[str, Any]]:
-        """Fetch departure data from VRR API."""
+        if self._provider == PROVIDER_VRR:
+            base_url = API_BASE_URL_VRR
+        else:
+            base_url = API_BASE_URL_KVV
+            
         if self.station_id:
             # Use station ID if provided
             params = (
@@ -138,11 +150,11 @@ class VRRSensor(SensorEntity):
                 f"limit={self.departures_limit}"
             )
             
-        url = f"{BASE_URL}?{params}"
+        url = f"{base_url}?{params}"
         session = async_get_clientsession(self._hass)
         
         headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; HomeAssistant VRR Integration)"
+            "User-Agent": f"Mozilla/5.0 (compatible; HomeAssistant {self._provider.upper()} Integration)"
         }
 
         max_retries = 3
@@ -152,20 +164,19 @@ class VRRSensor(SensorEntity):
                     if response.status == 200:
                         return await response.json()
                     else:
-                        _LOGGER.warning("VRR API returned status %s", response.status)
+                        _LOGGER.warning(f"{self._provider.upper()} API returned status %s", response.status)
                         
             except Exception as e:
-                _LOGGER.warning("Attempt %s failed: %s", attempt, e)
+                _LOGGER.warning(f"Attempt %s failed: %s", attempt, e)
                 if attempt < max_retries:
                     await asyncio.sleep(2 ** attempt)  # Exponential backoff
                     
         return None
 
     async def _process_departure_data(self, data: Dict[str, Any]):
-        """Process the departure data from VRR API."""
+        """Process the departure data from VRR/KVV API."""
         stop_events = data.get("stopEvents", [])
         if not stop_events:
-            _LOGGER.warning("No departures found in API response")
             self._state = "No departures"
             self._attributes = {
                 "departures": [],
@@ -180,13 +191,12 @@ class VRRSensor(SensorEntity):
         now = dt_util.now()
         
         for stop in stop_events:
-            try:
-                departure_info = self._parse_departure(stop, berlin_tz, now)
-                if departure_info and self._filter_transportation_type(departure_info):
-                    departures.append(departure_info)
-            except Exception as e:
-                _LOGGER.debug("Error parsing departure: %s", e)
-                continue
+            if self._provider == PROVIDER_VRR:
+                dep = self._parse_departure_vrr(stop, berlin_tz, now)
+            else:
+                dep = self._parse_departure_kvv(stop, berlin_tz, now)
+            if dep and dep["transportation_type"] in self.transportation_types:
+                departures.append(dep)
 
         # Sort by departure time
         departures.sort(key=lambda x: x.get("departure_time_obj", now))
@@ -219,8 +229,8 @@ class VRRSensor(SensorEntity):
             "total_departures": len(clean_departures)
         }
 
-    def _parse_departure(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
-        """Parse a single departure from API response."""
+    def _parse_departure_vrr(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
+        """Parse a single departure from VRR API response."""
         try:
             # Get times
             planned_time_str = stop.get("departureTimePlanned")
@@ -250,7 +260,7 @@ class VRRSensor(SensorEntity):
             description = transportation.get("description", "")
             
             # Determine transportation type
-            transport_type = self._determine_transport_type(transportation)
+            transport_type = self._determine_transport_type_vrr(transportation)
             
             # Get platform/track info
             platform = stop.get("platform", {}).get("name") or stop.get("platformName", "")
@@ -278,11 +288,72 @@ class VRRSensor(SensorEntity):
             }
             
         except Exception as e:
-            _LOGGER.debug("Error parsing departure: %s", e)
+            _LOGGER.debug("Error parsing VRR departure: %s", e)
             return None
 
-    def _determine_transport_type(self, transportation: Dict[str, Any]) -> str:
-        """Determine the transportation type from API data."""
+    def _parse_departure_kvv(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
+        """Parse a single departure from KVV API response."""
+        try:
+            # Get times
+            planned_time_str = stop.get("departureTimePlanned")
+            estimated_time_str = stop.get("departureTimeEstimated")
+            
+            if not planned_time_str:
+                return None
+                
+            # Parse times
+            planned_time = dt_util.parse_datetime(planned_time_str)
+            estimated_time = dt_util.parse_datetime(estimated_time_str) if estimated_time_str else planned_time
+            
+            if not planned_time:
+                return None
+                
+            # Convert to local timezone
+            planned_local = planned_time.astimezone(berlin_tz)
+            estimated_local = estimated_time.astimezone(berlin_tz)
+            
+            # Calculate delay
+            delay_minutes = int((estimated_local - planned_local).total_seconds() / 60)
+            
+            # Get transportation info
+            transportation = stop.get("transportation", {})
+            destination = transportation.get("destination", {}).get("name", "Unknown")
+            line_number = transportation.get("number", "")
+            description = transportation.get("description", "")
+            product_class = transportation.get("product", {}).get("class", 0)
+            transport_type = KVV_TRANSPORTATION_TYPES.get(product_class, "unknown")
+            
+            # Get platform/track info
+            platform = stop.get("location", {}).get("disassembledName") or stop.get("platformName", "")
+            
+            # Calculate minutes until departure
+            time_diff = estimated_local - now
+            minutes_until = max(0, int(time_diff.total_seconds() / 60))
+            
+            # Determine if real-time data is available
+            is_realtime = stop.get("isRealtimeControlled", False)
+            
+            return {
+                "line": line_number,
+                "destination": destination,
+                "departure_time": estimated_local.strftime("%H:%M"),
+                "planned_time": planned_local.strftime("%H:%M"),
+                "real_time": estimated_local.strftime("%H:%M") if is_realtime else None,
+                "delay": delay_minutes,
+                "platform": platform,
+                "transportation_type": transport_type,
+                "description": description,
+                "is_realtime": is_realtime,
+                "minutes_until_departure": minutes_until,
+                "departure_time_obj": estimated_local  # For internal sorting
+            }
+            
+        except Exception as e:
+            _LOGGER.debug("Error parsing KVV departure: %s", e)
+            return None
+
+    def _determine_transport_type_vrr(self, transportation: Dict[str, Any]) -> str:
+        """Determine the transportation type from VRR API data."""
         product = transportation.get("product", {})
         product_class = product.get("class", 0)
         
@@ -314,9 +385,3 @@ class VRRSensor(SensorEntity):
                         product_class, transportation.get("number", "unknown"))
         
         return transport_type
-
-    def _filter_transportation_type(self, departure: Dict[str, Any]) -> bool:
-        """Filter departure by transportation type."""
-        if not self.transportation_types:
-            return True
-        return departure.get("transportation_type") in self.transportation_types
