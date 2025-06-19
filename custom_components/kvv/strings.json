@@ -1,0 +1,24 @@
+{
+  "title": "KVV Departures",
+  "description": "Show upcoming departures for a KVV stop.",
+  "place_dm": {
+    "name": "City",
+    "description": "The city of the stop (e.g. Karlsruhe)"
+  },
+  "name_dm": {
+    "name": "Stop name",
+    "description": "The name of the stop (e.g. Essenweinstraße)"
+  },
+  "station_id": {
+    "name": "Station ID",
+    "description": "Optional: The station ID if known."
+  },
+  "departures": {
+    "name": "Number of departures",
+    "description": "How many upcoming departures to show."
+  },
+  "transportation_types": {
+    "name": "Transportation types",
+    "description": "Which types of transport to show (tram, train, bus)."
+  }
+}
