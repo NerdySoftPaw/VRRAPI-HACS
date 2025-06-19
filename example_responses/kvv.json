@@ -1,0 +1,1357 @@
+{
+  "version": "10.4.15.5",
+  "systemMessages": [],
+  "locations": [
+    {
+      "id": "de:08212:626",
+      "isGlobalId": true,
+      "name": "Karlsruhe, Essenweinstraße",
+      "disassembledName": "Essenweinstraße",
+      "coord": [5723488, 938634],
+      "type": "stop",
+      "parent": {
+        "id": "placeID:8212000:15",
+        "name": "Karlsruhe",
+        "type": "locality"
+      },
+      "assignedStops": [
+        {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "coord": [5723488, 938634],
+          "parent": {
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "productClasses": [1, 4],
+          "connectingMode": 100,
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      ],
+      "properties": {
+        "stopId": "7000626"
+      }
+    }
+  ],
+  "stopEvents": [
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:2:2",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 2",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723420, 938635],
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T10:59:00Z",
+      "departureTimeEstimated": "2025-06-19T11:00:00Z",
+      "transportation": {
+        "id": "kvv:22301:E:H:j25",
+        "name": "S-Bahn S1",
+        "disassembledName": "S1",
+        "number": "S1",
+        "description": "Bad Herrenalb - Hochstetten",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "AVG",
+          "id": "01",
+          "name": "Albtal-Verkehrs-Gesellschaft mbH"
+        },
+        "destination": {
+          "name": "Hirtenweg",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "S-Bahn",
+          "trainNumber": "37015",
+          "tripCode": 37015,
+          "globalId": "de:kvv:00S01_:"
+        },
+        "origin": {
+          "id": "7001306",
+          "name": "Bad Herrenalb",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "110009781_KVV_ICSKVV",
+          "version": "8",
+          "urlText": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "url": "http://projekte.kvv-efa.de:80/cm/XSLT_CM_SHOWADDINFO_REQUEST?infoID=110009781_KVV_ICSKVV&seqID=8",
+          "subtitle": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "title": "Linien S1, S11, 2, 3, 5, 9, 17, SEV",
+          "properties": {
+            "infoType": "lineInfo",
+            "htmlText": "\u003Cp\u003E(kue)\u003C/p\u003E\n\u003Cp\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003EVon Donnerstag, 29. Mai 2025, 07:00 Uhr\u003C/strong\u003E\u003C/span\u003E\u003Cbr /\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003Ebis Montag, 23. Juni 2025, 03:30 Uhr\u003C/strong\u003E\u003C/span\u003E\u003C/p\u003E\n\u003Cp\u003Egilt Phase 2 der diesj&auml;hrigen Sperrungen. In dieser Phase sind die nachfolgenden Streckenabschnitte im Netz der VBK f&uuml;r den Schienenverkehr in jeweils beiden Fahrtrichtungen voll gesperrt:\u003C/p\u003E\n\u003Cp\u003E- Ab dem Gleisviereck Mendelssohnplatz &uuml;ber Werderstra&szlig;e bis zur Wendeschleife Tivoli.\u003Cbr /\u003E- Ab dem Abzweig Ostendstra&szlig;e &uuml;ber Philipp-Reis-Stra&szlig;e und Konzerthaus bis zum Gleisviereck Mathystra&szlig;e.\u003Cbr /\u003E- Ab dem Gleisdreieck Yorckstra&szlig;e &uuml;ber Neureuter Stra&szlig;e bis Knielingen.\u003Cbr /\u003E- Ab dem Abzweig Moltkestra&szlig;e bis Haus Bethlehem.\u003Cbr /\u003E- Ab dem Abzweig Eckenerstra&szlig;e &uuml;ber Daxlanden bis Rappenw&ouml;rt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EEs gelten folgende Regelungen:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinien S1/S11\u003C/strong\u003E fahren ab der Haltestelle Marktplatz (Pyramide U) abweichend nach rechts ab und verkehrt &uuml;ber Durlacher Tor (U), Tullastra&szlig;e (in der Tullastra&szlig;e) und Hauptfriedhof (Tullastra&szlig;e) zum Hirtenweg. R&uuml;ckfahrt entsprechend umgekehrt.\u003C/li\u003E\n\u003Cli\u003EDie\u003Cstrong\u003E Linie 2\u003C/strong\u003E enden vom ZKM kommend an der Haltestelle Europaplatz (Kaiserstra&szlig;e). Fahrten der Gegenrichtung beginnen somit an der Haltestelle Europaplatz (Kaiserstra&szlig;e).\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 3\u003C/strong\u003E wird auf ihrem gesamten Linienweg eingestellt\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 5\u003C/strong\u003E wird vom Rheinhafen kommend ab der Haltestelle Schloss Gottesaue abweichend &uuml;ber die Haltestellen Tullastra&szlig;e (in der Tullastra&szlig;e) und Essenweinstra&szlig;e nach Rintheim (und entsprechend umgekehrt) umgelegt.\u003C/li\u003E\n\u003Cli\u003EAb Tivoli &uuml;ber Hauptbahnhof (Vorplatz), Kolpingplatz und Karlstor (Karlstra&szlig;e) bis Europaplatz (beide oberirischen Haltestellen) wird die \u003Cstrong\u003ELinie 9\u003C/strong\u003E eingerichtet.\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 17\u003C/strong\u003E (Europ&auml;ische Schulbahn) f&auml;hrt vom Rheinhafen kommend ab der Haltestelle Mathystra&szlig;e (in der Mathystra&szlig;e) Umleitung &uuml;ber Ettlinger Tor zur Haltestelle Ostendstra&szlig;e und ab dort weiter auf dem regul&auml;ren Fahrweg in die Waldstadt. In der Gegenrichtung erfolgt die Umleitung entsprechend umgekehrt.\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003EDes Weiteren sind die nachfolgend aufgelisteten Zugfahrten ebenfalls von der Sperrung betroffen. Alle vier verkehren zwischen Kronenplatz (Fritz-Erler-Stra&szlig;e) und Albtalbahnhof abweichend &uuml;ber Ettlinger Tor (Kriegsstra&szlig;e), Kolpingplatz und Ebertstra&szlig;e (oder umgekehrt):\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003ES4 Zug 85472 Heilbronn Pf&uuml;hlpark ab 23:40 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES4 Zug 85541 Karlsruhe Albtalbahnhof ab 01:15 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES5 Zug 84784 S&ouml;llingen ab 01:01 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003EE Zug 80404; Durlach Bahnhof ab 13:24 Uhr (dritter Wagen von Zug 85430); verkehrt nur montags bis freitags ausgenommen Feiertage\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003E\u003Cstrong\u003ESchienenersatzverkehr:\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003EAls Schienenersatzverkehr (SEV) werden folgende Linien eingerichtet:\u003Cstrong\u003E\u003Cbr /\u003E\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Co:OfficeDocumentSettings\u003E\n  \u003Co:RelyOnVML/\u003E\n  \u003Co:AllowPNG/\u003E\n \u003C/o:OfficeDocumentSettings\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Cw:WordDocument\u003E\n  \u003Cw:View\u003ENormal\u003C/w:View\u003E\n  \u003Cw:Zoom\u003E0\u003C/w:Zoom\u003E\n  \u003Cw:TrackMoves/\u003E\n  \u003Cw:TrackFormatting/\u003E\n  \u003Cw:HyphenationZone\u003E21\u003C/w:HyphenationZone\u003E\n  \u003Cw:PunctuationKerning/\u003E\n  \u003Cw:ValidateAgainstSchemas/\u003E\n  \u003Cw:SaveIfXMLInvalid\u003Efalse\u003C/w:SaveIfXMLInvalid\u003E\n  \u003Cw:IgnoreMixedContent\u003Efalse\u003C/w:IgnoreMixedContent\u003E\n  \u003Cw:AlwaysShowPlaceholderText\u003Efalse\u003C/w:AlwaysShowPlaceholderText\u003E\n  \u003Cw:DoNotPromoteQF/\u003E\n  \u003Cw:LidThemeOther\u003EDE\u003C/w:LidThemeOther\u003E\n  \u003Cw:LidThemeAsian\u003EX-NONE\u003C/w:LidThemeAsian\u003E\n  \u003Cw:LidThemeComplexScript\u003EX-NONE\u003C/w:LidThemeComplexScript\u003E\n  \u003Cw:Compatibility\u003E\n   \u003Cw:BreakWrappedTables/\u003E\n   \u003Cw:SnapToGridInCell/\u003E\n   \u003Cw:WrapTextWithPunct/\u003E\n   \u003Cw:UseAsianBreakRules/\u003E\n   \u003Cw:DontGrowAutofit/\u003E\n   \u003Cw:SplitPgBreakAndParaMark/\u003E\n   \u003Cw:EnableOpenTypeKerning/\u003E\n   \u003Cw:DontFlipMirrorIndents/\u003E\n   \u003Cw:OverrideTableStyleHps/\u003E\n  \u003C/w:Compatibility\u003E\n  \u003Cm:mathPr\u003E\n   \u003Cm:mathFont m:val=\"Cambria Math\"/\u003E\n   \u003Cm:brkBin m:val=\"before\"/\u003E\n   \u003Cm:brkBinSub m:val=\"&#45;-\"/\u003E\n   \u003Cm:smallFrac m:val=\"off\"/\u003E\n   \u003Cm:dispDef/\u003E\n   \u003Cm:lMargin m:val=\"0\"/\u003E\n   \u003Cm:rMargin m:val=\"0\"/\u003E\n   \u003Cm:defJc m:val=\"centerGroup\"/\u003E\n   \u003Cm:wrapIndent m:val=\"1440\"/\u003E\n   \u003Cm:intLim m:val=\"subSup\"/\u003E\n   \u003Cm:naryLim m:val=\"undOvr\"/\u003E\n  \u003C/m:mathPr\u003E\u003C/w:WordDocument\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003ELinie 10\u003C/strong\u003E: Kronenplatz &ndash; Hauptbahnhof (Vorplatz)\u003Cbr /\u003E\u003Cstrong\u003ELinie 11\u003C/strong\u003E: Heidehof &ndash; Neureut/Hochstetten\u003Cbr /\u003E\u003Cstrong\u003ELinie 12\u003C/strong\u003E: Europaplatz &ndash; Knielingen Nord\u003Cbr /\u003E\u003Cstrong\u003ELinie 13\u003C/strong\u003E: Entenfang &ndash; Daxlanden/Rappenw&ouml;rt\u003Cbr /\u003E\u003Cstrong\u003ELinie 14\u003C/strong\u003E: Europaplatz &ndash; Haus Bethlehem\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 10:\u003C/strong\u003E \u003Cbr /\u003EZwischen Kronenplatz und Hauptbahnhof (Vorplatz) verkehrt die Ersatzbus-Linie 10. Da die R&uuml;ppurrer Stra&szlig;e w&auml;hrend der gesamten Bauzeit nur von Nord nach S&uuml;d f&uuml;r den Kfz-Verkehr befahrbar ist, kann nur die Fahrt zum Hauptbahnhof entlang der gesperrten Schienentrasse erfolgen. In Fahrtrichtung Kronenplatz verkehrt die Ersatzlinie durch die Ettlinger Stra&szlig;e. Hierbei wird nur Haltestelle Kongresszentrum bedient.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 11\u003C/strong\u003E: \u003Cbr /\u003EAls Ersatz f&uuml;r den Streckenabschnitt Neureut bis Hochstetten (Linien S1/S11) wird ab der Haltestelle Heidehof die Linie 11 eingerichtet. \u003Cbr /\u003EIn der Schulwoche von Montag, 02. Juni 2025, bis einschlie&szlig;lich Freitag, 06. Juni 2025, wird dieser durch zwei weitere Verst&auml;rkerlinien (11x von/zur Haltestelle Europaplatz und 11s von/zur Haltestelle Frankenthaler Stra&szlig;e) erg&auml;nzt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 12:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 12 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. Ein Nachtverkehr wird nicht angeboten. Am Europaplatz bedient die Linie Steig A an der Sparkasse.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 14:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 14 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. In den N&auml;chten auf Samstage sowie auf Sonn- und Feiertage wird ein Nachtverkehr im 30-Minuten-Takt angeboten.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 70 am Entenfang\u003C/strong\u003E \u003Cbr /\u003EAufgrund des Schienenersatzverkehrs nach Daxlanden (Linie 13) wird die Haltestelle Entenfang der Linie 70 in Fahrtrichtung Heidehof nach Steig E in die Lameystra&szlig;e verlegt.\u003Cbr /\u003E\u003Cbr /\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 73 am Europaplatz\u003C/strong\u003E\u003Cbr /\u003EW&auml;hrend des SEV wird der regul&auml;re Steig A durch die Linien 11x, 12 und 14 genutzt. Daher wird die Haltestelle Europaplatz f&uuml;r die Linie 73 nach Steig B (Ersatzhaltetselle in der Douglasstra&szlig;e) verlegt.\u003C/p\u003E",
+            "wapText": "Karlsruhe: Vom 29.05. bis 23.06.2025 weitere Gleiserneuerungen (Phase 2)",
+            "additionalLinks": [
+              {
+                "id": "1",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Pressemitteilungen/2025-05-15_VBK_Brs_Phase-2_Rueppurrer-Strasse_screen.pdf",
+                "urlText": "Baustellenflyer",
+                "subtitle": "Baustellenflyer",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              },
+              {
+                "id": "2",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Fahrplaene_Netzplaene/Schiene/2025-05-29_DE_Tivoli_-_Kronenplatz_und_ab_Yorckstrasse.pdf",
+                "urlText": "Liniennetzplan zur Bauphase 2",
+                "subtitle": "Liniennetzplan zur Bauphase 2",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "ID": 1,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung Europaplatz (Bau Phase 2).png",
+                "fileName": "Umgebung Europaplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung Europaplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Europaplatz (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 325265
+              },
+              {
+                "ID": 2,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "fileName": "Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Karlsruhe Hbf (Vorplatz) (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 486449
+              },
+              {
+                "ID": 3,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 10.pdf",
+                "fileName": "SEV 10.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 10.pdf",
+                "linkText": "Ersatzfahrplan Linie 10",
+                "linkTarget": "_blank",
+                "size": 91902
+              },
+              {
+                "ID": 4,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11.pdf",
+                "fileName": "SEV 11.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11.pdf",
+                "linkText": "Ersatzfahrplan Linie 11",
+                "linkTarget": "_blank",
+                "size": 181558
+              },
+              {
+                "ID": 5,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11s und 11x.pdf",
+                "fileName": "SEV 11s und 11x.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11s und 11x.pdf",
+                "linkText": "Ersatzfahrplan Linien 11s und 11x",
+                "linkTarget": "_blank",
+                "size": 93430
+              },
+              {
+                "ID": 6,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 12.pdf",
+                "fileName": "SEV 12.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 12.pdf",
+                "linkText": "Ersatzfahrplan Linie 12",
+                "linkTarget": "_blank",
+                "size": 140903
+              },
+              {
+                "ID": 7,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 14.pdf",
+                "fileName": "SEV 14.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 14.pdf",
+                "linkText": "Ersatzfahrplan Linie 14",
+                "linkTarget": "_blank",
+                "size": 95475
+              }
+            ]
+          }
+        }
+      ],
+      "hints": [
+        {
+          "content": "Stufenloses Fahrzeug, Klimaanlage"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "37015-32729"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:2:2",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 2",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723420, 938635],
+        "properties": {
+          "occupancy": "MANY_SEATS"
+        },
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:00:00Z",
+      "departureTimeEstimated": "2025-06-19T11:01:00Z",
+      "transportation": {
+        "id": "kvv:21005:E:R:j25",
+        "name": "Straßenbahn 5",
+        "disassembledName": "5",
+        "number": "5",
+        "description": "Rheinhafen - Durlach Bf",
+        "product": {
+          "id": 0,
+          "class": 4,
+          "name": "Straßenbahn",
+          "iconId": 4
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Rintheim",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 70,
+          "globalId": "de:kvv:00005_:"
+        },
+        "origin": {
+          "id": "7000991",
+          "name": "Karlsruhe Betriebshof West",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "110009781_KVV_ICSKVV",
+          "version": "8",
+          "urlText": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "url": "http://projekte.kvv-efa.de:80/cm/XSLT_CM_SHOWADDINFO_REQUEST?infoID=110009781_KVV_ICSKVV&seqID=8",
+          "subtitle": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "title": "Linien S1, S11, 2, 3, 5, 9, 17, SEV",
+          "properties": {
+            "infoType": "lineInfo",
+            "htmlText": "\u003Cp\u003E(kue)\u003C/p\u003E\n\u003Cp\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003EVon Donnerstag, 29. Mai 2025, 07:00 Uhr\u003C/strong\u003E\u003C/span\u003E\u003Cbr /\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003Ebis Montag, 23. Juni 2025, 03:30 Uhr\u003C/strong\u003E\u003C/span\u003E\u003C/p\u003E\n\u003Cp\u003Egilt Phase 2 der diesj&auml;hrigen Sperrungen. In dieser Phase sind die nachfolgenden Streckenabschnitte im Netz der VBK f&uuml;r den Schienenverkehr in jeweils beiden Fahrtrichtungen voll gesperrt:\u003C/p\u003E\n\u003Cp\u003E- Ab dem Gleisviereck Mendelssohnplatz &uuml;ber Werderstra&szlig;e bis zur Wendeschleife Tivoli.\u003Cbr /\u003E- Ab dem Abzweig Ostendstra&szlig;e &uuml;ber Philipp-Reis-Stra&szlig;e und Konzerthaus bis zum Gleisviereck Mathystra&szlig;e.\u003Cbr /\u003E- Ab dem Gleisdreieck Yorckstra&szlig;e &uuml;ber Neureuter Stra&szlig;e bis Knielingen.\u003Cbr /\u003E- Ab dem Abzweig Moltkestra&szlig;e bis Haus Bethlehem.\u003Cbr /\u003E- Ab dem Abzweig Eckenerstra&szlig;e &uuml;ber Daxlanden bis Rappenw&ouml;rt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EEs gelten folgende Regelungen:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinien S1/S11\u003C/strong\u003E fahren ab der Haltestelle Marktplatz (Pyramide U) abweichend nach rechts ab und verkehrt &uuml;ber Durlacher Tor (U), Tullastra&szlig;e (in der Tullastra&szlig;e) und Hauptfriedhof (Tullastra&szlig;e) zum Hirtenweg. R&uuml;ckfahrt entsprechend umgekehrt.\u003C/li\u003E\n\u003Cli\u003EDie\u003Cstrong\u003E Linie 2\u003C/strong\u003E enden vom ZKM kommend an der Haltestelle Europaplatz (Kaiserstra&szlig;e). Fahrten der Gegenrichtung beginnen somit an der Haltestelle Europaplatz (Kaiserstra&szlig;e).\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 3\u003C/strong\u003E wird auf ihrem gesamten Linienweg eingestellt\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 5\u003C/strong\u003E wird vom Rheinhafen kommend ab der Haltestelle Schloss Gottesaue abweichend &uuml;ber die Haltestellen Tullastra&szlig;e (in der Tullastra&szlig;e) und Essenweinstra&szlig;e nach Rintheim (und entsprechend umgekehrt) umgelegt.\u003C/li\u003E\n\u003Cli\u003EAb Tivoli &uuml;ber Hauptbahnhof (Vorplatz), Kolpingplatz und Karlstor (Karlstra&szlig;e) bis Europaplatz (beide oberirischen Haltestellen) wird die \u003Cstrong\u003ELinie 9\u003C/strong\u003E eingerichtet.\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 17\u003C/strong\u003E (Europ&auml;ische Schulbahn) f&auml;hrt vom Rheinhafen kommend ab der Haltestelle Mathystra&szlig;e (in der Mathystra&szlig;e) Umleitung &uuml;ber Ettlinger Tor zur Haltestelle Ostendstra&szlig;e und ab dort weiter auf dem regul&auml;ren Fahrweg in die Waldstadt. In der Gegenrichtung erfolgt die Umleitung entsprechend umgekehrt.\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003EDes Weiteren sind die nachfolgend aufgelisteten Zugfahrten ebenfalls von der Sperrung betroffen. Alle vier verkehren zwischen Kronenplatz (Fritz-Erler-Stra&szlig;e) und Albtalbahnhof abweichend &uuml;ber Ettlinger Tor (Kriegsstra&szlig;e), Kolpingplatz und Ebertstra&szlig;e (oder umgekehrt):\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003ES4 Zug 85472 Heilbronn Pf&uuml;hlpark ab 23:40 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES4 Zug 85541 Karlsruhe Albtalbahnhof ab 01:15 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES5 Zug 84784 S&ouml;llingen ab 01:01 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003EE Zug 80404; Durlach Bahnhof ab 13:24 Uhr (dritter Wagen von Zug 85430); verkehrt nur montags bis freitags ausgenommen Feiertage\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003E\u003Cstrong\u003ESchienenersatzverkehr:\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003EAls Schienenersatzverkehr (SEV) werden folgende Linien eingerichtet:\u003Cstrong\u003E\u003Cbr /\u003E\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Co:OfficeDocumentSettings\u003E\n  \u003Co:RelyOnVML/\u003E\n  \u003Co:AllowPNG/\u003E\n \u003C/o:OfficeDocumentSettings\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Cw:WordDocument\u003E\n  \u003Cw:View\u003ENormal\u003C/w:View\u003E\n  \u003Cw:Zoom\u003E0\u003C/w:Zoom\u003E\n  \u003Cw:TrackMoves/\u003E\n  \u003Cw:TrackFormatting/\u003E\n  \u003Cw:HyphenationZone\u003E21\u003C/w:HyphenationZone\u003E\n  \u003Cw:PunctuationKerning/\u003E\n  \u003Cw:ValidateAgainstSchemas/\u003E\n  \u003Cw:SaveIfXMLInvalid\u003Efalse\u003C/w:SaveIfXMLInvalid\u003E\n  \u003Cw:IgnoreMixedContent\u003Efalse\u003C/w:IgnoreMixedContent\u003E\n  \u003Cw:AlwaysShowPlaceholderText\u003Efalse\u003C/w:AlwaysShowPlaceholderText\u003E\n  \u003Cw:DoNotPromoteQF/\u003E\n  \u003Cw:LidThemeOther\u003EDE\u003C/w:LidThemeOther\u003E\n  \u003Cw:LidThemeAsian\u003EX-NONE\u003C/w:LidThemeAsian\u003E\n  \u003Cw:LidThemeComplexScript\u003EX-NONE\u003C/w:LidThemeComplexScript\u003E\n  \u003Cw:Compatibility\u003E\n   \u003Cw:BreakWrappedTables/\u003E\n   \u003Cw:SnapToGridInCell/\u003E\n   \u003Cw:WrapTextWithPunct/\u003E\n   \u003Cw:UseAsianBreakRules/\u003E\n   \u003Cw:DontGrowAutofit/\u003E\n   \u003Cw:SplitPgBreakAndParaMark/\u003E\n   \u003Cw:EnableOpenTypeKerning/\u003E\n   \u003Cw:DontFlipMirrorIndents/\u003E\n   \u003Cw:OverrideTableStyleHps/\u003E\n  \u003C/w:Compatibility\u003E\n  \u003Cm:mathPr\u003E\n   \u003Cm:mathFont m:val=\"Cambria Math\"/\u003E\n   \u003Cm:brkBin m:val=\"before\"/\u003E\n   \u003Cm:brkBinSub m:val=\"&#45;-\"/\u003E\n   \u003Cm:smallFrac m:val=\"off\"/\u003E\n   \u003Cm:dispDef/\u003E\n   \u003Cm:lMargin m:val=\"0\"/\u003E\n   \u003Cm:rMargin m:val=\"0\"/\u003E\n   \u003Cm:defJc m:val=\"centerGroup\"/\u003E\n   \u003Cm:wrapIndent m:val=\"1440\"/\u003E\n   \u003Cm:intLim m:val=\"subSup\"/\u003E\n   \u003Cm:naryLim m:val=\"undOvr\"/\u003E\n  \u003C/m:mathPr\u003E\u003C/w:WordDocument\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003ELinie 10\u003C/strong\u003E: Kronenplatz &ndash; Hauptbahnhof (Vorplatz)\u003Cbr /\u003E\u003Cstrong\u003ELinie 11\u003C/strong\u003E: Heidehof &ndash; Neureut/Hochstetten\u003Cbr /\u003E\u003Cstrong\u003ELinie 12\u003C/strong\u003E: Europaplatz &ndash; Knielingen Nord\u003Cbr /\u003E\u003Cstrong\u003ELinie 13\u003C/strong\u003E: Entenfang &ndash; Daxlanden/Rappenw&ouml;rt\u003Cbr /\u003E\u003Cstrong\u003ELinie 14\u003C/strong\u003E: Europaplatz &ndash; Haus Bethlehem\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 10:\u003C/strong\u003E \u003Cbr /\u003EZwischen Kronenplatz und Hauptbahnhof (Vorplatz) verkehrt die Ersatzbus-Linie 10. Da die R&uuml;ppurrer Stra&szlig;e w&auml;hrend der gesamten Bauzeit nur von Nord nach S&uuml;d f&uuml;r den Kfz-Verkehr befahrbar ist, kann nur die Fahrt zum Hauptbahnhof entlang der gesperrten Schienentrasse erfolgen. In Fahrtrichtung Kronenplatz verkehrt die Ersatzlinie durch die Ettlinger Stra&szlig;e. Hierbei wird nur Haltestelle Kongresszentrum bedient.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 11\u003C/strong\u003E: \u003Cbr /\u003EAls Ersatz f&uuml;r den Streckenabschnitt Neureut bis Hochstetten (Linien S1/S11) wird ab der Haltestelle Heidehof die Linie 11 eingerichtet. \u003Cbr /\u003EIn der Schulwoche von Montag, 02. Juni 2025, bis einschlie&szlig;lich Freitag, 06. Juni 2025, wird dieser durch zwei weitere Verst&auml;rkerlinien (11x von/zur Haltestelle Europaplatz und 11s von/zur Haltestelle Frankenthaler Stra&szlig;e) erg&auml;nzt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 12:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 12 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. Ein Nachtverkehr wird nicht angeboten. Am Europaplatz bedient die Linie Steig A an der Sparkasse.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 14:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 14 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. In den N&auml;chten auf Samstage sowie auf Sonn- und Feiertage wird ein Nachtverkehr im 30-Minuten-Takt angeboten.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 70 am Entenfang\u003C/strong\u003E \u003Cbr /\u003EAufgrund des Schienenersatzverkehrs nach Daxlanden (Linie 13) wird die Haltestelle Entenfang der Linie 70 in Fahrtrichtung Heidehof nach Steig E in die Lameystra&szlig;e verlegt.\u003Cbr /\u003E\u003Cbr /\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 73 am Europaplatz\u003C/strong\u003E\u003Cbr /\u003EW&auml;hrend des SEV wird der regul&auml;re Steig A durch die Linien 11x, 12 und 14 genutzt. Daher wird die Haltestelle Europaplatz f&uuml;r die Linie 73 nach Steig B (Ersatzhaltetselle in der Douglasstra&szlig;e) verlegt.\u003C/p\u003E",
+            "wapText": "Karlsruhe: Vom 29.05. bis 23.06.2025 weitere Gleiserneuerungen (Phase 2)",
+            "additionalLinks": [
+              {
+                "id": "1",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Pressemitteilungen/2025-05-15_VBK_Brs_Phase-2_Rueppurrer-Strasse_screen.pdf",
+                "urlText": "Baustellenflyer",
+                "subtitle": "Baustellenflyer",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              },
+              {
+                "id": "2",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Fahrplaene_Netzplaene/Schiene/2025-05-29_DE_Tivoli_-_Kronenplatz_und_ab_Yorckstrasse.pdf",
+                "urlText": "Liniennetzplan zur Bauphase 2",
+                "subtitle": "Liniennetzplan zur Bauphase 2",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "ID": 1,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung Europaplatz (Bau Phase 2).png",
+                "fileName": "Umgebung Europaplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung Europaplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Europaplatz (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 325265
+              },
+              {
+                "ID": 2,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "fileName": "Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Karlsruhe Hbf (Vorplatz) (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 486449
+              },
+              {
+                "ID": 3,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 10.pdf",
+                "fileName": "SEV 10.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 10.pdf",
+                "linkText": "Ersatzfahrplan Linie 10",
+                "linkTarget": "_blank",
+                "size": 91902
+              },
+              {
+                "ID": 4,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11.pdf",
+                "fileName": "SEV 11.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11.pdf",
+                "linkText": "Ersatzfahrplan Linie 11",
+                "linkTarget": "_blank",
+                "size": 181558
+              },
+              {
+                "ID": 5,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11s und 11x.pdf",
+                "fileName": "SEV 11s und 11x.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11s und 11x.pdf",
+                "linkText": "Ersatzfahrplan Linien 11s und 11x",
+                "linkTarget": "_blank",
+                "size": 93430
+              },
+              {
+                "ID": 6,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 12.pdf",
+                "fileName": "SEV 12.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 12.pdf",
+                "linkText": "Ersatzfahrplan Linie 12",
+                "linkTarget": "_blank",
+                "size": 140903
+              },
+              {
+                "ID": 7,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 14.pdf",
+                "fileName": "SEV 14.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 14.pdf",
+                "linkText": "Ersatzfahrplan Linie 14",
+                "linkTarget": "_blank",
+                "size": 95475
+              }
+            ]
+          }
+        }
+      ],
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31429",
+        "AVMLowFloorVeh": "1"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:2:2",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 2",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723420, 938635],
+        "properties": {
+          "occupancy": "MANY_SEATS"
+        },
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:03:00Z",
+      "departureTimeEstimated": "2025-06-19T11:03:00Z",
+      "transportation": {
+        "id": "kvv:21012:E:R:j25",
+        "name": "S-Bahn S2",
+        "disassembledName": "S2",
+        "number": "S2",
+        "description": "Rheinstetten - Spöck",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Blankenloch",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 168,
+          "globalId": "de:kvv:00S02_:"
+        },
+        "origin": {
+          "id": "7001501",
+          "name": "Mörsch Bach-West",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31685",
+        "AVMLowFloorVeh": "1"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:1:1",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 1",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723558, 938631],
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:14:00Z",
+      "departureTimeEstimated": "2025-06-19T11:14:00Z",
+      "transportation": {
+        "id": "kvv:21012:E:H:j25",
+        "name": "S-Bahn S2",
+        "disassembledName": "S2",
+        "number": "S2",
+        "description": "Spöck - Rheinstetten",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Rheinstetten",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 432,
+          "globalId": "de:kvv:00S02_:"
+        },
+        "origin": {
+          "id": "7003013",
+          "name": "Hagsfeld Reitschulschlag",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31628",
+        "AVMLowFloorVeh": "1"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:1:1",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 1",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723558, 938631],
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:17:00Z",
+      "departureTimeEstimated": "2025-06-19T11:17:00Z",
+      "transportation": {
+        "id": "kvv:22311:E:R:j25",
+        "name": "S-Bahn S11",
+        "disassembledName": "S11",
+        "number": "S11",
+        "description": "Hochstetten - Ittersbach",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "AVG",
+          "id": "01",
+          "name": "Albtal-Verkehrs-Gesellschaft mbH"
+        },
+        "destination": {
+          "name": "Ittersbach Rathaus",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "S-Bahn",
+          "trainNumber": "27014",
+          "tripCode": 27014,
+          "globalId": "de:kvv:00S11_:"
+        },
+        "origin": {
+          "id": "7000403",
+          "name": "KA Hirtenweg/Technologiepark",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "110009781_KVV_ICSKVV",
+          "version": "8",
+          "urlText": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "url": "http://projekte.kvv-efa.de:80/cm/XSLT_CM_SHOWADDINFO_REQUEST?infoID=110009781_KVV_ICSKVV&seqID=8",
+          "subtitle": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "title": "Linien S1, S11, 2, 3, 5, 9, 17, SEV",
+          "properties": {
+            "infoType": "lineInfo",
+            "htmlText": "\u003Cp\u003E(kue)\u003C/p\u003E\n\u003Cp\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003EVon Donnerstag, 29. Mai 2025, 07:00 Uhr\u003C/strong\u003E\u003C/span\u003E\u003Cbr /\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003Ebis Montag, 23. Juni 2025, 03:30 Uhr\u003C/strong\u003E\u003C/span\u003E\u003C/p\u003E\n\u003Cp\u003Egilt Phase 2 der diesj&auml;hrigen Sperrungen. In dieser Phase sind die nachfolgenden Streckenabschnitte im Netz der VBK f&uuml;r den Schienenverkehr in jeweils beiden Fahrtrichtungen voll gesperrt:\u003C/p\u003E\n\u003Cp\u003E- Ab dem Gleisviereck Mendelssohnplatz &uuml;ber Werderstra&szlig;e bis zur Wendeschleife Tivoli.\u003Cbr /\u003E- Ab dem Abzweig Ostendstra&szlig;e &uuml;ber Philipp-Reis-Stra&szlig;e und Konzerthaus bis zum Gleisviereck Mathystra&szlig;e.\u003Cbr /\u003E- Ab dem Gleisdreieck Yorckstra&szlig;e &uuml;ber Neureuter Stra&szlig;e bis Knielingen.\u003Cbr /\u003E- Ab dem Abzweig Moltkestra&szlig;e bis Haus Bethlehem.\u003Cbr /\u003E- Ab dem Abzweig Eckenerstra&szlig;e &uuml;ber Daxlanden bis Rappenw&ouml;rt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EEs gelten folgende Regelungen:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinien S1/S11\u003C/strong\u003E fahren ab der Haltestelle Marktplatz (Pyramide U) abweichend nach rechts ab und verkehrt &uuml;ber Durlacher Tor (U), Tullastra&szlig;e (in der Tullastra&szlig;e) und Hauptfriedhof (Tullastra&szlig;e) zum Hirtenweg. R&uuml;ckfahrt entsprechend umgekehrt.\u003C/li\u003E\n\u003Cli\u003EDie\u003Cstrong\u003E Linie 2\u003C/strong\u003E enden vom ZKM kommend an der Haltestelle Europaplatz (Kaiserstra&szlig;e). Fahrten der Gegenrichtung beginnen somit an der Haltestelle Europaplatz (Kaiserstra&szlig;e).\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 3\u003C/strong\u003E wird auf ihrem gesamten Linienweg eingestellt\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 5\u003C/strong\u003E wird vom Rheinhafen kommend ab der Haltestelle Schloss Gottesaue abweichend &uuml;ber die Haltestellen Tullastra&szlig;e (in der Tullastra&szlig;e) und Essenweinstra&szlig;e nach Rintheim (und entsprechend umgekehrt) umgelegt.\u003C/li\u003E\n\u003Cli\u003EAb Tivoli &uuml;ber Hauptbahnhof (Vorplatz), Kolpingplatz und Karlstor (Karlstra&szlig;e) bis Europaplatz (beide oberirischen Haltestellen) wird die \u003Cstrong\u003ELinie 9\u003C/strong\u003E eingerichtet.\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 17\u003C/strong\u003E (Europ&auml;ische Schulbahn) f&auml;hrt vom Rheinhafen kommend ab der Haltestelle Mathystra&szlig;e (in der Mathystra&szlig;e) Umleitung &uuml;ber Ettlinger Tor zur Haltestelle Ostendstra&szlig;e und ab dort weiter auf dem regul&auml;ren Fahrweg in die Waldstadt. In der Gegenrichtung erfolgt die Umleitung entsprechend umgekehrt.\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003EDes Weiteren sind die nachfolgend aufgelisteten Zugfahrten ebenfalls von der Sperrung betroffen. Alle vier verkehren zwischen Kronenplatz (Fritz-Erler-Stra&szlig;e) und Albtalbahnhof abweichend &uuml;ber Ettlinger Tor (Kriegsstra&szlig;e), Kolpingplatz und Ebertstra&szlig;e (oder umgekehrt):\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003ES4 Zug 85472 Heilbronn Pf&uuml;hlpark ab 23:40 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES4 Zug 85541 Karlsruhe Albtalbahnhof ab 01:15 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES5 Zug 84784 S&ouml;llingen ab 01:01 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003EE Zug 80404; Durlach Bahnhof ab 13:24 Uhr (dritter Wagen von Zug 85430); verkehrt nur montags bis freitags ausgenommen Feiertage\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003E\u003Cstrong\u003ESchienenersatzverkehr:\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003EAls Schienenersatzverkehr (SEV) werden folgende Linien eingerichtet:\u003Cstrong\u003E\u003Cbr /\u003E\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Co:OfficeDocumentSettings\u003E\n  \u003Co:RelyOnVML/\u003E\n  \u003Co:AllowPNG/\u003E\n \u003C/o:OfficeDocumentSettings\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Cw:WordDocument\u003E\n  \u003Cw:View\u003ENormal\u003C/w:View\u003E\n  \u003Cw:Zoom\u003E0\u003C/w:Zoom\u003E\n  \u003Cw:TrackMoves/\u003E\n  \u003Cw:TrackFormatting/\u003E\n  \u003Cw:HyphenationZone\u003E21\u003C/w:HyphenationZone\u003E\n  \u003Cw:PunctuationKerning/\u003E\n  \u003Cw:ValidateAgainstSchemas/\u003E\n  \u003Cw:SaveIfXMLInvalid\u003Efalse\u003C/w:SaveIfXMLInvalid\u003E\n  \u003Cw:IgnoreMixedContent\u003Efalse\u003C/w:IgnoreMixedContent\u003E\n  \u003Cw:AlwaysShowPlaceholderText\u003Efalse\u003C/w:AlwaysShowPlaceholderText\u003E\n  \u003Cw:DoNotPromoteQF/\u003E\n  \u003Cw:LidThemeOther\u003EDE\u003C/w:LidThemeOther\u003E\n  \u003Cw:LidThemeAsian\u003EX-NONE\u003C/w:LidThemeAsian\u003E\n  \u003Cw:LidThemeComplexScript\u003EX-NONE\u003C/w:LidThemeComplexScript\u003E\n  \u003Cw:Compatibility\u003E\n   \u003Cw:BreakWrappedTables/\u003E\n   \u003Cw:SnapToGridInCell/\u003E\n   \u003Cw:WrapTextWithPunct/\u003E\n   \u003Cw:UseAsianBreakRules/\u003E\n   \u003Cw:DontGrowAutofit/\u003E\n   \u003Cw:SplitPgBreakAndParaMark/\u003E\n   \u003Cw:EnableOpenTypeKerning/\u003E\n   \u003Cw:DontFlipMirrorIndents/\u003E\n   \u003Cw:OverrideTableStyleHps/\u003E\n  \u003C/w:Compatibility\u003E\n  \u003Cm:mathPr\u003E\n   \u003Cm:mathFont m:val=\"Cambria Math\"/\u003E\n   \u003Cm:brkBin m:val=\"before\"/\u003E\n   \u003Cm:brkBinSub m:val=\"&#45;-\"/\u003E\n   \u003Cm:smallFrac m:val=\"off\"/\u003E\n   \u003Cm:dispDef/\u003E\n   \u003Cm:lMargin m:val=\"0\"/\u003E\n   \u003Cm:rMargin m:val=\"0\"/\u003E\n   \u003Cm:defJc m:val=\"centerGroup\"/\u003E\n   \u003Cm:wrapIndent m:val=\"1440\"/\u003E\n   \u003Cm:intLim m:val=\"subSup\"/\u003E\n   \u003Cm:naryLim m:val=\"undOvr\"/\u003E\n  \u003C/m:mathPr\u003E\u003C/w:WordDocument\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003ELinie 10\u003C/strong\u003E: Kronenplatz &ndash; Hauptbahnhof (Vorplatz)\u003Cbr /\u003E\u003Cstrong\u003ELinie 11\u003C/strong\u003E: Heidehof &ndash; Neureut/Hochstetten\u003Cbr /\u003E\u003Cstrong\u003ELinie 12\u003C/strong\u003E: Europaplatz &ndash; Knielingen Nord\u003Cbr /\u003E\u003Cstrong\u003ELinie 13\u003C/strong\u003E: Entenfang &ndash; Daxlanden/Rappenw&ouml;rt\u003Cbr /\u003E\u003Cstrong\u003ELinie 14\u003C/strong\u003E: Europaplatz &ndash; Haus Bethlehem\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 10:\u003C/strong\u003E \u003Cbr /\u003EZwischen Kronenplatz und Hauptbahnhof (Vorplatz) verkehrt die Ersatzbus-Linie 10. Da die R&uuml;ppurrer Stra&szlig;e w&auml;hrend der gesamten Bauzeit nur von Nord nach S&uuml;d f&uuml;r den Kfz-Verkehr befahrbar ist, kann nur die Fahrt zum Hauptbahnhof entlang der gesperrten Schienentrasse erfolgen. In Fahrtrichtung Kronenplatz verkehrt die Ersatzlinie durch die Ettlinger Stra&szlig;e. Hierbei wird nur Haltestelle Kongresszentrum bedient.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 11\u003C/strong\u003E: \u003Cbr /\u003EAls Ersatz f&uuml;r den Streckenabschnitt Neureut bis Hochstetten (Linien S1/S11) wird ab der Haltestelle Heidehof die Linie 11 eingerichtet. \u003Cbr /\u003EIn der Schulwoche von Montag, 02. Juni 2025, bis einschlie&szlig;lich Freitag, 06. Juni 2025, wird dieser durch zwei weitere Verst&auml;rkerlinien (11x von/zur Haltestelle Europaplatz und 11s von/zur Haltestelle Frankenthaler Stra&szlig;e) erg&auml;nzt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 12:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 12 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. Ein Nachtverkehr wird nicht angeboten. Am Europaplatz bedient die Linie Steig A an der Sparkasse.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 14:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 14 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. In den N&auml;chten auf Samstage sowie auf Sonn- und Feiertage wird ein Nachtverkehr im 30-Minuten-Takt angeboten.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 70 am Entenfang\u003C/strong\u003E \u003Cbr /\u003EAufgrund des Schienenersatzverkehrs nach Daxlanden (Linie 13) wird die Haltestelle Entenfang der Linie 70 in Fahrtrichtung Heidehof nach Steig E in die Lameystra&szlig;e verlegt.\u003Cbr /\u003E\u003Cbr /\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 73 am Europaplatz\u003C/strong\u003E\u003Cbr /\u003EW&auml;hrend des SEV wird der regul&auml;re Steig A durch die Linien 11x, 12 und 14 genutzt. Daher wird die Haltestelle Europaplatz f&uuml;r die Linie 73 nach Steig B (Ersatzhaltetselle in der Douglasstra&szlig;e) verlegt.\u003C/p\u003E",
+            "wapText": "Karlsruhe: Vom 29.05. bis 23.06.2025 weitere Gleiserneuerungen (Phase 2)",
+            "additionalLinks": [
+              {
+                "id": "1",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Pressemitteilungen/2025-05-15_VBK_Brs_Phase-2_Rueppurrer-Strasse_screen.pdf",
+                "urlText": "Baustellenflyer",
+                "subtitle": "Baustellenflyer",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              },
+              {
+                "id": "2",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Fahrplaene_Netzplaene/Schiene/2025-05-29_DE_Tivoli_-_Kronenplatz_und_ab_Yorckstrasse.pdf",
+                "urlText": "Liniennetzplan zur Bauphase 2",
+                "subtitle": "Liniennetzplan zur Bauphase 2",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "ID": 1,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung Europaplatz (Bau Phase 2).png",
+                "fileName": "Umgebung Europaplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung Europaplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Europaplatz (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 325265
+              },
+              {
+                "ID": 2,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "fileName": "Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Karlsruhe Hbf (Vorplatz) (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 486449
+              },
+              {
+                "ID": 3,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 10.pdf",
+                "fileName": "SEV 10.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 10.pdf",
+                "linkText": "Ersatzfahrplan Linie 10",
+                "linkTarget": "_blank",
+                "size": 91902
+              },
+              {
+                "ID": 4,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11.pdf",
+                "fileName": "SEV 11.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11.pdf",
+                "linkText": "Ersatzfahrplan Linie 11",
+                "linkTarget": "_blank",
+                "size": 181558
+              },
+              {
+                "ID": 5,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11s und 11x.pdf",
+                "fileName": "SEV 11s und 11x.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11s und 11x.pdf",
+                "linkText": "Ersatzfahrplan Linien 11s und 11x",
+                "linkTarget": "_blank",
+                "size": 93430
+              },
+              {
+                "ID": 6,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 12.pdf",
+                "fileName": "SEV 12.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 12.pdf",
+                "linkText": "Ersatzfahrplan Linie 12",
+                "linkTarget": "_blank",
+                "size": 140903
+              },
+              {
+                "ID": 7,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 14.pdf",
+                "fileName": "SEV 14.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 14.pdf",
+                "linkText": "Ersatzfahrplan Linie 14",
+                "linkTarget": "_blank",
+                "size": 95475
+              }
+            ]
+          }
+        }
+      ],
+      "hints": [
+        {
+          "content": "Stufenloses Fahrzeug, Klimaanlage"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "27014-33248"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:1:1",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 1",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723558, 938631],
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:17:00Z",
+      "departureTimeEstimated": "2025-06-19T11:17:00Z",
+      "transportation": {
+        "id": "kvv:21005:E:H:j25",
+        "name": "Straßenbahn 5",
+        "disassembledName": "5",
+        "number": "5",
+        "description": "Durlach Bf - Rheinhafen",
+        "product": {
+          "id": 0,
+          "class": 4,
+          "name": "Straßenbahn",
+          "iconId": 4
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Rheinhafen",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 578,
+          "globalId": "de:kvv:00005_:"
+        },
+        "origin": {
+          "id": "7000314",
+          "name": "Rintheim",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "110009781_KVV_ICSKVV",
+          "version": "8",
+          "urlText": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "url": "http://projekte.kvv-efa.de:80/cm/XSLT_CM_SHOWADDINFO_REQUEST?infoID=110009781_KVV_ICSKVV&seqID=8",
+          "subtitle": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "title": "Linien S1, S11, 2, 3, 5, 9, 17, SEV",
+          "properties": {
+            "infoType": "lineInfo",
+            "htmlText": "\u003Cp\u003E(kue)\u003C/p\u003E\n\u003Cp\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003EVon Donnerstag, 29. Mai 2025, 07:00 Uhr\u003C/strong\u003E\u003C/span\u003E\u003Cbr /\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003Ebis Montag, 23. Juni 2025, 03:30 Uhr\u003C/strong\u003E\u003C/span\u003E\u003C/p\u003E\n\u003Cp\u003Egilt Phase 2 der diesj&auml;hrigen Sperrungen. In dieser Phase sind die nachfolgenden Streckenabschnitte im Netz der VBK f&uuml;r den Schienenverkehr in jeweils beiden Fahrtrichtungen voll gesperrt:\u003C/p\u003E\n\u003Cp\u003E- Ab dem Gleisviereck Mendelssohnplatz &uuml;ber Werderstra&szlig;e bis zur Wendeschleife Tivoli.\u003Cbr /\u003E- Ab dem Abzweig Ostendstra&szlig;e &uuml;ber Philipp-Reis-Stra&szlig;e und Konzerthaus bis zum Gleisviereck Mathystra&szlig;e.\u003Cbr /\u003E- Ab dem Gleisdreieck Yorckstra&szlig;e &uuml;ber Neureuter Stra&szlig;e bis Knielingen.\u003Cbr /\u003E- Ab dem Abzweig Moltkestra&szlig;e bis Haus Bethlehem.\u003Cbr /\u003E- Ab dem Abzweig Eckenerstra&szlig;e &uuml;ber Daxlanden bis Rappenw&ouml;rt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EEs gelten folgende Regelungen:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinien S1/S11\u003C/strong\u003E fahren ab der Haltestelle Marktplatz (Pyramide U) abweichend nach rechts ab und verkehrt &uuml;ber Durlacher Tor (U), Tullastra&szlig;e (in der Tullastra&szlig;e) und Hauptfriedhof (Tullastra&szlig;e) zum Hirtenweg. R&uuml;ckfahrt entsprechend umgekehrt.\u003C/li\u003E\n\u003Cli\u003EDie\u003Cstrong\u003E Linie 2\u003C/strong\u003E enden vom ZKM kommend an der Haltestelle Europaplatz (Kaiserstra&szlig;e). Fahrten der Gegenrichtung beginnen somit an der Haltestelle Europaplatz (Kaiserstra&szlig;e).\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 3\u003C/strong\u003E wird auf ihrem gesamten Linienweg eingestellt\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 5\u003C/strong\u003E wird vom Rheinhafen kommend ab der Haltestelle Schloss Gottesaue abweichend &uuml;ber die Haltestellen Tullastra&szlig;e (in der Tullastra&szlig;e) und Essenweinstra&szlig;e nach Rintheim (und entsprechend umgekehrt) umgelegt.\u003C/li\u003E\n\u003Cli\u003EAb Tivoli &uuml;ber Hauptbahnhof (Vorplatz), Kolpingplatz und Karlstor (Karlstra&szlig;e) bis Europaplatz (beide oberirischen Haltestellen) wird die \u003Cstrong\u003ELinie 9\u003C/strong\u003E eingerichtet.\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 17\u003C/strong\u003E (Europ&auml;ische Schulbahn) f&auml;hrt vom Rheinhafen kommend ab der Haltestelle Mathystra&szlig;e (in der Mathystra&szlig;e) Umleitung &uuml;ber Ettlinger Tor zur Haltestelle Ostendstra&szlig;e und ab dort weiter auf dem regul&auml;ren Fahrweg in die Waldstadt. In der Gegenrichtung erfolgt die Umleitung entsprechend umgekehrt.\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003EDes Weiteren sind die nachfolgend aufgelisteten Zugfahrten ebenfalls von der Sperrung betroffen. Alle vier verkehren zwischen Kronenplatz (Fritz-Erler-Stra&szlig;e) und Albtalbahnhof abweichend &uuml;ber Ettlinger Tor (Kriegsstra&szlig;e), Kolpingplatz und Ebertstra&szlig;e (oder umgekehrt):\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003ES4 Zug 85472 Heilbronn Pf&uuml;hlpark ab 23:40 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES4 Zug 85541 Karlsruhe Albtalbahnhof ab 01:15 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES5 Zug 84784 S&ouml;llingen ab 01:01 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003EE Zug 80404; Durlach Bahnhof ab 13:24 Uhr (dritter Wagen von Zug 85430); verkehrt nur montags bis freitags ausgenommen Feiertage\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003E\u003Cstrong\u003ESchienenersatzverkehr:\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003EAls Schienenersatzverkehr (SEV) werden folgende Linien eingerichtet:\u003Cstrong\u003E\u003Cbr /\u003E\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Co:OfficeDocumentSettings\u003E\n  \u003Co:RelyOnVML/\u003E\n  \u003Co:AllowPNG/\u003E\n \u003C/o:OfficeDocumentSettings\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Cw:WordDocument\u003E\n  \u003Cw:View\u003ENormal\u003C/w:View\u003E\n  \u003Cw:Zoom\u003E0\u003C/w:Zoom\u003E\n  \u003Cw:TrackMoves/\u003E\n  \u003Cw:TrackFormatting/\u003E\n  \u003Cw:HyphenationZone\u003E21\u003C/w:HyphenationZone\u003E\n  \u003Cw:PunctuationKerning/\u003E\n  \u003Cw:ValidateAgainstSchemas/\u003E\n  \u003Cw:SaveIfXMLInvalid\u003Efalse\u003C/w:SaveIfXMLInvalid\u003E\n  \u003Cw:IgnoreMixedContent\u003Efalse\u003C/w:IgnoreMixedContent\u003E\n  \u003Cw:AlwaysShowPlaceholderText\u003Efalse\u003C/w:AlwaysShowPlaceholderText\u003E\n  \u003Cw:DoNotPromoteQF/\u003E\n  \u003Cw:LidThemeOther\u003EDE\u003C/w:LidThemeOther\u003E\n  \u003Cw:LidThemeAsian\u003EX-NONE\u003C/w:LidThemeAsian\u003E\n  \u003Cw:LidThemeComplexScript\u003EX-NONE\u003C/w:LidThemeComplexScript\u003E\n  \u003Cw:Compatibility\u003E\n   \u003Cw:BreakWrappedTables/\u003E\n   \u003Cw:SnapToGridInCell/\u003E\n   \u003Cw:WrapTextWithPunct/\u003E\n   \u003Cw:UseAsianBreakRules/\u003E\n   \u003Cw:DontGrowAutofit/\u003E\n   \u003Cw:SplitPgBreakAndParaMark/\u003E\n   \u003Cw:EnableOpenTypeKerning/\u003E\n   \u003Cw:DontFlipMirrorIndents/\u003E\n   \u003Cw:OverrideTableStyleHps/\u003E\n  \u003C/w:Compatibility\u003E\n  \u003Cm:mathPr\u003E\n   \u003Cm:mathFont m:val=\"Cambria Math\"/\u003E\n   \u003Cm:brkBin m:val=\"before\"/\u003E\n   \u003Cm:brkBinSub m:val=\"&#45;-\"/\u003E\n   \u003Cm:smallFrac m:val=\"off\"/\u003E\n   \u003Cm:dispDef/\u003E\n   \u003Cm:lMargin m:val=\"0\"/\u003E\n   \u003Cm:rMargin m:val=\"0\"/\u003E\n   \u003Cm:defJc m:val=\"centerGroup\"/\u003E\n   \u003Cm:wrapIndent m:val=\"1440\"/\u003E\n   \u003Cm:intLim m:val=\"subSup\"/\u003E\n   \u003Cm:naryLim m:val=\"undOvr\"/\u003E\n  \u003C/m:mathPr\u003E\u003C/w:WordDocument\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003ELinie 10\u003C/strong\u003E: Kronenplatz &ndash; Hauptbahnhof (Vorplatz)\u003Cbr /\u003E\u003Cstrong\u003ELinie 11\u003C/strong\u003E: Heidehof &ndash; Neureut/Hochstetten\u003Cbr /\u003E\u003Cstrong\u003ELinie 12\u003C/strong\u003E: Europaplatz &ndash; Knielingen Nord\u003Cbr /\u003E\u003Cstrong\u003ELinie 13\u003C/strong\u003E: Entenfang &ndash; Daxlanden/Rappenw&ouml;rt\u003Cbr /\u003E\u003Cstrong\u003ELinie 14\u003C/strong\u003E: Europaplatz &ndash; Haus Bethlehem\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 10:\u003C/strong\u003E \u003Cbr /\u003EZwischen Kronenplatz und Hauptbahnhof (Vorplatz) verkehrt die Ersatzbus-Linie 10. Da die R&uuml;ppurrer Stra&szlig;e w&auml;hrend der gesamten Bauzeit nur von Nord nach S&uuml;d f&uuml;r den Kfz-Verkehr befahrbar ist, kann nur die Fahrt zum Hauptbahnhof entlang der gesperrten Schienentrasse erfolgen. In Fahrtrichtung Kronenplatz verkehrt die Ersatzlinie durch die Ettlinger Stra&szlig;e. Hierbei wird nur Haltestelle Kongresszentrum bedient.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 11\u003C/strong\u003E: \u003Cbr /\u003EAls Ersatz f&uuml;r den Streckenabschnitt Neureut bis Hochstetten (Linien S1/S11) wird ab der Haltestelle Heidehof die Linie 11 eingerichtet. \u003Cbr /\u003EIn der Schulwoche von Montag, 02. Juni 2025, bis einschlie&szlig;lich Freitag, 06. Juni 2025, wird dieser durch zwei weitere Verst&auml;rkerlinien (11x von/zur Haltestelle Europaplatz und 11s von/zur Haltestelle Frankenthaler Stra&szlig;e) erg&auml;nzt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 12:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 12 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. Ein Nachtverkehr wird nicht angeboten. Am Europaplatz bedient die Linie Steig A an der Sparkasse.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 14:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 14 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. In den N&auml;chten auf Samstage sowie auf Sonn- und Feiertage wird ein Nachtverkehr im 30-Minuten-Takt angeboten.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 70 am Entenfang\u003C/strong\u003E \u003Cbr /\u003EAufgrund des Schienenersatzverkehrs nach Daxlanden (Linie 13) wird die Haltestelle Entenfang der Linie 70 in Fahrtrichtung Heidehof nach Steig E in die Lameystra&szlig;e verlegt.\u003Cbr /\u003E\u003Cbr /\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 73 am Europaplatz\u003C/strong\u003E\u003Cbr /\u003EW&auml;hrend des SEV wird der regul&auml;re Steig A durch die Linien 11x, 12 und 14 genutzt. Daher wird die Haltestelle Europaplatz f&uuml;r die Linie 73 nach Steig B (Ersatzhaltetselle in der Douglasstra&szlig;e) verlegt.\u003C/p\u003E",
+            "wapText": "Karlsruhe: Vom 29.05. bis 23.06.2025 weitere Gleiserneuerungen (Phase 2)",
+            "additionalLinks": [
+              {
+                "id": "1",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Pressemitteilungen/2025-05-15_VBK_Brs_Phase-2_Rueppurrer-Strasse_screen.pdf",
+                "urlText": "Baustellenflyer",
+                "subtitle": "Baustellenflyer",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              },
+              {
+                "id": "2",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Fahrplaene_Netzplaene/Schiene/2025-05-29_DE_Tivoli_-_Kronenplatz_und_ab_Yorckstrasse.pdf",
+                "urlText": "Liniennetzplan zur Bauphase 2",
+                "subtitle": "Liniennetzplan zur Bauphase 2",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "ID": 1,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung Europaplatz (Bau Phase 2).png",
+                "fileName": "Umgebung Europaplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung Europaplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Europaplatz (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 325265
+              },
+              {
+                "ID": 2,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "fileName": "Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Karlsruhe Hbf (Vorplatz) (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 486449
+              },
+              {
+                "ID": 3,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 10.pdf",
+                "fileName": "SEV 10.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 10.pdf",
+                "linkText": "Ersatzfahrplan Linie 10",
+                "linkTarget": "_blank",
+                "size": 91902
+              },
+              {
+                "ID": 4,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11.pdf",
+                "fileName": "SEV 11.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11.pdf",
+                "linkText": "Ersatzfahrplan Linie 11",
+                "linkTarget": "_blank",
+                "size": 181558
+              },
+              {
+                "ID": 5,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11s und 11x.pdf",
+                "fileName": "SEV 11s und 11x.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11s und 11x.pdf",
+                "linkText": "Ersatzfahrplan Linien 11s und 11x",
+                "linkTarget": "_blank",
+                "size": 93430
+              },
+              {
+                "ID": 6,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 12.pdf",
+                "fileName": "SEV 12.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 12.pdf",
+                "linkText": "Ersatzfahrplan Linie 12",
+                "linkTarget": "_blank",
+                "size": 140903
+              },
+              {
+                "ID": 7,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 14.pdf",
+                "fileName": "SEV 14.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 14.pdf",
+                "linkText": "Ersatzfahrplan Linie 14",
+                "linkTarget": "_blank",
+                "size": 95475
+              }
+            ]
+          }
+        }
+      ],
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31387",
+        "AVMLowFloorVeh": "1"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:2:2",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 2",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723420, 938635],
+        "properties": {
+          "occupancy": "STANDING_ONLY"
+        },
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:19:00Z",
+      "departureTimeEstimated": "2025-06-19T11:20:00Z",
+      "transportation": {
+        "id": "kvv:22311:E:H:j25",
+        "name": "S-Bahn S11",
+        "disassembledName": "S11",
+        "number": "S11",
+        "description": "Ittersbach - Hochstetten",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "AVG",
+          "id": "01",
+          "name": "Albtal-Verkehrs-Gesellschaft mbH"
+        },
+        "destination": {
+          "name": "Hirtenweg",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "S-Bahn",
+          "trainNumber": "27017",
+          "tripCode": 27017,
+          "globalId": "de:kvv:00S11_:"
+        },
+        "origin": {
+          "id": "7001410",
+          "name": "Ittersbach Rathaus",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "110009781_KVV_ICSKVV",
+          "version": "8",
+          "urlText": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "url": "http://projekte.kvv-efa.de:80/cm/XSLT_CM_SHOWADDINFO_REQUEST?infoID=110009781_KVV_ICSKVV&seqID=8",
+          "subtitle": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "title": "Linien S1, S11, 2, 3, 5, 9, 17, SEV",
+          "properties": {
+            "infoType": "lineInfo",
+            "htmlText": "\u003Cp\u003E(kue)\u003C/p\u003E\n\u003Cp\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003EVon Donnerstag, 29. Mai 2025, 07:00 Uhr\u003C/strong\u003E\u003C/span\u003E\u003Cbr /\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003Ebis Montag, 23. Juni 2025, 03:30 Uhr\u003C/strong\u003E\u003C/span\u003E\u003C/p\u003E\n\u003Cp\u003Egilt Phase 2 der diesj&auml;hrigen Sperrungen. In dieser Phase sind die nachfolgenden Streckenabschnitte im Netz der VBK f&uuml;r den Schienenverkehr in jeweils beiden Fahrtrichtungen voll gesperrt:\u003C/p\u003E\n\u003Cp\u003E- Ab dem Gleisviereck Mendelssohnplatz &uuml;ber Werderstra&szlig;e bis zur Wendeschleife Tivoli.\u003Cbr /\u003E- Ab dem Abzweig Ostendstra&szlig;e &uuml;ber Philipp-Reis-Stra&szlig;e und Konzerthaus bis zum Gleisviereck Mathystra&szlig;e.\u003Cbr /\u003E- Ab dem Gleisdreieck Yorckstra&szlig;e &uuml;ber Neureuter Stra&szlig;e bis Knielingen.\u003Cbr /\u003E- Ab dem Abzweig Moltkestra&szlig;e bis Haus Bethlehem.\u003Cbr /\u003E- Ab dem Abzweig Eckenerstra&szlig;e &uuml;ber Daxlanden bis Rappenw&ouml;rt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EEs gelten folgende Regelungen:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinien S1/S11\u003C/strong\u003E fahren ab der Haltestelle Marktplatz (Pyramide U) abweichend nach rechts ab und verkehrt &uuml;ber Durlacher Tor (U), Tullastra&szlig;e (in der Tullastra&szlig;e) und Hauptfriedhof (Tullastra&szlig;e) zum Hirtenweg. R&uuml;ckfahrt entsprechend umgekehrt.\u003C/li\u003E\n\u003Cli\u003EDie\u003Cstrong\u003E Linie 2\u003C/strong\u003E enden vom ZKM kommend an der Haltestelle Europaplatz (Kaiserstra&szlig;e). Fahrten der Gegenrichtung beginnen somit an der Haltestelle Europaplatz (Kaiserstra&szlig;e).\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 3\u003C/strong\u003E wird auf ihrem gesamten Linienweg eingestellt\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 5\u003C/strong\u003E wird vom Rheinhafen kommend ab der Haltestelle Schloss Gottesaue abweichend &uuml;ber die Haltestellen Tullastra&szlig;e (in der Tullastra&szlig;e) und Essenweinstra&szlig;e nach Rintheim (und entsprechend umgekehrt) umgelegt.\u003C/li\u003E\n\u003Cli\u003EAb Tivoli &uuml;ber Hauptbahnhof (Vorplatz), Kolpingplatz und Karlstor (Karlstra&szlig;e) bis Europaplatz (beide oberirischen Haltestellen) wird die \u003Cstrong\u003ELinie 9\u003C/strong\u003E eingerichtet.\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 17\u003C/strong\u003E (Europ&auml;ische Schulbahn) f&auml;hrt vom Rheinhafen kommend ab der Haltestelle Mathystra&szlig;e (in der Mathystra&szlig;e) Umleitung &uuml;ber Ettlinger Tor zur Haltestelle Ostendstra&szlig;e und ab dort weiter auf dem regul&auml;ren Fahrweg in die Waldstadt. In der Gegenrichtung erfolgt die Umleitung entsprechend umgekehrt.\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003EDes Weiteren sind die nachfolgend aufgelisteten Zugfahrten ebenfalls von der Sperrung betroffen. Alle vier verkehren zwischen Kronenplatz (Fritz-Erler-Stra&szlig;e) und Albtalbahnhof abweichend &uuml;ber Ettlinger Tor (Kriegsstra&szlig;e), Kolpingplatz und Ebertstra&szlig;e (oder umgekehrt):\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003ES4 Zug 85472 Heilbronn Pf&uuml;hlpark ab 23:40 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES4 Zug 85541 Karlsruhe Albtalbahnhof ab 01:15 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES5 Zug 84784 S&ouml;llingen ab 01:01 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003EE Zug 80404; Durlach Bahnhof ab 13:24 Uhr (dritter Wagen von Zug 85430); verkehrt nur montags bis freitags ausgenommen Feiertage\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003E\u003Cstrong\u003ESchienenersatzverkehr:\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003EAls Schienenersatzverkehr (SEV) werden folgende Linien eingerichtet:\u003Cstrong\u003E\u003Cbr /\u003E\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Co:OfficeDocumentSettings\u003E\n  \u003Co:RelyOnVML/\u003E\n  \u003Co:AllowPNG/\u003E\n \u003C/o:OfficeDocumentSettings\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Cw:WordDocument\u003E\n  \u003Cw:View\u003ENormal\u003C/w:View\u003E\n  \u003Cw:Zoom\u003E0\u003C/w:Zoom\u003E\n  \u003Cw:TrackMoves/\u003E\n  \u003Cw:TrackFormatting/\u003E\n  \u003Cw:HyphenationZone\u003E21\u003C/w:HyphenationZone\u003E\n  \u003Cw:PunctuationKerning/\u003E\n  \u003Cw:ValidateAgainstSchemas/\u003E\n  \u003Cw:SaveIfXMLInvalid\u003Efalse\u003C/w:SaveIfXMLInvalid\u003E\n  \u003Cw:IgnoreMixedContent\u003Efalse\u003C/w:IgnoreMixedContent\u003E\n  \u003Cw:AlwaysShowPlaceholderText\u003Efalse\u003C/w:AlwaysShowPlaceholderText\u003E\n  \u003Cw:DoNotPromoteQF/\u003E\n  \u003Cw:LidThemeOther\u003EDE\u003C/w:LidThemeOther\u003E\n  \u003Cw:LidThemeAsian\u003EX-NONE\u003C/w:LidThemeAsian\u003E\n  \u003Cw:LidThemeComplexScript\u003EX-NONE\u003C/w:LidThemeComplexScript\u003E\n  \u003Cw:Compatibility\u003E\n   \u003Cw:BreakWrappedTables/\u003E\n   \u003Cw:SnapToGridInCell/\u003E\n   \u003Cw:WrapTextWithPunct/\u003E\n   \u003Cw:UseAsianBreakRules/\u003E\n   \u003Cw:DontGrowAutofit/\u003E\n   \u003Cw:SplitPgBreakAndParaMark/\u003E\n   \u003Cw:EnableOpenTypeKerning/\u003E\n   \u003Cw:DontFlipMirrorIndents/\u003E\n   \u003Cw:OverrideTableStyleHps/\u003E\n  \u003C/w:Compatibility\u003E\n  \u003Cm:mathPr\u003E\n   \u003Cm:mathFont m:val=\"Cambria Math\"/\u003E\n   \u003Cm:brkBin m:val=\"before\"/\u003E\n   \u003Cm:brkBinSub m:val=\"&#45;-\"/\u003E\n   \u003Cm:smallFrac m:val=\"off\"/\u003E\n   \u003Cm:dispDef/\u003E\n   \u003Cm:lMargin m:val=\"0\"/\u003E\n   \u003Cm:rMargin m:val=\"0\"/\u003E\n   \u003Cm:defJc m:val=\"centerGroup\"/\u003E\n   \u003Cm:wrapIndent m:val=\"1440\"/\u003E\n   \u003Cm:intLim m:val=\"subSup\"/\u003E\n   \u003Cm:naryLim m:val=\"undOvr\"/\u003E\n  \u003C/m:mathPr\u003E\u003C/w:WordDocument\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003ELinie 10\u003C/strong\u003E: Kronenplatz &ndash; Hauptbahnhof (Vorplatz)\u003Cbr /\u003E\u003Cstrong\u003ELinie 11\u003C/strong\u003E: Heidehof &ndash; Neureut/Hochstetten\u003Cbr /\u003E\u003Cstrong\u003ELinie 12\u003C/strong\u003E: Europaplatz &ndash; Knielingen Nord\u003Cbr /\u003E\u003Cstrong\u003ELinie 13\u003C/strong\u003E: Entenfang &ndash; Daxlanden/Rappenw&ouml;rt\u003Cbr /\u003E\u003Cstrong\u003ELinie 14\u003C/strong\u003E: Europaplatz &ndash; Haus Bethlehem\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 10:\u003C/strong\u003E \u003Cbr /\u003EZwischen Kronenplatz und Hauptbahnhof (Vorplatz) verkehrt die Ersatzbus-Linie 10. Da die R&uuml;ppurrer Stra&szlig;e w&auml;hrend der gesamten Bauzeit nur von Nord nach S&uuml;d f&uuml;r den Kfz-Verkehr befahrbar ist, kann nur die Fahrt zum Hauptbahnhof entlang der gesperrten Schienentrasse erfolgen. In Fahrtrichtung Kronenplatz verkehrt die Ersatzlinie durch die Ettlinger Stra&szlig;e. Hierbei wird nur Haltestelle Kongresszentrum bedient.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 11\u003C/strong\u003E: \u003Cbr /\u003EAls Ersatz f&uuml;r den Streckenabschnitt Neureut bis Hochstetten (Linien S1/S11) wird ab der Haltestelle Heidehof die Linie 11 eingerichtet. \u003Cbr /\u003EIn der Schulwoche von Montag, 02. Juni 2025, bis einschlie&szlig;lich Freitag, 06. Juni 2025, wird dieser durch zwei weitere Verst&auml;rkerlinien (11x von/zur Haltestelle Europaplatz und 11s von/zur Haltestelle Frankenthaler Stra&szlig;e) erg&auml;nzt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 12:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 12 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. Ein Nachtverkehr wird nicht angeboten. Am Europaplatz bedient die Linie Steig A an der Sparkasse.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 14:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 14 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. In den N&auml;chten auf Samstage sowie auf Sonn- und Feiertage wird ein Nachtverkehr im 30-Minuten-Takt angeboten.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 70 am Entenfang\u003C/strong\u003E \u003Cbr /\u003EAufgrund des Schienenersatzverkehrs nach Daxlanden (Linie 13) wird die Haltestelle Entenfang der Linie 70 in Fahrtrichtung Heidehof nach Steig E in die Lameystra&szlig;e verlegt.\u003Cbr /\u003E\u003Cbr /\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 73 am Europaplatz\u003C/strong\u003E\u003Cbr /\u003EW&auml;hrend des SEV wird der regul&auml;re Steig A durch die Linien 11x, 12 und 14 genutzt. Daher wird die Haltestelle Europaplatz f&uuml;r die Linie 73 nach Steig B (Ersatzhaltetselle in der Douglasstra&szlig;e) verlegt.\u003C/p\u003E",
+            "wapText": "Karlsruhe: Vom 29.05. bis 23.06.2025 weitere Gleiserneuerungen (Phase 2)",
+            "additionalLinks": [
+              {
+                "id": "1",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Pressemitteilungen/2025-05-15_VBK_Brs_Phase-2_Rueppurrer-Strasse_screen.pdf",
+                "urlText": "Baustellenflyer",
+                "subtitle": "Baustellenflyer",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              },
+              {
+                "id": "2",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Fahrplaene_Netzplaene/Schiene/2025-05-29_DE_Tivoli_-_Kronenplatz_und_ab_Yorckstrasse.pdf",
+                "urlText": "Liniennetzplan zur Bauphase 2",
+                "subtitle": "Liniennetzplan zur Bauphase 2",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "ID": 1,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung Europaplatz (Bau Phase 2).png",
+                "fileName": "Umgebung Europaplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung Europaplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Europaplatz (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 325265
+              },
+              {
+                "ID": 2,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "fileName": "Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Karlsruhe Hbf (Vorplatz) (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 486449
+              },
+              {
+                "ID": 3,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 10.pdf",
+                "fileName": "SEV 10.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 10.pdf",
+                "linkText": "Ersatzfahrplan Linie 10",
+                "linkTarget": "_blank",
+                "size": 91902
+              },
+              {
+                "ID": 4,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11.pdf",
+                "fileName": "SEV 11.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11.pdf",
+                "linkText": "Ersatzfahrplan Linie 11",
+                "linkTarget": "_blank",
+                "size": 181558
+              },
+              {
+                "ID": 5,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11s und 11x.pdf",
+                "fileName": "SEV 11s und 11x.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11s und 11x.pdf",
+                "linkText": "Ersatzfahrplan Linien 11s und 11x",
+                "linkTarget": "_blank",
+                "size": 93430
+              },
+              {
+                "ID": 6,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 12.pdf",
+                "fileName": "SEV 12.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 12.pdf",
+                "linkText": "Ersatzfahrplan Linie 12",
+                "linkTarget": "_blank",
+                "size": 140903
+              },
+              {
+                "ID": 7,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 14.pdf",
+                "fileName": "SEV 14.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 14.pdf",
+                "linkText": "Ersatzfahrplan Linie 14",
+                "linkTarget": "_blank",
+                "size": 95475
+              }
+            ]
+          }
+        }
+      ],
+      "hints": [
+        {
+          "content": "Stufenloses Fahrzeug, Klimaanlage"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "27017-33269"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:2:2",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 2",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723420, 938635],
+        "properties": {
+          "occupancy": "MANY_SEATS"
+        },
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:20:00Z",
+      "departureTimeEstimated": "2025-06-19T11:20:00Z",
+      "transportation": {
+        "id": "kvv:21005:E:R:j25",
+        "name": "Straßenbahn 5",
+        "disassembledName": "5",
+        "number": "5",
+        "description": "Rheinhafen - Durlach Bf",
+        "product": {
+          "id": 0,
+          "class": 4,
+          "name": "Straßenbahn",
+          "iconId": 4
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Rintheim",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 73,
+          "globalId": "de:kvv:00005_:"
+        },
+        "origin": {
+          "id": "7000991",
+          "name": "Karlsruhe Betriebshof West",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "110009781_KVV_ICSKVV",
+          "version": "8",
+          "urlText": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "url": "http://projekte.kvv-efa.de:80/cm/XSLT_CM_SHOWADDINFO_REQUEST?infoID=110009781_KVV_ICSKVV&seqID=8",
+          "subtitle": "Karlsruhe: Gleiserneuerungen (Phase 2)",
+          "title": "Linien S1, S11, 2, 3, 5, 9, 17, SEV",
+          "properties": {
+            "infoType": "lineInfo",
+            "htmlText": "\u003Cp\u003E(kue)\u003C/p\u003E\n\u003Cp\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003EVon Donnerstag, 29. Mai 2025, 07:00 Uhr\u003C/strong\u003E\u003C/span\u003E\u003Cbr /\u003E\u003Cspan style=\"color: #c30a37;\"\u003E\u003Cstrong\u003Ebis Montag, 23. Juni 2025, 03:30 Uhr\u003C/strong\u003E\u003C/span\u003E\u003C/p\u003E\n\u003Cp\u003Egilt Phase 2 der diesj&auml;hrigen Sperrungen. In dieser Phase sind die nachfolgenden Streckenabschnitte im Netz der VBK f&uuml;r den Schienenverkehr in jeweils beiden Fahrtrichtungen voll gesperrt:\u003C/p\u003E\n\u003Cp\u003E- Ab dem Gleisviereck Mendelssohnplatz &uuml;ber Werderstra&szlig;e bis zur Wendeschleife Tivoli.\u003Cbr /\u003E- Ab dem Abzweig Ostendstra&szlig;e &uuml;ber Philipp-Reis-Stra&szlig;e und Konzerthaus bis zum Gleisviereck Mathystra&szlig;e.\u003Cbr /\u003E- Ab dem Gleisdreieck Yorckstra&szlig;e &uuml;ber Neureuter Stra&szlig;e bis Knielingen.\u003Cbr /\u003E- Ab dem Abzweig Moltkestra&szlig;e bis Haus Bethlehem.\u003Cbr /\u003E- Ab dem Abzweig Eckenerstra&szlig;e &uuml;ber Daxlanden bis Rappenw&ouml;rt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EEs gelten folgende Regelungen:\u003C/strong\u003E\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinien S1/S11\u003C/strong\u003E fahren ab der Haltestelle Marktplatz (Pyramide U) abweichend nach rechts ab und verkehrt &uuml;ber Durlacher Tor (U), Tullastra&szlig;e (in der Tullastra&szlig;e) und Hauptfriedhof (Tullastra&szlig;e) zum Hirtenweg. R&uuml;ckfahrt entsprechend umgekehrt.\u003C/li\u003E\n\u003Cli\u003EDie\u003Cstrong\u003E Linie 2\u003C/strong\u003E enden vom ZKM kommend an der Haltestelle Europaplatz (Kaiserstra&szlig;e). Fahrten der Gegenrichtung beginnen somit an der Haltestelle Europaplatz (Kaiserstra&szlig;e).\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 3\u003C/strong\u003E wird auf ihrem gesamten Linienweg eingestellt\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 5\u003C/strong\u003E wird vom Rheinhafen kommend ab der Haltestelle Schloss Gottesaue abweichend &uuml;ber die Haltestellen Tullastra&szlig;e (in der Tullastra&szlig;e) und Essenweinstra&szlig;e nach Rintheim (und entsprechend umgekehrt) umgelegt.\u003C/li\u003E\n\u003Cli\u003EAb Tivoli &uuml;ber Hauptbahnhof (Vorplatz), Kolpingplatz und Karlstor (Karlstra&szlig;e) bis Europaplatz (beide oberirischen Haltestellen) wird die \u003Cstrong\u003ELinie 9\u003C/strong\u003E eingerichtet.\u003C/li\u003E\n\u003Cli\u003EDie \u003Cstrong\u003ELinie 17\u003C/strong\u003E (Europ&auml;ische Schulbahn) f&auml;hrt vom Rheinhafen kommend ab der Haltestelle Mathystra&szlig;e (in der Mathystra&szlig;e) Umleitung &uuml;ber Ettlinger Tor zur Haltestelle Ostendstra&szlig;e und ab dort weiter auf dem regul&auml;ren Fahrweg in die Waldstadt. In der Gegenrichtung erfolgt die Umleitung entsprechend umgekehrt.\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003EDes Weiteren sind die nachfolgend aufgelisteten Zugfahrten ebenfalls von der Sperrung betroffen. Alle vier verkehren zwischen Kronenplatz (Fritz-Erler-Stra&szlig;e) und Albtalbahnhof abweichend &uuml;ber Ettlinger Tor (Kriegsstra&szlig;e), Kolpingplatz und Ebertstra&szlig;e (oder umgekehrt):\u003C/p\u003E\n\u003Cul\u003E\n\u003Cli\u003ES4 Zug 85472 Heilbronn Pf&uuml;hlpark ab 23:40 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES4 Zug 85541 Karlsruhe Albtalbahnhof ab 01:15 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003ES5 Zug 84784 S&ouml;llingen ab 01:01 Uhr; verkehrt nur in N&auml;chten auf Montag bis Freitag ohne Feiertag\u003C/li\u003E\n\u003Cli\u003EE Zug 80404; Durlach Bahnhof ab 13:24 Uhr (dritter Wagen von Zug 85430); verkehrt nur montags bis freitags ausgenommen Feiertage\u003C/li\u003E\n\u003C/ul\u003E\n\u003Cp\u003E\u003Cstrong\u003ESchienenersatzverkehr:\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003EAls Schienenersatzverkehr (SEV) werden folgende Linien eingerichtet:\u003Cstrong\u003E\u003Cbr /\u003E\u003C/strong\u003E\u003C/p\u003E\n\u003Cp\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Co:OfficeDocumentSettings\u003E\n  \u003Co:RelyOnVML/\u003E\n  \u003Co:AllowPNG/\u003E\n \u003C/o:OfficeDocumentSettings\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C!-- [if gte mso 9]\u003E\u003Cxml\u003E\n \u003Cw:WordDocument\u003E\n  \u003Cw:View\u003ENormal\u003C/w:View\u003E\n  \u003Cw:Zoom\u003E0\u003C/w:Zoom\u003E\n  \u003Cw:TrackMoves/\u003E\n  \u003Cw:TrackFormatting/\u003E\n  \u003Cw:HyphenationZone\u003E21\u003C/w:HyphenationZone\u003E\n  \u003Cw:PunctuationKerning/\u003E\n  \u003Cw:ValidateAgainstSchemas/\u003E\n  \u003Cw:SaveIfXMLInvalid\u003Efalse\u003C/w:SaveIfXMLInvalid\u003E\n  \u003Cw:IgnoreMixedContent\u003Efalse\u003C/w:IgnoreMixedContent\u003E\n  \u003Cw:AlwaysShowPlaceholderText\u003Efalse\u003C/w:AlwaysShowPlaceholderText\u003E\n  \u003Cw:DoNotPromoteQF/\u003E\n  \u003Cw:LidThemeOther\u003EDE\u003C/w:LidThemeOther\u003E\n  \u003Cw:LidThemeAsian\u003EX-NONE\u003C/w:LidThemeAsian\u003E\n  \u003Cw:LidThemeComplexScript\u003EX-NONE\u003C/w:LidThemeComplexScript\u003E\n  \u003Cw:Compatibility\u003E\n   \u003Cw:BreakWrappedTables/\u003E\n   \u003Cw:SnapToGridInCell/\u003E\n   \u003Cw:WrapTextWithPunct/\u003E\n   \u003Cw:UseAsianBreakRules/\u003E\n   \u003Cw:DontGrowAutofit/\u003E\n   \u003Cw:SplitPgBreakAndParaMark/\u003E\n   \u003Cw:EnableOpenTypeKerning/\u003E\n   \u003Cw:DontFlipMirrorIndents/\u003E\n   \u003Cw:OverrideTableStyleHps/\u003E\n  \u003C/w:Compatibility\u003E\n  \u003Cm:mathPr\u003E\n   \u003Cm:mathFont m:val=\"Cambria Math\"/\u003E\n   \u003Cm:brkBin m:val=\"before\"/\u003E\n   \u003Cm:brkBinSub m:val=\"&#45;-\"/\u003E\n   \u003Cm:smallFrac m:val=\"off\"/\u003E\n   \u003Cm:dispDef/\u003E\n   \u003Cm:lMargin m:val=\"0\"/\u003E\n   \u003Cm:rMargin m:val=\"0\"/\u003E\n   \u003Cm:defJc m:val=\"centerGroup\"/\u003E\n   \u003Cm:wrapIndent m:val=\"1440\"/\u003E\n   \u003Cm:intLim m:val=\"subSup\"/\u003E\n   \u003Cm:naryLim m:val=\"undOvr\"/\u003E\n  \u003C/m:mathPr\u003E\u003C/w:WordDocument\u003E\n\u003C/xml\u003E\u003C![endif]--\u003E\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003ELinie 10\u003C/strong\u003E: Kronenplatz &ndash; Hauptbahnhof (Vorplatz)\u003Cbr /\u003E\u003Cstrong\u003ELinie 11\u003C/strong\u003E: Heidehof &ndash; Neureut/Hochstetten\u003Cbr /\u003E\u003Cstrong\u003ELinie 12\u003C/strong\u003E: Europaplatz &ndash; Knielingen Nord\u003Cbr /\u003E\u003Cstrong\u003ELinie 13\u003C/strong\u003E: Entenfang &ndash; Daxlanden/Rappenw&ouml;rt\u003Cbr /\u003E\u003Cstrong\u003ELinie 14\u003C/strong\u003E: Europaplatz &ndash; Haus Bethlehem\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 10:\u003C/strong\u003E \u003Cbr /\u003EZwischen Kronenplatz und Hauptbahnhof (Vorplatz) verkehrt die Ersatzbus-Linie 10. Da die R&uuml;ppurrer Stra&szlig;e w&auml;hrend der gesamten Bauzeit nur von Nord nach S&uuml;d f&uuml;r den Kfz-Verkehr befahrbar ist, kann nur die Fahrt zum Hauptbahnhof entlang der gesperrten Schienentrasse erfolgen. In Fahrtrichtung Kronenplatz verkehrt die Ersatzlinie durch die Ettlinger Stra&szlig;e. Hierbei wird nur Haltestelle Kongresszentrum bedient.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 11\u003C/strong\u003E: \u003Cbr /\u003EAls Ersatz f&uuml;r den Streckenabschnitt Neureut bis Hochstetten (Linien S1/S11) wird ab der Haltestelle Heidehof die Linie 11 eingerichtet. \u003Cbr /\u003EIn der Schulwoche von Montag, 02. Juni 2025, bis einschlie&szlig;lich Freitag, 06. Juni 2025, wird dieser durch zwei weitere Verst&auml;rkerlinien (11x von/zur Haltestelle Europaplatz und 11s von/zur Haltestelle Frankenthaler Stra&szlig;e) erg&auml;nzt.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 12:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 12 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. Ein Nachtverkehr wird nicht angeboten. Am Europaplatz bedient die Linie Steig A an der Sparkasse.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EHinweis Linie 14:\u003C/strong\u003E\u003Cbr /\u003EDie Linie 14 verkehrt montags bis freitags zwischen 5 Uhr und 20 Uhr sowie samstags zwischen 10 Uhr und 19 Uhr im 10-Minuten-Takt. Au&szlig;erhalb dieser Zeitfenster, sowie sonn- und feiertags gilt ein 20-Minuten-Takt. In den N&auml;chten auf Samstage sowie auf Sonn- und Feiertage wird ein Nachtverkehr im 30-Minuten-Takt angeboten.\u003C/p\u003E\n\u003Cp\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 70 am Entenfang\u003C/strong\u003E \u003Cbr /\u003EAufgrund des Schienenersatzverkehrs nach Daxlanden (Linie 13) wird die Haltestelle Entenfang der Linie 70 in Fahrtrichtung Heidehof nach Steig E in die Lameystra&szlig;e verlegt.\u003Cbr /\u003E\u003Cbr /\u003E\u003Cstrong\u003EGe&auml;nderte Abfahrt Linie 73 am Europaplatz\u003C/strong\u003E\u003Cbr /\u003EW&auml;hrend des SEV wird der regul&auml;re Steig A durch die Linien 11x, 12 und 14 genutzt. Daher wird die Haltestelle Europaplatz f&uuml;r die Linie 73 nach Steig B (Ersatzhaltetselle in der Douglasstra&szlig;e) verlegt.\u003C/p\u003E",
+            "wapText": "Karlsruhe: Vom 29.05. bis 23.06.2025 weitere Gleiserneuerungen (Phase 2)",
+            "additionalLinks": [
+              {
+                "id": "1",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Pressemitteilungen/2025-05-15_VBK_Brs_Phase-2_Rueppurrer-Strasse_screen.pdf",
+                "urlText": "Baustellenflyer",
+                "subtitle": "Baustellenflyer",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              },
+              {
+                "id": "2",
+                "url": "https://www.kvv.de/fileadmin/user_upload/kvv/Dateien/Fahrplaene_Netzplaene/Schiene/2025-05-29_DE_Tivoli_-_Kronenplatz_und_ab_Yorckstrasse.pdf",
+                "urlText": "Liniennetzplan zur Bauphase 2",
+                "subtitle": "Liniennetzplan zur Bauphase 2",
+                "properties": {
+                  "linkTarget": "_blank"
+                }
+              }
+            ],
+            "attachments": [
+              {
+                "ID": 1,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung Europaplatz (Bau Phase 2).png",
+                "fileName": "Umgebung Europaplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung Europaplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Europaplatz (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 325265
+              },
+              {
+                "ID": 2,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "fileName": "Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/Umgebung KA Hbf Vorplatz (Bau Phase 2).png",
+                "linkText": "Umgebungsplan Karlsruhe Hbf (Vorplatz) (Phase 2)",
+                "linkTarget": "_blank",
+                "size": 486449
+              },
+              {
+                "ID": 3,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 10.pdf",
+                "fileName": "SEV 10.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 10.pdf",
+                "linkText": "Ersatzfahrplan Linie 10",
+                "linkTarget": "_blank",
+                "size": 91902
+              },
+              {
+                "ID": 4,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11.pdf",
+                "fileName": "SEV 11.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11.pdf",
+                "linkText": "Ersatzfahrplan Linie 11",
+                "linkTarget": "_blank",
+                "size": 181558
+              },
+              {
+                "ID": 5,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 11s und 11x.pdf",
+                "fileName": "SEV 11s und 11x.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 11s und 11x.pdf",
+                "linkText": "Ersatzfahrplan Linien 11s und 11x",
+                "linkTarget": "_blank",
+                "size": 93430
+              },
+              {
+                "ID": 6,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 12.pdf",
+                "fileName": "SEV 12.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 12.pdf",
+                "linkText": "Ersatzfahrplan Linie 12",
+                "linkTarget": "_blank",
+                "size": 140903
+              },
+              {
+                "ID": 7,
+                "path": "\\\\localhost\\mentzdv\\wwwroot\\ICS_Uploads\\110009781_KVV_ICSKVV\\SEV 14.pdf",
+                "fileName": "SEV 14.pdf",
+                "virtPath": "https://projekte.kvv-efa.de/ICS_Uploads/110009781_KVV_ICSKVV/SEV 14.pdf",
+                "linkText": "Ersatzfahrplan Linie 14",
+                "linkTarget": "_blank",
+                "size": 95475
+              }
+            ]
+          }
+        }
+      ],
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31430",
+        "AVMLowFloorVeh": "1"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:2:2",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 2",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723420, 938635],
+        "properties": {
+          "occupancy": "MANY_SEATS"
+        },
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:23:00Z",
+      "departureTimeEstimated": "2025-06-19T11:23:00Z",
+      "transportation": {
+        "id": "kvv:21012:E:R:j25",
+        "name": "S-Bahn S2",
+        "disassembledName": "S2",
+        "number": "S2",
+        "description": "Rheinstetten - Spöck",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Spöck",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 67,
+          "globalId": "de:kvv:00S02_:"
+        },
+        "origin": {
+          "id": "7001501",
+          "name": "Mörsch Bach-West",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31686",
+        "AVMLowFloorVeh": "1"
+      }
+    },
+    {
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:08212:626:1:1",
+        "isGlobalId": true,
+        "name": "Karlsruhe Essenweinstraße",
+        "disassembledName": "Gleis 1",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5723558, 938631],
+        "parent": {
+          "id": "de:08212:626",
+          "isGlobalId": true,
+          "name": "Karlsruhe Essenweinstraße",
+          "disassembledName": "Essenweinstraße",
+          "type": "stop",
+          "parent": {
+            "id": "placeID:8212000:15",
+            "name": "Karlsruhe",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "7000626"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:34:00Z",
+      "departureTimeEstimated": "2025-06-19T11:34:00Z",
+      "transportation": {
+        "id": "kvv:21012:E:H:j25",
+        "name": "S-Bahn S2",
+        "disassembledName": "S2",
+        "number": "S2",
+        "description": "Spöck - Rheinstetten",
+        "product": {
+          "id": 11,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "VBK",
+          "id": "02",
+          "name": "Verkehrsbetriebe Karlsruhe GmbH"
+        },
+        "destination": {
+          "name": "Rheinstetten",
+          "type": "stop"
+        },
+        "properties": {
+          "tripCode": 508,
+          "globalId": "de:kvv:00S02_:"
+        },
+        "origin": {
+          "id": "7032296",
+          "name": "Spöck Richard-Hecht-Schule",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Niederflurwagen"
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "31629",
+        "AVMLowFloorVeh": "1"
+      }
+    }
+  ]
+}

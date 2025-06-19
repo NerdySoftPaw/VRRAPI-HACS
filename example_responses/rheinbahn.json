@@ -1,0 +1,1078 @@
+{
+  "version": "10.6.21.17",
+  "systemMessages": [],
+  "locations": [
+    {
+      "id": "de:05111:18235",
+      "isGlobalId": true,
+      "name": "Düsseldorf, Düsseldorf Hbf",
+      "disassembledName": "Düsseldorf Hbf",
+      "coord": [5339653, 756193],
+      "type": "stop",
+      "parent": {
+        "id": "placeID:5111000:6",
+        "name": "Düsseldorf",
+        "type": "locality"
+      },
+      "assignedStops": [
+        {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "coord": [5339653, 756193],
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "productClasses": [0, 1, 2, 4, 5, 7, 13],
+          "connectingMode": 100,
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      ],
+      "properties": {
+        "additionalTariffData": {
+          "area": "",
+          "zones": "",
+          "layer1": "",
+          "layer2": ""
+        },
+        "stopId": "20018235",
+        "downloads": [
+          {
+            "type": "SM",
+            "url": "vrr/18235_D-Hauptbahnhof.pdf",
+            "size": 479
+          }
+        ]
+      }
+    }
+  ],
+  "stopEvents": [
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:94:17",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "17",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5339786, 756401],
+        "properties": {
+          "stopId": "20018235",
+          "area": "94",
+          "platform": "17",
+          "platformName": "17",
+          "plannedPlatformName": "17"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T10:38:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T10:38:00Z",
+      "departureTimeEstimated": "2025-06-19T11:08:00Z",
+      "transportation": {
+        "id": "ddb:98X41: :R:j25",
+        "name": "ICE 726 InterCityExpress",
+        "number": "726",
+        "product": {
+          "id": 0,
+          "class": 16,
+          "name": "Zug",
+          "iconId": 6
+        },
+        "operator": {
+          "code": "DB",
+          "id": "00",
+          "name": "DB AG"
+        },
+        "destination": {
+          "id": "20009289",
+          "name": "Essen Hauptbahnhof",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "InterCityExpress",
+          "trainType": "ICE",
+          "trainNumber": "726",
+          "tripCode": 821,
+          "specialFares": "ICE_ROUTE",
+          "lineDisplay": "TRAIN",
+          "OperatorURL": "https://www.bahn.de"
+        },
+        "origin": {
+          "id": "91000100",
+          "name": "München Hbf",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "ICE Sprinter",
+          "providerCode": "IT",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Komfort Check-in verfügbar - wenn möglich bitte einchecken",
+          "providerCode": "CK",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Bordrestaurant",
+          "providerCode": "BR",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": ".",
+          "providerCode": "GD",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "verspätete Bereitstellung des Zuges",
+          "providerCode": "ddb98X41_R_IncidentCall821_20018235_1",
+          "type": "RTIncidentCall",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Sonstige Qualitätsmängel",
+          "providerCode": "ddb98X41_R_InfoCall821_20018235_1",
+          "type": "RTInfoCall",
+          "properties": {
+            "subnet": "ddb"
+          }
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "726-80-8000261-074600",
+        "lineType": [
+          "HIGHSPEEDTRAIN",
+          "LONG_DISTANCE_TRAINS",
+          "SUPPLEMENT"
+        ]
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:93:16",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "16",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5339779, 756391],
+        "properties": {
+          "occupancy": "FULL",
+          "stopId": "20018235",
+          "area": "93",
+          "platform": "16",
+          "platformName": "16",
+          "plannedPlatformName": "16"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T10:58:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T10:58:00Z",
+      "departureTimeEstimated": "2025-06-19T11:05:00Z",
+      "transportation": {
+        "id": "ddb:90E05: :R:j25",
+        "name": "Regionalzug RE5 (RRX)",
+        "disassembledName": "RE5",
+        "number": "RE5 (RRX)",
+        "product": {
+          "id": 8,
+          "class": 13,
+          "name": "Regionalzug",
+          "iconId": 6
+        },
+        "operator": {
+          "code": "NX",
+          "id": "NX",
+          "name": "National Express"
+        },
+        "destination": {
+          "id": "15010117",
+          "name": "Koblenz Hauptbahnhof",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "RRX Rhein-Ruhr-Express",
+          "trainType": "RE",
+          "trainNumber": "28517",
+          "tripCode": 374,
+          "lineDisplay": "LINE",
+          "globalId": "de:nrw.de:re5:"
+        },
+        "origin": {
+          "id": "20036447",
+          "name": "Voerde Friedrichsfeld Bahnhof",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Linie RE5 (RRX): Fahrradmitnahme begrenzt möglich",
+          "providerCode": "G",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie RE5 (RRX): Behindertengerechtes Fahrzeug",
+          "providerCode": "RG",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie RE5 (RRX): Rollstuhlstellplatz",
+          "providerCode": "RO",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie RE5 (RRX): Laptop-Steckdosen",
+          "providerCode": "LS",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie RE5 (RRX): Klimaanlage",
+          "providerCode": "KL",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie RE5 (RRX): WLAN verfügbar",
+          "providerCode": "WV",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Vorfahrt eines anderen Zuges",
+          "providerCode": "ddb90E05_R_IncidentCall374_20018235_1",
+          "type": "RTIncidentCall",
+          "properties": {
+            "subnet": "ddb"
+          }
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "28517"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:7:2",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "2",
+        "type": "platform",
+        "pointType": "PLATFORM",
+        "coord": [5339780, 756335],
+        "properties": {
+          "realtimeStatus": [
+            "AREA_CHANGED"
+          ],
+          "stopId": "20018235",
+          "area": "2",
+          "platform": "2",
+          "platformName": "2",
+          "plannedPlatformName": "2"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T10:58:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T10:58:30Z",
+      "departureTimeEstimated": "2025-06-19T11:04:18Z",
+      "transportation": {
+        "id": "dvg:20079: :H:j25",
+        "name": "U-Bahn U79",
+        "disassembledName": "U79",
+        "number": "U79",
+        "description": "DU-Meiderich Bf - Duisburg Hbf - D-Kaiserswerth - Düsseldorf Hbf - Oberbilk - D-Universität Ost",
+        "product": {
+          "id": 0,
+          "class": 2,
+          "name": "U-Bahn",
+          "iconId": 1
+        },
+        "operator": {
+          "code": "DVG",
+          "id": "20",
+          "name": "DVG AG"
+        },
+        "destination": {
+          "id": "20018296",
+          "name": "D-Uni Ost/Botanischer Garten",
+          "type": "stop"
+        },
+        "properties": {
+          "trainType": "ICE",
+          "tripCode": 209,
+          "lineDisplay": "LINE",
+          "globalId": "de:vrr:U79:DVG-20-79"
+        },
+        "origin": {
+          "id": "20018151",
+          "name": "D-Wittlaer",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "ems-36975",
+          "version": 1023,
+          "type": "lineInfo",
+          "properties": {
+            "publisher": "ems.comm.addinfo",
+            "infoType": "lineInfo",
+            "incidentDateTime": "12/06/2025 03:00 - 23/06/2025 03:00"
+          },
+          "infoLinks": [
+            {
+              "urlText": "Linie U79 - Busse statt Bahnen - Zwischen (H) Duisburg, Im Schlenk und (H) Duisburg, Meiderich Bf - Grund: Baumaßnahme",
+              "url": "http://ems.vrr.de/info-link/cbb63854-fe44-5e0e-8b06-0ebafe398738",
+              "content": "\u003Cdiv\u003EVon Freitag, 20. Juni, Betriebsende, bis Sonntag, 22. Juni, Betriebsende, findet auf der Heerstra&szlig;e ein Br&uuml;ckeneinschub einer Fu&szlig;g&auml;ngerbr&uuml;cke statt. Dies hat zur Folge, dass auf den\u003Cbr /\u003ELinien 903 und U79 der Duisburger Verkehrsgesellschaft AG (DVG) streckenweise Busse (SEV) statt Bahnen fahren. Die Linie NE6 wird umgeleitet.\u003C/div\u003E\n\u003Cdiv\u003E&nbsp;\u003C/div\u003E\n\u003Cdiv\u003ELinie 903:\u003Cbr /\u003EAuf dem Streckenabschnitt zwischen &bdquo;Rheint&ouml;rchenstra&szlig;e&ldquo; und &bdquo;Duisburg Hbf&ldquo; fahren in beiden Richtungen Busse statt Bahnen. Die Haltestelle &bdquo;Platanenhof&ldquo; entf&auml;llt. Die DVG bittet die Fahrg&auml;ste die Haltestelle &bdquo;Musfeldstra&szlig;e&ldquo; des SEV U79 zu nutzen.\u003C/div\u003E\n\u003Cdiv\u003E&nbsp;\u003C/div\u003E\n\u003Cdiv\u003ELinie U79:\u003Cbr /\u003EDie Linie U79 endet vorzeitig an der Haltestelle &bdquo;Im Schlenk&ldquo;. Auf dem Streckenabschnitt &bdquo;Im Schlenk&ldquo; bis &bdquo;Duisburg Hbf&ldquo; beziehungsweise bis &bdquo;Duissern&ldquo; fahren in beiden Richtungen Busse statt Bahnen. In der Hauptverkehrszeit bittet die DVG die Fahrg&auml;ste f&uuml;r den Streckenabschnitt &bdquo;Duisburg Hbf.&ldquo; bis &bdquo;Duissern&ldquo;/ &bdquo;Meiderich Bf.&ldquo; die Linie 903 zu nutzen. In der Schwachverkehrszeit fahren die SEV-Busse der Linie U79 bis &bdquo;Duissern&ldquo; durch. Ein Umstieg an der Haltestelle &bdquo;Duisburg Hbf&ldquo; ist dann nicht erforderlich.\u003C/div\u003E\n\u003Cdiv\u003E&nbsp;\u003C/div\u003E\n\u003Cdiv\u003ELinie NE6:\u003Cbr /\u003EDie Busse fahren zwischen den Haltestellen &bdquo;Friedrich-Wilhelm-Stra&szlig;e&ldquo; und &bdquo;Br&uuml;ckenplatz&ldquo; eine &ouml;rtliche Umleitung &uuml;ber die Steinsche Gasse, Marientorstra&szlig;e, Werftstra&szlig;e, Vulkanstra&szlig;e, Plessingstra&szlig;e, Musfeldstra&szlig;e und Friedenstra&szlig;e. Ab da gilt der normale Linienweg. Die Haltestelle &bdquo;Platanenhof&ldquo; entf&auml;llt. Die DVG bittet die Fahrg&auml;ste die Haltestelle &bdquo;Musfeldstra&szlig;e&ldquo; des SEV U79 zu nutzen.\u003C/div\u003E\n\u003Cdiv\u003E\u003Cbr /\u003EBetroffene Linien:\u003Cbr /\u003E903, U79 und NE6\u003C/div\u003E\n\u003Cdiv\u003E\u003Cbr /\u003EEntfallende Haltestelle:\u003Cbr /\u003E&bdquo;Platanenhof&ldquo;\u003C/div\u003E\n\u003Cdiv\u003E\u003Cbr /\u003EVerkehrsinformationen zu Bus und Bahn gibt es im Internet unter www.dvg-duisburg.de, bei der DVG-Telefonhotline unter der Rufnummer 0203 60 44 555 und in der myDVG Bus&amp;Bahn-App. Die myDVG Bus&amp;Bahn-App steht f&uuml;r die g&auml;ngigen iPhones und Android-Smartphones in den jeweiligen Stores kostenlos zum Download bereit. Aktuelle Informationen finden Sie auch bei Facebook unter facebook.de/dvgduisburg.\u003C/div\u003E",
+              "subtitle": "Busse statt Bahnen durch Baumaßnahme",
+              "title": "Busse statt Bahnen durch Baumaßnahme",
+              "additionalText": "Die beschriebenen Änderungen sind in der elektronischen Fahrplanauskunft (EFA) \u003Cb\u003Enicht\u003C/b\u003E berücksichtigt.",
+              "smsText": "Linie U79 - Busse statt Bahnen - Zwischen (H) Duisburg, Im Schlenk und (H) Duisburg, Meiderich Bf - Grund: Baumaßnahme"
+            }
+          ]
+        },
+        {
+          "priority": "normal",
+          "id": "ems-36539",
+          "version": 605427,
+          "type": "lineInfo",
+          "properties": {
+            "publisher": "ems.comm.addinfo",
+            "infoType": "lineInfo",
+            "incidentDateTime": "27/05/2025 05:00 - 01/07/2025 00:00"
+          },
+          "infoLinks": [
+            {
+              "urlText": "Linie U79 - Haltestellenausfälle - (H) Düsseldorf, Nordstraße U - Grund: Haltestellensperrung",
+              "url": "http://ems.vrr.de/info-link/812f7aef-6a10-5ca2-85dc-317ffbb81852",
+              "content": "\u003Cdiv\u003E\n\u003Cdiv\u003EDie Landeshauptstadt und die Rheinbahn erneuern im U-Bahnhof &bdquo;Nordstra&szlig;e&ldquo; ab Sommer den Brandschutz der Haltestelle. Dazu wurden in den letzten Wochen vorbereitende Arbeiten durchgef&uuml;hrt. Dabei wurde nun ein Austritt von Schadstoffen festgestellt, sodass der U-Bahnhof &bdquo;Nordstra&szlig;e&ldquo; ab 21. Mai, bis auf Weiteres, nicht angefahren werden kann.\u003C/div\u003E\n\u003Cdiv\u003EDie Bahnen k&ouml;nnen den U-Bahnhof weiterhin passieren, ohne dass dabei eine Gefahr f&uuml;r die Gesundheit besteht. Jedoch durchfahren die Bahnen aus Sicherheitsgr&uuml;nden die Haltestelle mit einer reduzierten Geschwindigkeit. Der Ein- und Ausstieg an der Haltestelle ist bis auf Weiteres nicht m&ouml;glich.\u003C/div\u003E\n\u003Cdiv\u003EDer oberirdische Fahrgastbetrieb der Stra&szlig;enbahnlinien 701 und 705 ist von der Einschr&auml;nkung der U-Bahnlinien U78 und U79 nicht betroffen.\u003C/div\u003E\n\u003C/div\u003E",
+              "subtitle": "U-Bahnen halten bis auf Weiteres nicht am U-Bahnhof \"Nordstraße\"",
+              "title": "U-Bahnen halten bis auf Weiteres nicht am U-Bahnhof \"Nordstraße\"",
+              "additionalText": "Die beschriebenen Änderungen sind in der elektronischen Fahrplanauskunft (EFA) \u003Cb\u003Enicht\u003C/b\u003E berücksichtigt.",
+              "smsText": "Linie U79 - Haltestellenausfälle - (H) Düsseldorf, Nordstraße U - Grund: Haltestellensperrung"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "RB_VIA.4877004"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:2:9",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "9",
+        "type": "platform",
+        "pointType": "PLATFORM",
+        "coord": [5339487, 756160],
+        "properties": {
+          "stopId": "20018235",
+          "area": "9",
+          "platform": "9",
+          "platformName": "9",
+          "plannedPlatformName": "9"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T10:59:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T10:59:30Z",
+      "departureTimeEstimated": "2025-06-19T10:59:00Z",
+      "transportation": {
+        "id": "rbg:72721: :R:j25",
+        "name": "Niederflurbus 721",
+        "disassembledName": "721",
+        "number": "721",
+        "description": "D-Tannenhof, Gothaer Weg - Düsseldorf Hbf - Nordfriedhof - D-Flughafen Terminal A / B / C",
+        "product": {
+          "id": 13,
+          "class": 5,
+          "name": "Niederflurbus",
+          "iconId": 5
+        },
+        "operator": {
+          "code": "RBG",
+          "id": "70",
+          "name": "Rheinbahn"
+        },
+        "destination": {
+          "id": "20018492",
+          "name": "D-Flughafen Term. A/B/C",
+          "type": "stop"
+        },
+        "properties": {
+          "trainType": "RE",
+          "isSTT": true,
+          "tripCode": 575,
+          "lineDisplay": "LINE",
+          "globalId": "de:vrr:721:RBG-72-721"
+        },
+        "origin": {
+          "id": "20018819",
+          "name": "D-Gothaer Weg",
+          "type": "stop"
+        }
+      },
+      "properties": {
+        "AVMSTripID": "RB_VIA.145004"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:4:11",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "11",
+        "type": "platform",
+        "pointType": "PLATFORM",
+        "coord": [5339541, 756024],
+        "properties": {
+          "stopId": "20018235",
+          "area": "11",
+          "platform": "11",
+          "platformName": "11",
+          "plannedPlatformName": "11"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:00:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T11:00:30Z",
+      "departureTimeEstimated": "2025-06-19T11:00:00Z",
+      "transportation": {
+        "id": "rbg:72738: :R:j25",
+        "name": "Niederflurbus 738",
+        "disassembledName": "738",
+        "number": "738",
+        "description": "Düsseldorf Hbf - Kettwiger Straße  - D-Gerresheim - Mettmann-Zentrum  - Mettmann, Jubiläumsplatz",
+        "product": {
+          "id": 13,
+          "class": 5,
+          "name": "Niederflurbus",
+          "iconId": 5
+        },
+        "operator": {
+          "code": "RBG",
+          "id": "70",
+          "name": "Rheinbahn"
+        },
+        "destination": {
+          "id": "20019019",
+          "name": "ME-Jubiläumsplatz",
+          "type": "stop"
+        },
+        "properties": {
+          "trainType": "RE",
+          "isSTT": true,
+          "tripCode": 710,
+          "lineDisplay": "LINE",
+          "globalId": "de:vrr:738:RBG-72-738"
+        },
+        "origin": {
+          "id": "20018235",
+          "name": "Düsseldorf Hbf",
+          "type": "stop"
+        }
+      },
+      "properties": {
+        "AVMSTripID": "RB_VIA.875004"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:98:14",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "14",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5339768, 756362],
+        "properties": {
+          "stopId": "20018235",
+          "area": "98",
+          "platform": "14",
+          "platformName": "14",
+          "plannedPlatformName": "14"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:00:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T11:00:00Z",
+      "departureTimeEstimated": "2025-06-19T11:00:00Z",
+      "transportation": {
+        "id": "ddb:92E06: :R:j25",
+        "name": "S-Bahn S6",
+        "disassembledName": "S6",
+        "number": "S6",
+        "product": {
+          "id": 3,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "DBNW",
+          "id": "8003",
+          "name": "DB Regio AG NRW"
+        },
+        "destination": {
+          "id": "20018210",
+          "name": "D-Rath Mitte S",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "S-Bahn",
+          "trainType": "S",
+          "trainNumber": "30671",
+          "tripCode": 1387,
+          "lineDisplay": "LINE",
+          "globalId": "de:nrw.de:s6:"
+        },
+        "origin": {
+          "id": "22000420",
+          "name": "Köln Worringen S-Bahn",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Linie S6: Fahrradmitnahme begrenzt möglich",
+          "providerCode": "FB",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie S6: Fahrzeuggebundene Einstiegshilfe vorhanden",
+          "providerCode": "EH",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "30671-8003S-8003373-114300"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:98:13",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "13",
+        "type": "platform",
+        "pointType": "TRACK",
+        "coord": [5339754, 756343],
+        "properties": {
+          "occupancy": "FEW_SEATS",
+          "stopId": "20018235",
+          "area": "98",
+          "platform": "13",
+          "platformName": "13",
+          "plannedPlatformName": "13"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:00:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T11:00:00Z",
+      "departureTimeEstimated": "2025-06-19T11:00:00Z",
+      "transportation": {
+        "id": "ddb:92E08: :H:j25",
+        "name": "S-Bahn S8",
+        "disassembledName": "S8",
+        "number": "S8",
+        "product": {
+          "id": 3,
+          "class": 1,
+          "name": "S-Bahn",
+          "iconId": 2
+        },
+        "operator": {
+          "code": "DBNW",
+          "id": "8003",
+          "name": "DB Regio AG NRW"
+        },
+        "destination": {
+          "id": "20011602",
+          "name": "Wuppertal Oberbarmen",
+          "type": "stop"
+        },
+        "properties": {
+          "trainName": "S-Bahn",
+          "trainType": "S",
+          "trainNumber": "30873",
+          "tripCode": 127,
+          "lineDisplay": "LINE",
+          "globalId": "de:nrw.de:s8:"
+        },
+        "origin": {
+          "id": "20023007",
+          "name": "MG Hbf /Europaplatz",
+          "type": "stop"
+        }
+      },
+      "hints": [
+        {
+          "content": "Linie S8: Fahrradmitnahme begrenzt möglich",
+          "providerCode": "FB",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie S8: Fahrzeuggebundene Einstiegshilfe vorhanden",
+          "providerCode": "EH",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie S8: rollstuhltaugliches WC",
+          "providerCode": "OC",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        },
+        {
+          "content": "Linie S8: Toilette an Bord",
+          "providerCode": "TO",
+          "type": "Timetable",
+          "properties": {
+            "subnet": "ddb"
+          }
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "30873-800354-8000253-122400"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:3:14",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "14",
+        "type": "platform",
+        "pointType": "PLATFORM",
+        "coord": [5339534, 756003],
+        "properties": {
+          "stopId": "20018235",
+          "area": "14",
+          "platform": "14",
+          "platformName": "14",
+          "plannedPlatformName": "14"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:01:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T11:01:30Z",
+      "departureTimeEstimated": "2025-06-19T11:01:00Z",
+      "transportation": {
+        "id": "rbg:72732: :R:j25",
+        "name": "Niederflurbus 732",
+        "disassembledName": "732",
+        "number": "732",
+        "description": "D-Eller, Vennhauser Allee - D-Eller Süd  - Oberbilker Markt  - Düsseldorf Hbf - Kirchplatz  - Hafen, Bremer Straße - D-Hafen, Lausward",
+        "product": {
+          "id": 13,
+          "class": 5,
+          "name": "Niederflurbus",
+          "iconId": 5
+        },
+        "operator": {
+          "code": "RBG",
+          "id": "70",
+          "name": "Rheinbahn"
+        },
+        "destination": {
+          "id": "20018250",
+          "name": "D-Kirchplatz U",
+          "type": "stop"
+        },
+        "properties": {
+          "trainType": "S",
+          "isSTT": true,
+          "tripCode": 1106,
+          "lineDisplay": "LINE",
+          "globalId": "de:vrr:732:RBG-72-732"
+        },
+        "origin": {
+          "id": "20018261",
+          "name": "D-Vennhauser Allee",
+          "type": "stop"
+        }
+      },
+      "properties": {
+        "AVMSTripID": "RB_VIA.572004"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:6:1",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "1",
+        "type": "platform",
+        "pointType": "PLATFORM",
+        "coord": [5339747, 756300],
+        "properties": {
+          "realtimeStatus": [
+            "AREA_CHANGED"
+          ],
+          "stopId": "20018235",
+          "area": "1",
+          "platform": "1",
+          "platformName": "1",
+          "plannedPlatformName": "1"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:01:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T11:01:30Z",
+      "departureTimeEstimated": "2025-06-19T11:02:42Z",
+      "transportation": {
+        "id": "dvg:20079: :R:j25",
+        "name": "U-Bahn U79",
+        "disassembledName": "U79",
+        "number": "U79",
+        "description": "D-Universität Ost - Oberbilk - Düsseldorf Hbf - D-Kaiserswerth - Duisburg Hbf - DU-Meiderich Bf",
+        "product": {
+          "id": 0,
+          "class": 2,
+          "name": "U-Bahn",
+          "iconId": 1
+        },
+        "operator": {
+          "code": "DVG",
+          "id": "20",
+          "name": "DVG AG"
+        },
+        "destination": {
+          "id": "20018151",
+          "name": "D-Wittlaer",
+          "type": "stop"
+        },
+        "properties": {
+          "trainType": "S",
+          "tripCode": 611,
+          "lineDisplay": "LINE",
+          "globalId": "de:vrr:U79:DVG-20-79"
+        },
+        "origin": {
+          "id": "20018296",
+          "name": "D-Uni Ost/Botanischer Garten",
+          "type": "stop"
+        }
+      },
+      "infos": [
+        {
+          "priority": "normal",
+          "id": "ems-36975",
+          "version": 1023,
+          "type": "lineInfo",
+          "properties": {
+            "publisher": "ems.comm.addinfo",
+            "infoType": "lineInfo",
+            "incidentDateTime": "12/06/2025 03:00 - 23/06/2025 03:00"
+          },
+          "infoLinks": [
+            {
+              "urlText": "Linie U79 - Busse statt Bahnen - Zwischen (H) Duisburg, Im Schlenk und (H) Duisburg, Meiderich Bf - Grund: Baumaßnahme",
+              "url": "http://ems.vrr.de/info-link/cbb63854-fe44-5e0e-8b06-0ebafe398738",
+              "content": "\u003Cdiv\u003EVon Freitag, 20. Juni, Betriebsende, bis Sonntag, 22. Juni, Betriebsende, findet auf der Heerstra&szlig;e ein Br&uuml;ckeneinschub einer Fu&szlig;g&auml;ngerbr&uuml;cke statt. Dies hat zur Folge, dass auf den\u003Cbr /\u003ELinien 903 und U79 der Duisburger Verkehrsgesellschaft AG (DVG) streckenweise Busse (SEV) statt Bahnen fahren. Die Linie NE6 wird umgeleitet.\u003C/div\u003E\n\u003Cdiv\u003E&nbsp;\u003C/div\u003E\n\u003Cdiv\u003ELinie 903:\u003Cbr /\u003EAuf dem Streckenabschnitt zwischen &bdquo;Rheint&ouml;rchenstra&szlig;e&ldquo; und &bdquo;Duisburg Hbf&ldquo; fahren in beiden Richtungen Busse statt Bahnen. Die Haltestelle &bdquo;Platanenhof&ldquo; entf&auml;llt. Die DVG bittet die Fahrg&auml;ste die Haltestelle &bdquo;Musfeldstra&szlig;e&ldquo; des SEV U79 zu nutzen.\u003C/div\u003E\n\u003Cdiv\u003E&nbsp;\u003C/div\u003E\n\u003Cdiv\u003ELinie U79:\u003Cbr /\u003EDie Linie U79 endet vorzeitig an der Haltestelle &bdquo;Im Schlenk&ldquo;. Auf dem Streckenabschnitt &bdquo;Im Schlenk&ldquo; bis &bdquo;Duisburg Hbf&ldquo; beziehungsweise bis &bdquo;Duissern&ldquo; fahren in beiden Richtungen Busse statt Bahnen. In der Hauptverkehrszeit bittet die DVG die Fahrg&auml;ste f&uuml;r den Streckenabschnitt &bdquo;Duisburg Hbf.&ldquo; bis &bdquo;Duissern&ldquo;/ &bdquo;Meiderich Bf.&ldquo; die Linie 903 zu nutzen. In der Schwachverkehrszeit fahren die SEV-Busse der Linie U79 bis &bdquo;Duissern&ldquo; durch. Ein Umstieg an der Haltestelle &bdquo;Duisburg Hbf&ldquo; ist dann nicht erforderlich.\u003C/div\u003E\n\u003Cdiv\u003E&nbsp;\u003C/div\u003E\n\u003Cdiv\u003ELinie NE6:\u003Cbr /\u003EDie Busse fahren zwischen den Haltestellen &bdquo;Friedrich-Wilhelm-Stra&szlig;e&ldquo; und &bdquo;Br&uuml;ckenplatz&ldquo; eine &ouml;rtliche Umleitung &uuml;ber die Steinsche Gasse, Marientorstra&szlig;e, Werftstra&szlig;e, Vulkanstra&szlig;e, Plessingstra&szlig;e, Musfeldstra&szlig;e und Friedenstra&szlig;e. Ab da gilt der normale Linienweg. Die Haltestelle &bdquo;Platanenhof&ldquo; entf&auml;llt. Die DVG bittet die Fahrg&auml;ste die Haltestelle &bdquo;Musfeldstra&szlig;e&ldquo; des SEV U79 zu nutzen.\u003C/div\u003E\n\u003Cdiv\u003E\u003Cbr /\u003EBetroffene Linien:\u003Cbr /\u003E903, U79 und NE6\u003C/div\u003E\n\u003Cdiv\u003E\u003Cbr /\u003EEntfallende Haltestelle:\u003Cbr /\u003E&bdquo;Platanenhof&ldquo;\u003C/div\u003E\n\u003Cdiv\u003E\u003Cbr /\u003EVerkehrsinformationen zu Bus und Bahn gibt es im Internet unter www.dvg-duisburg.de, bei der DVG-Telefonhotline unter der Rufnummer 0203 60 44 555 und in der myDVG Bus&amp;Bahn-App. Die myDVG Bus&amp;Bahn-App steht f&uuml;r die g&auml;ngigen iPhones und Android-Smartphones in den jeweiligen Stores kostenlos zum Download bereit. Aktuelle Informationen finden Sie auch bei Facebook unter facebook.de/dvgduisburg.\u003C/div\u003E",
+              "subtitle": "Busse statt Bahnen durch Baumaßnahme",
+              "title": "Busse statt Bahnen durch Baumaßnahme",
+              "additionalText": "Die beschriebenen Änderungen sind in der elektronischen Fahrplanauskunft (EFA) \u003Cb\u003Enicht\u003C/b\u003E berücksichtigt.",
+              "smsText": "Linie U79 - Busse statt Bahnen - Zwischen (H) Duisburg, Im Schlenk und (H) Duisburg, Meiderich Bf - Grund: Baumaßnahme"
+            }
+          ]
+        },
+        {
+          "priority": "normal",
+          "id": "ems-36539",
+          "version": 605427,
+          "type": "lineInfo",
+          "properties": {
+            "publisher": "ems.comm.addinfo",
+            "infoType": "lineInfo",
+            "incidentDateTime": "27/05/2025 05:00 - 01/07/2025 00:00"
+          },
+          "infoLinks": [
+            {
+              "urlText": "Linie U79 - Haltestellenausfälle - (H) Düsseldorf, Nordstraße U - Grund: Haltestellensperrung",
+              "url": "http://ems.vrr.de/info-link/812f7aef-6a10-5ca2-85dc-317ffbb81852",
+              "content": "\u003Cdiv\u003E\n\u003Cdiv\u003EDie Landeshauptstadt und die Rheinbahn erneuern im U-Bahnhof &bdquo;Nordstra&szlig;e&ldquo; ab Sommer den Brandschutz der Haltestelle. Dazu wurden in den letzten Wochen vorbereitende Arbeiten durchgef&uuml;hrt. Dabei wurde nun ein Austritt von Schadstoffen festgestellt, sodass der U-Bahnhof &bdquo;Nordstra&szlig;e&ldquo; ab 21. Mai, bis auf Weiteres, nicht angefahren werden kann.\u003C/div\u003E\n\u003Cdiv\u003EDie Bahnen k&ouml;nnen den U-Bahnhof weiterhin passieren, ohne dass dabei eine Gefahr f&uuml;r die Gesundheit besteht. Jedoch durchfahren die Bahnen aus Sicherheitsgr&uuml;nden die Haltestelle mit einer reduzierten Geschwindigkeit. Der Ein- und Ausstieg an der Haltestelle ist bis auf Weiteres nicht m&ouml;glich.\u003C/div\u003E\n\u003Cdiv\u003EDer oberirdische Fahrgastbetrieb der Stra&szlig;enbahnlinien 701 und 705 ist von der Einschr&auml;nkung der U-Bahnlinien U78 und U79 nicht betroffen.\u003C/div\u003E\n\u003C/div\u003E",
+              "subtitle": "U-Bahnen halten bis auf Weiteres nicht am U-Bahnhof \"Nordstraße\"",
+              "title": "U-Bahnen halten bis auf Weiteres nicht am U-Bahnhof \"Nordstraße\"",
+              "additionalText": "Die beschriebenen Änderungen sind in der elektronischen Fahrplanauskunft (EFA) \u003Cb\u003Enicht\u003C/b\u003E berücksichtigt.",
+              "smsText": "Linie U79 - Haltestellenausfälle - (H) Düsseldorf, Nordstraße U - Grund: Haltestellensperrung"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "AVMSTripID": "RB_VIA.4845004"
+      }
+    },
+    {
+      "realtimeStatus": [
+        "MONITORED"
+      ],
+      "isRealtimeControlled": true,
+      "location": {
+        "id": "de:05111:18235:7:4",
+        "isGlobalId": true,
+        "name": "Düsseldorf Hbf",
+        "disassembledName": "4",
+        "type": "platform",
+        "pointType": "PLATFORM",
+        "coord": [5339786, 756298],
+        "properties": {
+          "stopId": "20018235",
+          "area": "2",
+          "platform": "4",
+          "platformName": "4",
+          "plannedPlatformName": "4"
+        },
+        "parent": {
+          "id": "de:05111:18235",
+          "isGlobalId": true,
+          "name": "Düsseldorf Hbf",
+          "type": "stop",
+          "parent": {
+            "name": "Düsseldorf",
+            "type": "locality"
+          },
+          "properties": {
+            "stopId": "20018235"
+          }
+        }
+      },
+      "departureTimePlanned": "2025-06-19T11:02:00Z",
+      "departureTimeBaseTimetable": "2025-06-19T11:02:30Z",
+      "departureTimeEstimated": "2025-06-19T11:02:18Z",
+      "transportation": {
+        "id": "rbg:70075: :H:j25",
+        "name": "U-Bahn U75",
+        "disassembledName": "U75",
+        "number": "U75",
+        "description": "Neuss Hbf - D-Heerdt - Heinr.-Heine-Allee  - Düsseldorf Hbf - D-Eller Mitte  - D-Eller, Vennhauser Allee",
+        "product": {
+          "id": 0,
+          "class": 2,
+          "name": "U-Bahn",
+          "iconId": 1
+        },
+        "operator": {
+          "code": "RBG",
+          "id": "70",
+          "name": "Rheinbahn"
+        },
+        "destination": {
+          "id": "20018261",
+          "name": "D-Vennhauser Allee",
+          "type": "stop"
+        },
+        "properties": {
+          "trainType": "S",
+          "isSTT": true,
+          "tripCode": 877,
+          "lineDisplay": "LINE",
+          "globalId": "de:vrr:U75:RBG-70-75"
+        },
+        "origin": {
+          "id": "20020055",
+          "name": "Neuss Hauptbahnhof",
+          "type": "stop"
+        }
+      },
+      "properties": {
+        "AVMSTripID": "RB_VIA.4688004"
+      }
+    }
+  ]
+}
