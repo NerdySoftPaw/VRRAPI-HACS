@@ -1,3 +1,4 @@
+![logo]
 # NRW/KVV Departures Home Assistant Integration
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
@@ -5,6 +6,7 @@
 [![HACS][hacsbadge]][hacs]
 
 ![Project Maintenance][maintenance-shield]
+
 
 A Home Assistant integration for the public transport networks VRR (Verkehrsverbund Rhein-Ruhr) and KVV (Karlsruher Verkehrsverbund). This integration provides real-time departure information for public transport in NRW and Karlsruhe.
 
@@ -247,3 +249,4 @@ https://openservice-test.vrr.de/static03/XML_DM_REQUEST?outputFormat=RapidJSON&p
 [maintenance-shield]: https://img.shields.io/badge/maintainer-NerdySoftPaw-blue.svg?style=for-the-badge
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [hacs]: https://github.com/hacs/integration
+[logo]: img/logo.png
