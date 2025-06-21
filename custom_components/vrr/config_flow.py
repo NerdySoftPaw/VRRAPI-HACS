@@ -49,25 +49,19 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if user wants to use autocomplete
             search_term = user_input.get(CONF_SEARCH_TERM, "").strip()
-            selected_station = user_input.get(CONF_SELECTED_STATION)
+            station_id = user_input.get(CONF_STATION_ID, "").strip()
+            place_dm = user_input.get("place_dm", "").strip()
+            name_dm = user_input.get("name_dm", "").strip()
 
+            # If user entered a search term and it's long enough, go to station search
             if search_term and len(search_term) >= MIN_SEARCH_LENGTH:
-                # User entered search term, show suggestions
-                return await self.async_step_station_search(user_input)
-            elif selected_station:
-                # User selected a station from suggestions
-                return await self._create_entry_from_selection(selected_station)
+                return await self.async_step_station_search()
+            # If user provided station ID or place/name directly, create entry
+            elif station_id or (place_dm and name_dm):
+                return await self._create_entry_from_manual_input(user_input)
+            # Otherwise show error
             else:
-                # Validate manual input
-                station_id = user_input.get(CONF_STATION_ID, "").strip()
-                place_dm = user_input.get("place_dm", "").strip()
-                name_dm = user_input.get("name_dm", "").strip()
-
-                if not station_id and (not place_dm or not name_dm):
-                    errors["base"] = "missing_location"
-                else:
-                    # Create entry with manual input
-                    return await self._create_entry_from_manual_input(user_input)
+                errors["base"] = "missing_location"
 
         # Show initial form
         schema = vol.Schema({
