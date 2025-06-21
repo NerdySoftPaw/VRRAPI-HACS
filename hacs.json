@@ -1,6 +1,7 @@
 {
-"name": "VRR Departures",
+"name": "NRW/KVV Departures",
 "category": "integration",
-"description": "Fetches departure times from the VRR API and displays them as a sensor in Home Assistant",
-"domains": ["sensor"]
+"description": "Fetches departure times from the VRR or KVV API and displays them as a sensor in Home Assistant",
+"domains": ["sensor"],
+"beta": true
 }
