@@ -3,7 +3,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-DOMAIN = "vrrapi_hacs"
+DOMAIN = "vrr"
 
 TRANSPORT_NETWORKS = {
     "VRR": "https://efa.vrr.de/vrr/XML_STOPFINDER_REQUEST?type_sf=stop&outputFormat=JSON&name_sf={query}",
