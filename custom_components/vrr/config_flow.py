@@ -11,7 +11,7 @@ TRANSPORT_NETWORKS = {
     # Weitere EFA-kompatible Verbünde können hier ergänzt werden
 }
 
-class VrrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VrrApiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self):
@@ -109,18 +109,9 @@ class VrrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async with session.get(url) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    # NEU: JSON-API liefert "locations"
-                    if "locations" in data and isinstance(data["locations"], list):
-                        results = []
-                        for loc in data["locations"]:
-                            name_val = loc.get("name", "")
-                            id_val = loc.get("id", "")
-                            if name_val and id_val:
-                                results.append({"name": name_val, "id": id_val})
-                        return results[:10]
-                    # ALT: legacy-API liefert "stopFinder" mit "points"
                     stop_finder = data.get("stopFinder", {})
                     points = stop_finder.get("points", {})
+                    # VRR: Dict mit "point", KVV: Liste
                     if isinstance(points, dict) and "point" in points:
                         points = points["point"]
                         if isinstance(points, dict):
@@ -138,6 +129,7 @@ class VrrConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         name_val = p.get("name", "")
                         if name_val and ref_val:
                             results.append({"name": name_val, "id": ref_val})
+                    print(f"Suggestions: {results}")  # Debug!
                     return results[:10]
         except Exception as e:
             print(f"StopFinder API error: {e}")
