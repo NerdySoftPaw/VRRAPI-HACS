@@ -53,18 +53,18 @@ class MultiProviderSensor(SensorEntity):
         self._last_update = None
         self._api_calls_today = 0
         self._last_api_reset = datetime.now().date()
-        
+
         # Configuration
         self.place_dm = place_dm
         self.name_dm = name_dm
         self.station_id = station_id
         self.departures_limit = departures
         self.transportation_types = transportation_types or list(TRANSPORTATION_TYPES.keys())
-        
+
         # Setup entity
         self._attr_unique_id = f"{provider}_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}"
         self._name = f"{provider.upper()} {place_dm} - {name_dm}"
-        
+
     @property
     def name(self):
         """Return the name of the sensor."""
