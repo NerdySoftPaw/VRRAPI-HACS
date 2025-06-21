@@ -110,18 +110,24 @@ class VrrApiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if resp.status == 200:
                     data = await resp.json()
                     stop_finder = data.get("stopFinder", {})
-                    points = stop_finder.get("points", {})
-                    # VRR: Dict mit "point", KVV: Liste
+                    # VRR: response["stopFinder"]["points"]["point"] (kann dict oder list sein)
+                    # KVV: response["stopFinder"]["points"] ist direkt eine Liste
+                    points = stop_finder.get("points", [])
                     if isinstance(points, dict) and "point" in points:
+                        # VRR-Style
                         points = points["point"]
                         if isinstance(points, dict):
                             points = [points]
                     elif isinstance(points, list):
+                        # KVV-Style
                         pass
                     else:
                         points = []
+
                     results = []
                     for p in points:
+                        # VRR: "ref" ist string, KVV: "ref" ist dict mit "id"
+                        ref_val = ""
                         if isinstance(p.get("ref"), dict):
                             ref_val = p["ref"].get("id", "")
                         else:
@@ -129,7 +135,6 @@ class VrrApiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         name_val = p.get("name", "")
                         if name_val and ref_val:
                             results.append({"name": name_val, "id": ref_val})
-                    print(f"Suggestions: {results}")  # Debug!
                     return results[:10]
         except Exception as e:
             print(f"StopFinder API error: {e}")
