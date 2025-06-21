@@ -1,126 +1,109 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "vrrapi_hacs"
+from .const import (
+    DOMAIN, 
+    DEFAULT_PLACE, 
+    DEFAULT_NAME, 
+    DEFAULT_DEPARTURES,
+    DEFAULT_SCAN_INTERVAL,
+    CONF_PROVIDER,  # NEU
+    CONF_STATION_ID,
+    CONF_DEPARTURES,
+    CONF_TRANSPORTATION_TYPES,
+    CONF_SCAN_INTERVAL,
+    TRANSPORTATION_TYPES,
+    PROVIDERS
+)
 
-TRANSPORT_NETWORKS = {
-    "VRR": "https://efa.vrr.de/vrr/XML_STOPFINDER_REQUEST?type_sf=stop&outputFormat=JSON&name_sf={query}",
-    "KVV": "https://projekte.kvv-efa.de/sl3/XML_STOPFINDER_REQUEST?type_sf=stop&outputFormat=JSON&name_sf={query}",
-    # Weitere EFA-kompatible Verbünde können hier ergänzt werden
-}
+class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for VRR integration."""
 
-class VrrApiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
-    def __init__(self):
-        self.network = None
-        self.api_url = None
-        self.location = None
-        self.location_id = None
-
     async def async_step_user(self, user_input=None):
-        """Schritt 1: Auswahl des Verkehrsverbundes"""
+        """Handle the initial step."""
         errors = {}
+        
         if user_input is not None:
-            self.network = user_input["network"]
-            self.api_url = TRANSPORT_NETWORKS[self.network]
-            return await self.async_step_location()
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("network", default="VRR"): vol.In(list(TRANSPORT_NETWORKS.keys()))
-            }),
-        )
+            # Validate station ID or place/name
+            station_id = user_input.get(CONF_STATION_ID, "").strip()
+            place_dm = user_input.get("place_dm", "").strip()
+            name_dm = user_input.get("name_dm", "").strip()
+            
+            if not station_id and (not place_dm or not name_dm):
+                errors["base"] = "missing_location"
+            else:
+                # Create unique ID
+                provider = user_input.get(CONF_PROVIDER, "vrr")
+                if station_id:
+                    unique_id = f"{provider}_{station_id}"
+                    title = f"{provider.upper()} Station {station_id}"
+                else:
+                    unique_id = f"{provider}_{place_dm}_{name_dm}".lower().replace(" ", "_")
+                    title = f"{provider.upper()} {place_dm} - {name_dm}"
+                
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                
+                return self.async_create_entry(
+                    title=title,
+                    data=user_input,
+                )
 
-    async def async_step_location(self, user_input=None):
-        """Schritt 2: Ort/Haltestelle suchen und auswählen"""
-        errors = {}
-        suggestions = []
-        query = ""
-        if user_input is not None:
-            query = user_input.get("location", "")
-            if query:
-                suggestions = await self._get_stopfinder_suggestions(query)
-                if "location_select" in user_input:
-                    selected = next((s for s in suggestions if s["name"] == user_input["location_select"]), None)
-                    if selected:
-                        self.location = selected["name"]
-                        self.location_id = selected["id"]
-                        return await self.async_step_stop()
-                if not suggestions:
-                    errors["location"] = "no_locations_found"
+        schema = vol.Schema({
+            vol.Required(CONF_PROVIDER, default="vrr"): vol.In(PROVIDERS),
+            vol.Optional(CONF_STATION_ID, default=""): str,
+            vol.Optional("place_dm", default=DEFAULT_PLACE): str,
+            vol.Optional("name_dm", default=DEFAULT_NAME): str,
+            vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
+            vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(list(TRANSPORTATION_TYPES.keys())),
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(int, vol.Range(min=10, max=3600)),
+        })
+
         return self.async_show_form(
-            step_id="location",
-            data_schema=vol.Schema({
-                vol.Optional("location", default=query): str,
-                vol.Optional("location_select"): vol.In([s["name"] for s in suggestions]) if suggestions else str,
-            }),
+            step_id="user", 
+            data_schema=schema, 
             errors=errors,
             description_placeholders={
-                "hint": "Tippe einen Ort oder eine Haltestelle ein und wähle dann einen Vorschlag."
+                "station_id_help": "Optional: Use VRR Station ID instead of place/name",
+                "place_help": "City or area name (e.g., Düsseldorf)",
+                "name_help": "Station or stop name (e.g., Hauptbahnhof)"
             }
         )
 
-    async def async_step_stop(self, user_input=None):
-        """Schritt 3: (Optional) weitere Filterung oder 'genaue' Haltestelle wählen"""
-        errors = {}
-        suggestions = []
-        query = ""
-        if user_input is not None:
-            query = user_input.get("stop", "")
-            if query:
-                # Suche weiter einschränken; z.B. Stationsname plus Eingabe
-                search_string = f"{self.location} {query}".strip()
-                suggestions = await self._get_stopfinder_suggestions(search_string)
-                if "stop_select" in user_input:
-                    selected = next((s for s in suggestions if s["name"] == user_input["stop_select"]), None)
-                    if selected:
-                        return self.async_create_entry(
-                            title=f"{selected['name']} ({self.network})",
-                            data={
-                                "network": self.network,
-                                "api_url": self.api_url,
-                                "location": self.location,
-                                "location_id": self.location_id,
-                                "stop": selected["name"],
-                                "stop_id": selected["id"],
-                            }
-                        )
-                if not suggestions:
-                    errors["stop"] = "no_stops_found"
-        return self.async_show_form(
-            step_id="stop",
-            data_schema=vol.Schema({
-                vol.Optional("stop", default=query): str,
-                vol.Optional("stop_select"): vol.In([s["name"] for s in suggestions]) if suggestions else str,
-            }),
-            errors=errors,
-            description_placeholders={
-                "hint": "Tippe eine Haltestelle ein und wähle dann einen Vorschlag."
-            }
-        )
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return VRROptionsFlowHandler(config_entry)
 
-    async def _get_stopfinder_suggestions(self, query):
-        """Holt Vorschläge für Haltestellen/Orte von der gewählten API"""
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        url = self.api_url.format(query=query)
-        try:
-            async with session.get(url) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    points = data.get("stopFinder", {}).get("points", {}).get("point", [])
-                    # Immer als Liste behandeln (auch wenn nur 1 Element zurückkommt)
-                    if isinstance(points, dict):  # nur ein Eintrag
-                        points = [points]
-                    # Filter auf type "STOP" (optional, falls du nur echte Haltestellen willst)
-                    filtered = [
-                        {"name": p["name"], "id": p["ref"]}
-                        for p in points if "name" in p and "ref" in p and p.get("type") in ("STOP", "STATION")
-                    ]
-                    # Du kannst die Liste ggf. auf 10 Treffer begrenzen:
-                    return filtered[:10]
-        except Exception:
-            pass
-        return []
+
+class VRROptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle VRR options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_departures = self.config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
+        current_scan_interval = self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        current_transport_types = self.config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
+
+        schema = vol.Schema({
+            vol.Optional(CONF_DEPARTURES, default=current_departures): vol.All(int, vol.Range(min=1, max=20)),
+            vol.Optional(CONF_SCAN_INTERVAL, default=current_scan_interval): vol.All(int, vol.Range(min=30, max=600)),
+            vol.Optional(CONF_TRANSPORTATION_TYPES, default=current_transport_types): cv.multi_select(TRANSPORTATION_TYPES),
+        })
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema
+        )
