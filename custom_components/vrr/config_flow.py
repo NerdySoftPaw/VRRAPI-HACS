@@ -103,24 +103,39 @@ class VrrApiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _get_stopfinder_suggestions(self, query):
-        """Holt Vorschläge für Haltestellen/Orte von der gewählten API"""
         session = aiohttp_client.async_get_clientsession(self.hass)
         url = self.api_url.format(query=query)
         try:
             async with session.get(url) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    points = data.get("stopFinder", {}).get("points", {}).get("point", [])
-                    # Immer als Liste behandeln (auch wenn nur 1 Element zurückkommt)
-                    if isinstance(points, dict):  # nur ein Eintrag
-                        points = [points]
-                    # Filter auf type "STOP" (optional, falls du nur echte Haltestellen willst)
-                    filtered = [
-                        {"name": p["name"], "id": p["ref"]}
-                        for p in points if "name" in p and "ref" in p and p.get("type") in ("STOP", "STATION")
-                    ]
-                    # Du kannst die Liste ggf. auf 10 Treffer begrenzen:
-                    return filtered[:10]
-        except Exception:
-            pass
+                    stop_finder = data.get("stopFinder", {})
+                    # VRR: response["stopFinder"]["points"]["point"] (kann dict oder list sein)
+                    # KVV: response["stopFinder"]["points"] ist direkt eine Liste
+                    points = stop_finder.get("points", [])
+                    if isinstance(points, dict) and "point" in points:
+                        # VRR-Style
+                        points = points["point"]
+                        if isinstance(points, dict):
+                            points = [points]
+                    elif isinstance(points, list):
+                        # KVV-Style
+                        pass
+                    else:
+                        points = []
+
+                    results = []
+                    for p in points:
+                        # VRR: "ref" ist string, KVV: "ref" ist dict mit "id"
+                        ref_val = ""
+                        if isinstance(p.get("ref"), dict):
+                            ref_val = p["ref"].get("id", "")
+                        else:
+                            ref_val = p.get("ref", "")
+                        name_val = p.get("name", "")
+                        if name_val and ref_val:
+                            results.append({"name": name_val, "id": ref_val})
+                    return results[:10]
+        except Exception as e:
+            print(f"StopFinder API error: {e}")
         return []
