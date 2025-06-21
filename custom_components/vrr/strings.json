@@ -2,31 +2,58 @@
   "config": {
     "step": {
       "user": {
-        "title": "VRR/KVV Departure Configuration",
-        "description": "Configure your VRR or KVV departure sensor",
+        "title": "VRR/KVV Departures Setup",
+        "description": "Configure your transit station. You can either search for stations or enter details manually.",
         "data": {
-          "provider": "Provider (VRR or KVV)",
+          "provider": "Transit Provider",
+          "search_term": "Search for station (3+ characters)",
           "station_id": "Station ID (optional)",
-          "place_dm": "Place/City",
-          "name_dm": "Station Name", 
+          "place_dm": "City/Place",
+          "name_dm": "Station Name",
           "departures": "Number of departures",
-          "scan_interval": "Update interval (seconds)",
-          "transportation_types": "Transportation types"
+          "transportation_types": "Transportation Types",
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "search_term": "{search_help}",
+          "station_id": "{station_id_help}",
+          "place_dm": "{place_help}",
+          "name_dm": "{name_help}"
+        }
+      },
+      "station_search": {
+        "title": "Select Station",
+        "description": "Choose from the found stations or refine your search.",
+        "data": {
+          "provider": "Transit Provider",
+          "search_term": "Search term",
+          "selected_station": "Select Station",
+          "departures": "Number of departures",
+          "transportation_types": "Transportation Types",
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "selected_station": "{search_results}"
         }
       }
     },
     "error": {
-      "missing_location": "Please provide either a Station ID OR both Place and Station Name"
+      "missing_location": "Please provide either a Station ID or both City and Station Name",
+      "invalid_selection": "Invalid station selection. Please try again.",
+      "search_failed": "Failed to search for stations. Please try manual configuration."
+    },
+    "abort": {
+      "already_configured": "This station is already configured"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "VRR/KVV Departure Options",
+        "title": "VRR/KVV Options",
         "data": {
           "departures": "Number of departures",
           "scan_interval": "Update interval (seconds)",
-          "transportation_types": "Transportation types"
+          "transportation_types": "Transportation Types"
         }
       }
     }
