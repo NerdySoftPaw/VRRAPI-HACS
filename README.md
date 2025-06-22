@@ -43,7 +43,7 @@ A Home Assistant integration for the public transport networks VRR (Verkehrsverb
 
 ```yaml
 sensor:
-  - platform: vrr
+  - platform: public_transport_de
     place_dm: "Düsseldorf"
     name_dm: "Hauptbahnhof"
     departures: 10
@@ -82,7 +82,7 @@ sensor:
 #### With Station ID (Recommended)
 ```yaml
 sensor:
-  - platform: vrr
+  - platform: public_transport_de
     station_id: "20018235"  # Düsseldorf Hauptbahnhof
     departures: 10
     transportation_types:
@@ -93,7 +93,7 @@ sensor:
 #### With Place and Stop Name
 ```yaml
 sensor:
-  - platform: vrr
+  - platform: public_transport_de
     place_dm: "Düsseldorf"
     name_dm: "Hauptbahnhof"
     departures: 5
@@ -104,7 +104,7 @@ sensor:
 #### Buses and Trams Only
 ```yaml
 sensor:
-  - platform: vrr
+  - platform: public_transport_de
     place_dm: "Essen"
     name_dm: "Hauptbahnhof"
     transportation_types:
