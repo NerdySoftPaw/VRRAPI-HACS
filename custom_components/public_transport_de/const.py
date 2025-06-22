@@ -14,7 +14,8 @@ CONF_SCAN_INTERVAL = "scan_interval"
 # Provider
 PROVIDER_VRR = "vrr"
 PROVIDER_KVV = "kvv"
-PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV]
+PROVIDER_HVV = "hvv"
+PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV]
 
 # Transportation types mapping
 TRANSPORTATION_TYPES = {
@@ -30,9 +31,22 @@ API_RATE_LIMIT_PER_HOUR = 1000
 API_RATE_LIMIT_PER_DAY = 60000
 API_BASE_URL_VRR = "https://openservice-test.vrr.de/static03/XML_DM_REQUEST"
 API_BASE_URL_KVV = "https://projekte.kvv-efa.de/sl3-alone/XSLT_DM_REQUEST"
+API_BASE_URL_HVV = "https://hvv.efa.de/efa/XML_DM_REQUEST"
 # Mapping für KVV
 KVV_TRANSPORTATION_TYPES = {
     1: "train",   # S-Bahn
     4: "tram",    # Straßenbahn
     5: "bus",     # Bus
+}
+
+HVV_TRANSPORTATION_TYPES = {
+    0: "train",      # Zug, S-Bahn
+    1: "train",      # U-Bahn
+    2: "subway",     # U-Bahn
+    3: "bus",        # Bus
+    4: "tram",       # Straßenbahn
+    5: "bus",        # Bus, Metrobus
+    6: "ferry",      # Fähre
+    7: "on_demand",  # Rufbus, On-Demand
+    # ... ergänzen je nach Bedarf und API
 }

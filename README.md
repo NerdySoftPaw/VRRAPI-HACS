@@ -228,6 +228,45 @@ https://openservice-test.vrr.de/static03/XML_DM_REQUEST?outputFormat=RapidJSON&s
 https://openservice-test.vrr.de/static03/XML_DM_REQUEST?outputFormat=RapidJSON&place_dm=Düsseldorf&type_dm=stop&name_dm=Hauptbahnhof&mode=direct&useRealtime=1&limit=10
 ```
 
+
+## HVV Support
+
+HVV (Hamburger Verkehrsverbund) is now supported!
+
+- Use `provider: hvv` in your configuration to fetch departures from any HVV stop.
+- Platform information is parsed from `location.properties.platform` in the HVV API response.
+- All relevant transport types (bus, metrobus, expressbus, etc.) are mapped.
+- Real-time data is shown if HVV provides it via deviations between `departureTimePlanned` and `departureTimeEstimated`.
+
+**Example HVV API response:**
+```json
+{
+  "stopEvents": [
+    {
+      "location": {
+        "name": "Stadionstraße",
+        "properties": {
+          "stopId": "28582004",
+          "platform": "1"
+        }
+      },
+      "departureTimePlanned": "2025-06-22T20:00:00Z",
+      "transportation": {
+        "number": "2",
+        "description": "Berliner Tor > Hbf. > Altona > Schenefeld",
+        "product": {
+          "class": 5,
+          "name": "Bus"
+        },
+        "destination": {
+          "name": "Schenefeld, Schenefelder Platz"
+        }
+      }
+    }
+  ]
+}
+```
+
 ## Changelog
 
 ### Latest Changes
@@ -238,6 +277,7 @@ https://openservice-test.vrr.de/static03/XML_DM_REQUEST?outputFormat=RapidJSON&p
 - Improved timezone handling for German local time
 - Added support for both station ID and place/name queries
 - Enhanced real-time data processing and delay calculations
+- Improved sensor attributes for better usability
 
 **Made with ❤️ for the Home Assistant community**
 <!-- Links -->

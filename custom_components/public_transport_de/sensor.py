@@ -21,9 +21,12 @@ from .const import (
     API_RATE_LIMIT_PER_DAY,
     API_BASE_URL_VRR,
     API_BASE_URL_KVV,
+    API_BASE_URL_HVV,
     PROVIDER_VRR,
     PROVIDER_KVV,
-    KVV_TRANSPORTATION_TYPES
+    PROVIDER_HVV,
+    KVV_TRANSPORTATION_TYPES,
+    HVV_TRANSPORTATION_TYPES
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,8 +127,12 @@ class MultiProviderSensor(SensorEntity):
     async def _fetch_departures(self) -> Optional[Dict[str, Any]]:
         if self._provider == PROVIDER_VRR:
             base_url = API_BASE_URL_VRR
-        else:
+        elif self._provider == PROVIDER_KVV:
             base_url = API_BASE_URL_KVV
+        elif self._provider == PROVIDER_HVV:   # <--- hinzugefügt
+            base_url = API_BASE_URL_HVV        # <--- hinzugefügt
+        else:
+            raise ValueError(f"Unsupported provider: {self._provider}")
             
         if self.station_id:
             # Use station ID if provided
@@ -189,14 +196,16 @@ class MultiProviderSensor(SensorEntity):
         departures = []
         berlin_tz = dt_util.get_time_zone("Europe/Berlin")
         now = dt_util.now()
-        
+
         for stop in stop_events:
             if self._provider == PROVIDER_VRR:
                 dep = self._parse_departure_vrr(stop, berlin_tz, now)
-            else:
+            elif self._provider == PROVIDER_KVV:
                 dep = self._parse_departure_kvv(stop, berlin_tz, now)
-            if dep and dep["transportation_type"] in self.transportation_types:
-                departures.append(dep)
+            elif self._provider == PROVIDER_HVV:
+                dep = self._parse_departure_hvv(stop, berlin_tz, now)
+            else:
+                dep = None
 
         # Sort by departure time
         departures.sort(key=lambda x: x.get("departure_time_obj", now))
@@ -385,3 +394,56 @@ class MultiProviderSensor(SensorEntity):
                         product_class, transportation.get("number", "unknown"))
         
         return transport_type
+    def _parse_departure_hvv(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
+        """Parse a single departure from HVV API response."""
+        try:
+            # Zeiten auslesen
+            planned_time_str = stop.get("departureTimePlanned")
+            estimated_time_str = stop.get("departureTimeEstimated") or planned_time_str
+
+            if not planned_time_str:
+                return None
+
+            planned_time = dt_util.parse_datetime(planned_time_str)
+            estimated_time = dt_util.parse_datetime(estimated_time_str) if estimated_time_str else planned_time
+
+            planned_local = planned_time.astimezone(berlin_tz)
+            estimated_local = estimated_time.astimezone(berlin_tz)
+
+            delay_minutes = int((estimated_local - planned_local).total_seconds() / 60)
+
+            transportation = stop.get("transportation", {})
+            destination = transportation.get("destination", {}).get("name", "Unknown")
+            line_number = transportation.get("number", "")
+            description = transportation.get("description", "")
+            product_class = transportation.get("product", {}).get("class", 0)
+            transport_type = HVV_TRANSPORTATION_TYPES.get(product_class, "unknown")
+
+            # Platform extrahieren
+            platform = stop.get("location", {}).get("properties", {}).get("platform") \
+                       or stop.get("location", {}).get("platformName", "")
+
+            # Minuten bis Abfahrt
+            time_diff = estimated_local - now
+            minutes_until = max(0, int(time_diff.total_seconds() / 60))
+
+            # Echtzeitdaten (HVV nutzt keine explizite RealTime-Flag wie die anderen)
+            is_realtime = estimated_time_str != planned_time_str
+
+            return {
+                "line": line_number,
+                "destination": destination,
+                "departure_time": estimated_local.strftime("%H:%M"),
+                "planned_time": planned_local.strftime("%H:%M"),
+                "real_time": estimated_local.strftime("%H:%M") if is_realtime else None,
+                "delay": delay_minutes,
+                "platform": platform,
+                "transportation_type": transport_type,
+                "description": description,
+                "is_realtime": is_realtime,
+                "minutes_until_departure": minutes_until,
+                "departure_time_obj": estimated_local  # For internal sorting
+            }
+        except Exception as e:
+            _LOGGER.debug("Error parsing HVV departure: %s", e)
+            return None
