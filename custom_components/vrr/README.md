@@ -1,11 +1,11 @@
-# VRR/KVV Home Assistant Integration
+# NRW/KVV Home Assistant Integration
 
 Diese Integration zeigt Abfahrten für VRR- und KVV-Haltestellen in Home Assistant an.
 
 ## Einrichtung
 
 - Über HACS installieren oder als custom_component einbinden
-- Integration "VRR/KVV Departures" hinzufügen
+- Integration "NRW/KVV Departures" hinzufügen
 - Provider auswählen: `vrr` (Standard) oder `kvv`
 - Stadt und Haltestellenname angeben (z.B. Düsseldorf, Elbruchstrasse oder Karlsruhe, Essenweinstraße)
 - Optional: station_id, Anzahl Abfahrten, Transporttypen
@@ -23,7 +23,7 @@ Diese Integration zeigt Abfahrten für VRR- und KVV-Haltestellen in Home Assista
 ## Beispiel
 ```
 sensor:
-  - platform: vrr
+  - platform: public_transport_de
     provider: kvv
     place_dm: Karlsruhe
     name_dm: Essenweinstraße
