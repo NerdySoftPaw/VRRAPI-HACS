@@ -206,10 +206,12 @@ class MultiProviderSensor(SensorEntity):
                 dep = self._parse_departure_hvv(stop, berlin_tz, now)
             else:
                 dep = None
+            if dep:
+                departures.append(dep)
 
         # Sort by departure time
         departures.sort(key=lambda x: x.get("departure_time_obj", now))
-        
+
         # Limit to requested number
         departures = departures[:self.departures_limit]
 
