@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HVV/VRR/KVV - ÖPNV Abfahrten",
+        "description": "Konfigurieren Sie Ihre ÖPNV-Integration",
+        "data": {
+          "provider": "Anbieter",
+          "station_id": "Stations-ID (optional)",
+          "place_dm": "Ort/Stadt",
+          "name_dm": "Haltestelle/Bahnhof",
+          "departures": "Anzahl Abfahrten",
+          "transportation_types": "Verkehrsmittel",
+          "scan_interval": "Update-Intervall (Sekunden)"
+        }
+      }
+    },
+    "error": {
+      "missing_location": "Bitte geben Sie entweder eine Stations-ID oder Ort und Haltestelle an"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ÖPNV Abfahrten Optionen",
+        "data": {
+          "departures": "Anzahl Abfahrten",
+          "transportation_types": "Verkehrsmittel",
+          "scan_interval": "Update-Intervall (Sekunden)"
+        }
+      }
+    }
+  }
+}
