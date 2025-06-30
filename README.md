@@ -39,34 +39,7 @@ A Home Assistant integration for the public transport networks VRR (Verkehrsverb
 
 ## Configuration
 
-### YAML Configuration
-
-```yaml
-sensor:
-  - platform: public_transport_de
-    place_dm: "Düsseldorf"
-    name_dm: "Hauptbahnhof"
-    departures: 10
-    transportation_types:
-      - train
-      - subway
-      - tram
-      - bus
-    scan_interval: 60
-```
-
-### Configuration Options
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `place_dm` | string | Yes* | - | Name of the city/place |
-| `name_dm` | string | Yes* | - | Name of the stop |
-| `station_id` | string | Yes* | - | VRR Station ID (alternative to place_dm/name_dm) |
-| `departures` | integer | No | 5 | Number of departures to display |
-| `transportation_types` | list | No | all | List of transportation types to filter |
-| `scan_interval` | integer | No | 60 | Update interval in seconds |
-
-*Either `station_id` OR `place_dm` + `name_dm` are required.
+- Activate the Integration in the Settings, and then you can configure it.
 
 ### Transportation Types
 
@@ -79,64 +52,7 @@ sensor:
 
 ### Examples
 
-#### With Station ID (Recommended)
-```yaml
-sensor:
-  - platform: public_transport_de
-    station_id: "20018235"  # Düsseldorf Hauptbahnhof
-    departures: 10
-    transportation_types:
-      - train
-      - subway
-```
 
-#### With Place and Stop Name
-```yaml
-sensor:
-  - platform: public_transport_de
-    place_dm: "Düsseldorf"
-    name_dm: "Hauptbahnhof"
-    departures: 5
-    transportation_types:
-      - train
-```
-
-#### Buses and Trams Only
-```yaml
-sensor:
-  - platform: public_transport_de
-    place_dm: "Essen"
-    name_dm: "Hauptbahnhof"
-    transportation_types:
-      - bus
-      - tram
-```
-
-## Sensor Attributes
-
-The sensor provides the following attributes:
-
-```yaml
-state: "20:45"  # Next departure time
-attributes:
-  departures:
-    - line: "U79"
-      destination: "Duisburg Hbf"
-      departure_time: "20:45"
-      planned_time: "20:43"
-      real_time: "20:45"
-      delay: 2
-      platform: "2"
-      transportation_type: "subway"
-      description: "U-Bahn"
-      is_realtime: true
-      minutes_until_departure: 15
-  station_name: "Düsseldorf - Hauptbahnhof"
-  station_id: "20018235"
-  next_departure_minutes: 15
-  total_departures: 10
-  last_updated: "2025-06-11T18:30:00+02:00"
-```
 
 ## API Limits and Rate Limiting
 
@@ -289,4 +205,4 @@ HVV (Hamburger Verkehrsverbund) is now supported!
 [maintenance-shield]: https://img.shields.io/badge/maintainer-NerdySoftPaw-blue.svg?style=for-the-badge
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [hacs]: https://github.com/hacs/integration
-[logo]: img/logo.png
+[logo]: https://brands.home-assistant.io/vrr/icon.png
