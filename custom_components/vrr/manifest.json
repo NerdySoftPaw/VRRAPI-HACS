@@ -1,11 +1,11 @@
 {
   "domain": "vrr",
   "name": "NRW/KVV Departures",
-  "version": "4.1.0",
-  "documentation": "https://github.com/NerdySoftPaw/VRRAPI-HACS/blob/main/README.md",
-  "requirements": ["pytz"],
-  "dependencies": [],
   "codeowners": ["@NerdySoftPaw"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "dependencies": [],
+  "documentation": "https://github.com/NerdySoftPaw/VRRAPI-HACS/blob/main/README.md",
+  "iot_class": "cloud_polling",
+  "requirements": ["pytz"],
+  "version": "4.1.0"
 }
