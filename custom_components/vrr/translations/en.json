@@ -2,33 +2,84 @@
   "config": {
     "step": {
       "user": {
-        "title": "HVV/VRR/KVV - ÖPNV Abfahrten",
-        "description": "Konfigurieren Sie Ihre ÖPNV-Integration",
+        "title": "Select Public Transport Provider",
+        "description": "Choose your public transport provider",
         "data": {
-          "provider": "Anbieter",
-          "station_id": "Stations-ID (optional)",
-          "place_dm": "Ort/Stadt",
-          "name_dm": "Haltestelle/Bahnhof",
-          "departures": "Anzahl Abfahrten",
-          "transportation_types": "Verkehrsmittel",
-          "scan_interval": "Update-Intervall (Sekunden)"
+          "provider": "Provider"
+        },
+        "data_description": {
+          "provider": "VRR (NRW), KVV (Karlsruhe) or HVV (Hamburg)"
+        }
+      },
+      "location": {
+        "title": "Search City/Location",
+        "description": "Search for your city or location.\nExample: Düsseldorf, Köln, Hamburg...",
+        "data": {
+          "location_search": "City/Location"
+        }
+      },
+      "location_select": {
+        "title": "Select Location",
+        "description": "Found {count} results. Please select your location:",
+        "data": {
+          "location": "Location"
+        }
+      },
+      "stop": {
+        "title": "Search Stop/Station",
+        "description": "Search for your stop in {location}.\nExample: Hauptbahnhof, Marktplatz...",
+        "data": {
+          "stop_search": "Stop/Station"
+        }
+      },
+      "stop_select": {
+        "title": "Select Stop",
+        "description": "Found {count} stops. Please select your stop:",
+        "data": {
+          "stop": "Stop"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Configure settings for {stop}",
+        "data": {
+          "departures": "Number of departures",
+          "transportation_types": "Transport types",
+          "scan_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "departures": "How many departures should be displayed? (1-20)",
+          "transportation_types": "Which transport types should be displayed?",
+          "scan_interval": "How often should data be updated? (10-3600 seconds)"
         }
       }
     },
     "error": {
-      "missing_location": "Bitte geben Sie entweder eine Stations-ID oder Ort und Haltestelle an"
+      "missing_location": "Please provide either a station ID or location and stop name",
+      "empty_search": "Please enter a search term",
+      "no_results": "No results found. Please try a different search term."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "ÖPNV Abfahrten Optionen",
+        "title": "Public Transport Departures Options",
         "data": {
-          "departures": "Anzahl Abfahrten",
-          "transportation_types": "Verkehrsmittel",
-          "scan_interval": "Update-Intervall (Sekunden)"
+          "departures": "Number of departures",
+          "transportation_types": "Transport types",
+          "scan_interval": "Update interval (seconds)"
         }
       }
+    }
+  },
+  "issues": {
+    "rate_limit_reached": {
+      "title": "API Rate Limit Reached",
+      "description": "The daily API limit of {limit} requests for {provider} has been reached. The integration will automatically resume tomorrow. Consider increasing the update interval."
+    },
+    "api_error": {
+      "title": "API Error",
+      "description": "There was an error retrieving data from {provider}. Please check your station ID or stop information in the settings."
     }
   }
 }

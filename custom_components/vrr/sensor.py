@@ -16,6 +16,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.entity import DeviceInfo
 from .const import (
     DEFAULT_PLACE,
     DEFAULT_NAME,
@@ -76,9 +78,24 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         if today > self._last_api_reset:
             self._api_calls_today = 0
             self._last_api_reset = today
+            # Clear rate limit repair issue when new day starts
+            ir.async_delete_issue(self.hass, DOMAIN, f"rate_limit_{self.provider}")
 
         if self._api_calls_today >= API_RATE_LIMIT_PER_DAY:
             _LOGGER.warning("API rate limit approached, skipping update")
+            # Create repair issue
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"rate_limit_{self.provider}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="rate_limit_reached",
+                translation_placeholders={
+                    "provider": self.provider.upper(),
+                    "limit": str(API_RATE_LIMIT_PER_DAY),
+                },
+            )
             return False
         return True
 
@@ -94,10 +111,38 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self._fetch_departures()
             if data and isinstance(data, dict):
                 self._api_calls_today += 1
+                # Clear API error repair issue on successful fetch
+                ir.async_delete_issue(self.hass, DOMAIN, f"api_error_{self.provider}")
                 return data
             else:
+                # Create repair issue for invalid API response
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"api_error_{self.provider}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="api_error",
+                    translation_placeholders={
+                        "provider": self.provider.upper(),
+                    },
+                )
                 raise UpdateFailed("Invalid or empty API response")
+        except UpdateFailed:
+            raise
         except Exception as err:
+            # Create repair issue for API errors
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"api_error_{self.provider}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="api_error",
+                translation_placeholders={
+                    "provider": self.provider.upper(),
+                },
+            )
             raise UpdateFailed(f"Error fetching data: {err}")
 
     async def _fetch_departures(self) -> Optional[Dict[str, Any]]:
@@ -208,6 +253,11 @@ async def async_setup_entry(
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
 
+    # Store coordinator in hass.data for binary_sensor access
+    from .const import DOMAIN
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][f"{config_entry.entry_id}_coordinator"] = coordinator
+
     # Create sensor
     async_add_entities([
         MultiProviderSensor(
@@ -242,6 +292,17 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_unique_id = f"{provider}_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}"
         self._attr_name = f"{provider.upper()} {place_dm} - {name_dm}"
+
+        # Device info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{provider}_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}")},
+            name=f"{place_dm} - {name_dm}",
+            manufacturer=f"{provider.upper()} Public Transport",
+            model="Departure Monitor",
+            sw_version="4.1.0",
+            configuration_url=f"https://github.com/NerdySoftPaw/VRRAPI-HACS",
+            suggested_area=place_dm,
+        )
 
         # Listen to options updates
         self._config_entry.async_on_unload(
@@ -335,9 +396,17 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             self._state = "No departures"
             self._attributes = {
                 "departures": [],
+                "next_3_departures": [],
                 "station_name": f"{self.coordinator.place_dm} - {self.coordinator.name_dm}",
                 "last_updated": dt_util.utcnow().isoformat(),
-                "next_departure_minutes": None
+                "next_departure_minutes": None,
+                "station_id": self.coordinator.station_id,
+                "total_departures": 0,
+                "delayed_count": 0,
+                "on_time_count": 0,
+                "average_delay": 0,
+                "earliest_departure": None,
+                "latest_departure": None,
             }
             return
 
@@ -381,13 +450,54 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             clean_dep.pop("departure_time_obj", None)
             clean_departures.append(clean_dep)
 
+        # Calculate additional statistics
+        next_3_departures = []
+        delayed_count = 0
+        on_time_count = 0
+        total_delay = 0
+        departure_times = []
+
+        for dep in clean_departures:
+            # Count delays
+            if dep.get("delay", 0) > 0:
+                delayed_count += 1
+                total_delay += dep["delay"]
+            else:
+                on_time_count += 1
+
+            # Collect departure times for earliest/latest
+            if "departure_time_obj" in departures:
+                # We still have the original departure with time_obj
+                original_dep = next((d for d in departures if d.get("line") == dep.get("line") and d.get("destination") == dep.get("destination")), None)
+                if original_dep and "departure_time_obj" in original_dep:
+                    departure_times.append(original_dep["departure_time_obj"])
+
+        # Next 3 departures (simplified)
+        next_3_departures = clean_departures[:3] if len(clean_departures) >= 3 else clean_departures
+
+        # Average delay
+        average_delay = round(total_delay / delayed_count, 1) if delayed_count > 0 else 0
+
+        # Earliest and latest departure times
+        earliest_departure = None
+        latest_departure = None
+        if departure_times:
+            earliest_departure = min(departure_times).strftime("%H:%M")
+            latest_departure = max(departure_times).strftime("%H:%M")
+
         self._attributes = {
             "departures": clean_departures,
+            "next_3_departures": next_3_departures,
             "station_name": f"{self.coordinator.place_dm} - {self.coordinator.name_dm}",
             "last_updated": dt_util.utcnow().isoformat(),
             "next_departure_minutes": next_minutes,
             "station_id": self.coordinator.station_id,
-            "total_departures": len(clean_departures)
+            "total_departures": len(clean_departures),
+            "delayed_count": delayed_count,
+            "on_time_count": on_time_count,
+            "average_delay": average_delay,
+            "earliest_departure": earliest_departure,
+            "latest_departure": latest_departure,
         }
 
     def _parse_departure_generic(self, stop: Dict[str, Any], berlin_tz, now: datetime,

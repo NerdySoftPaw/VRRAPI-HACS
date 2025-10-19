@@ -1,8 +1,66 @@
-### Example user template template
-### Example user template
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-# IntelliJ project files
-.idea
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
 *.iml
-out
-gen
+out/
+gen/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Home Assistant
+home-assistant.log
+home-assistant_v2.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.zip

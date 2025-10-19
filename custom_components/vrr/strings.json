@@ -2,21 +2,62 @@
   "config": {
     "step": {
       "user": {
-        "title": "HVV/VRR/KVV - ÖPNV Abfahrten",
-        "description": "Konfigurieren Sie Ihre ÖPNV-Integration",
+        "title": "ÖPNV Anbieter wählen",
+        "description": "Wähle deinen ÖPNV-Anbieter aus",
         "data": {
-          "provider": "Anbieter",
-          "station_id": "Stations-ID (optional)",
-          "place_dm": "Ort/Stadt",
-          "name_dm": "Haltestelle/Bahnhof",
+          "provider": "Anbieter"
+        },
+        "data_description": {
+          "provider": "VRR (NRW), KVV (Karlsruhe) oder HVV (Hamburg)"
+        }
+      },
+      "location": {
+        "title": "Stadt/Ort suchen",
+        "description": "Suche nach deiner Stadt oder deinem Ort.\nBeispiel: Düsseldorf, Köln, Hamburg...",
+        "data": {
+          "location_search": "Stadt/Ort"
+        }
+      },
+      "location_select": {
+        "title": "Ort auswählen",
+        "description": "{count} Ergebnisse gefunden. Bitte wähle deinen Ort aus:",
+        "data": {
+          "location": "Ort"
+        }
+      },
+      "stop": {
+        "title": "Haltestelle suchen",
+        "description": "Suche nach deiner Haltestelle in {location}.\nBeispiel: Hauptbahnhof, Marktplatz...",
+        "data": {
+          "stop_search": "Haltestelle"
+        }
+      },
+      "stop_select": {
+        "title": "Haltestelle auswählen",
+        "description": "{count} Haltestellen gefunden. Bitte wähle deine Haltestelle aus:",
+        "data": {
+          "stop": "Haltestelle"
+        }
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "description": "Konfiguriere die Einstellungen für {stop}",
+        "data": {
           "departures": "Anzahl Abfahrten",
           "transportation_types": "Verkehrsmittel",
           "scan_interval": "Update-Intervall (Sekunden)"
+        },
+        "data_description": {
+          "departures": "Wie viele Abfahrten sollen angezeigt werden? (1-20)",
+          "transportation_types": "Welche Verkehrsmittel sollen angezeigt werden?",
+          "scan_interval": "Wie oft sollen die Daten aktualisiert werden? (10-3600 Sekunden)"
         }
       }
     },
     "error": {
-      "missing_location": "Bitte geben Sie entweder eine Stations-ID oder Ort und Haltestelle an"
+      "missing_location": "Bitte geben Sie entweder eine Stations-ID oder Ort und Haltestelle an",
+      "empty_search": "Bitte geben Sie einen Suchbegriff ein",
+      "no_results": "Keine Ergebnisse gefunden. Bitte versuchen Sie einen anderen Suchbegriff."
     }
   },
   "options": {
@@ -29,6 +70,16 @@
           "scan_interval": "Update-Intervall (Sekunden)"
         }
       }
+    }
+  },
+  "issues": {
+    "rate_limit_reached": {
+      "title": "API Rate Limit erreicht",
+      "description": "Das tägliche API-Limit von {limit} Anfragen für {provider} wurde erreicht. Die Integration wird morgen automatisch fortgesetzt. Erwägen Sie, das Update-Intervall zu erhöhen."
+    },
+    "api_error": {
+      "title": "API-Fehler",
+      "description": "Es gab einen Fehler beim Abrufen der Daten von {provider}. Bitte überprüfen Sie Ihre Stations-ID oder Haltestelleninformationen in den Einstellungen."
     }
   }
 }
