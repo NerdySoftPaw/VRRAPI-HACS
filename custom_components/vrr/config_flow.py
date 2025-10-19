@@ -71,7 +71,11 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Search for stops directly
                 stops = await self._search_stops(search_term)
 
-                if not stops:
+                # Validate that stops is a list
+                if not isinstance(stops, list):
+                    _LOGGER.error("Search returned invalid type %s, expected list", type(stops))
+                    errors["stop_search"] = "api_error"
+                elif not stops:
                     errors["stop_search"] = "no_results"
                 elif len(stops) == 1:
                     # Only one result, select it automatically
@@ -110,7 +114,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Validate stops is a list
         if not isinstance(stops, list):
             _LOGGER.error("Invalid stops data: expected list, got %s", type(stops))
-            return await self.async_step_stop(user_input=None)
+            return await self.async_step_stop_search(user_input=None)
 
         # Store stops temporarily
         self.hass.data[f"{DOMAIN}_temp_stops"] = stops
@@ -208,9 +212,17 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return self._parse_stopfinder_response(data, search_type="stop")
+                    _LOGGER.debug("API response type: %s, data: %s", type(data), data)
+                    result = self._parse_stopfinder_response(data, search_type="stop", search_term=search_term)
+                    # Ensure we always return a list
+                    if not isinstance(result, list):
+                        _LOGGER.error("_parse_stopfinder_response returned %s instead of list", type(result))
+                        return []
+                    return result
+                else:
+                    _LOGGER.error("API returned status %s", response.status)
         except Exception as e:
-            _LOGGER.error("Error searching stops: %s", e)
+            _LOGGER.error("Error searching stops: %s", e, exc_info=True)
 
         return []
 
@@ -225,7 +237,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return "https://openservice-test.vrr.de/static03/XML_STOPFINDER_REQUEST"
 
-    def _parse_stopfinder_response(self, data: Dict[str, Any], search_type: str = "stop") -> List[Dict[str, Any]]:
+    def _parse_stopfinder_response(self, data: Dict[str, Any], search_type: str = "stop", search_term: str = "") -> List[Dict[str, Any]]:
         """Parse STOPFINDER API response."""
         results = []
 
@@ -241,6 +253,10 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not isinstance(locations, list):
                 _LOGGER.error("Invalid locations in API response: expected list, got %s", type(locations))
                 return []
+
+            # Extract potential city/place names from search term for filtering
+            search_lower = search_term.lower()
+            search_words = search_lower.split()
 
             for location in locations:
                 # Skip non-dict entries
@@ -276,6 +292,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             "name": name,
                             "type": loc_type,
                             "place": place,
+                            "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower())
                         })
                 elif search_type == "stop":
                     # For stop search, prefer stops and stations
@@ -285,15 +302,61 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             "name": name,
                             "type": loc_type,
                             "place": place,
+                            "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower())
                         })
+
+            # Sort by relevance (higher is better)
+            results.sort(key=lambda x: x.get("relevance", 0), reverse=True)
+
+            # Remove relevance score before returning (not needed in UI)
+            for result in results:
+                result.pop("relevance", None)
 
             # Limit results to top 10
             results = results[:10]
 
         except Exception as e:
-            _LOGGER.error("Error parsing stopfinder response: %s", e)
+            _LOGGER.error("Error parsing stopfinder response: %s", e, exc_info=True)
 
         return results
+
+    def _calculate_relevance(self, search_term: str, name: str, place: str) -> int:
+        """Calculate relevance score for a search result.
+
+        Higher score = more relevant result.
+        """
+        score = 0
+        search_words = search_term.split()
+
+        # Bonus if place name is in search term
+        if place and any(word in place.lower() for word in search_words):
+            score += 100
+
+        # Bonus if place name matches a search word exactly
+        if place and place.lower() in search_words:
+            score += 200
+
+        # Bonus for exact name match
+        if name == search_term:
+            score += 300
+
+        # Bonus for name starting with search term
+        if name.startswith(search_term):
+            score += 150
+
+        # Bonus for each matching word in name
+        name_words = name.split()
+        for search_word in search_words:
+            if len(search_word) > 2:  # Only consider words longer than 2 chars
+                for name_word in name_words:
+                    if search_word in name_word:
+                        score += 50
+
+        # Penalty for very long place names (likely less specific)
+        if place and len(place) > 20:
+            score -= 10
+
+        return score
 
     @staticmethod
     @callback
