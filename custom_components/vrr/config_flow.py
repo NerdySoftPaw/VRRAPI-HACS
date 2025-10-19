@@ -38,14 +38,13 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self._provider: Optional[str] = None
-        self._selected_location: Optional[Dict[str, Any]] = None
         self._selected_stop: Optional[Dict[str, Any]] = None
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle the initial step - select provider."""
         if user_input is not None:
             self._provider = user_input[CONF_PROVIDER]
-            return await self.async_step_location()
+            return await self.async_step_stop_search()
 
         schema = vol.Schema({
             vol.Required(CONF_PROVIDER, default=PROVIDER_VRR): vol.In(PROVIDERS),
@@ -59,85 +58,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_location(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
-        """Handle location search step."""
-        errors = {}
-
-        if user_input is not None:
-            search_term = user_input.get("location_search", "").strip()
-
-            if not search_term:
-                errors["location_search"] = "empty_search"
-            else:
-                # Search for locations
-                locations = await self._search_locations(search_term)
-
-                if not locations:
-                    errors["location_search"] = "no_results"
-                elif len(locations) == 1:
-                    # Only one result, select it automatically
-                    self._selected_location = locations[0]
-                    return await self.async_step_stop()
-                else:
-                    # Multiple results, let user choose
-                    return await self.async_step_location_select(locations)
-
-        schema = vol.Schema({
-            vol.Required("location_search"): str,
-        })
-
-        return self.async_show_form(
-            step_id="location",
-            data_schema=schema,
-            errors=errors,
-            description_placeholders={
-                "provider": self._provider.upper(),
-                "example": "z.B. Düsseldorf, Köln, Hamburg..."
-            }
-        )
-
-    async def async_step_location_select(self, locations: List[Dict[str, Any]] = None, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
-        """Let user select from multiple location results."""
-        if user_input is not None:
-            # Find selected location
-            selected_id = user_input["location"]
-            for loc in self.hass.data.get(f"{DOMAIN}_temp_locations", []):
-                if isinstance(loc, dict) and loc.get("id") == selected_id:
-                    self._selected_location = loc
-                    break
-
-            return await self.async_step_stop()
-
-        # Validate locations is a list
-        if not isinstance(locations, list):
-            _LOGGER.error("Invalid locations data: expected list, got %s", type(locations))
-            return await self.async_step_location(user_input=None)
-
-        # Store locations temporarily
-        self.hass.data[f"{DOMAIN}_temp_locations"] = locations
-
-        # Create options dict for dropdown - filter out invalid entries
-        location_options = {}
-        for loc in locations:
-            if isinstance(loc, dict) and "id" in loc and "name" in loc:
-                loc_type = loc.get("type", "unknown")
-                location_options[loc["id"]] = f"{loc['name']} ({loc_type})"
-            else:
-                _LOGGER.warning("Skipping invalid location entry: %s", loc)
-
-        schema = vol.Schema({
-            vol.Required("location"): vol.In(location_options),
-        })
-
-        return self.async_show_form(
-            step_id="location_select",
-            data_schema=schema,
-            description_placeholders={
-                "count": str(len(locations))
-            }
-        )
-
-    async def async_step_stop(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
+    async def async_step_stop_search(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle stop/station search step."""
         errors = {}
 
@@ -147,8 +68,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not search_term:
                 errors["stop_search"] = "empty_search"
             else:
-                # Search for stops in the selected location
-                stops = await self._search_stops(search_term, self._selected_location)
+                # Search for stops directly
+                stops = await self._search_stops(search_term)
 
                 if not stops:
                     errors["stop_search"] = "no_results"
@@ -160,19 +81,17 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Multiple results, let user choose
                     return await self.async_step_stop_select(stops)
 
-        location_name = self._selected_location.get("name", "Unknown") if self._selected_location else "Unknown"
-
         schema = vol.Schema({
             vol.Required("stop_search"): str,
         })
 
         return self.async_show_form(
-            step_id="stop",
+            step_id="stop_search",
             data_schema=schema,
             errors=errors,
             description_placeholders={
-                "location": location_name,
-                "example": "z.B. Hauptbahnhof, Marktplatz..."
+                "provider": self._provider.upper(),
+                "example": "z.B. Düsseldorf Hauptbahnhof, Köln Heumarkt..."
             }
         )
 
@@ -270,46 +189,15 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _search_locations(self, search_term: str) -> List[Dict[str, Any]]:
-        """Search for locations (cities/areas) using STOPFINDER API."""
-        api_url = self._get_stopfinder_url()
-
-        params = (
-            f"outputFormat=RapidJSON&"
-            f"locationServerActive=1&"
-            f"type_sf=any&"
-            f"name_sf={search_term}&"
-            f"SpEncId=0"
-        )
-
-        url = f"{api_url}?{params}"
-        session = async_get_clientsession(self.hass)
-
-        try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return self._parse_stopfinder_response(data, search_type="location")
-        except Exception as e:
-            _LOGGER.error("Error searching locations: %s", e)
-
-        return []
-
-    async def _search_stops(self, search_term: str, location: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def _search_stops(self, search_term: str) -> List[Dict[str, Any]]:
         """Search for stops/stations using STOPFINDER API."""
         api_url = self._get_stopfinder_url()
-
-        # If we have a location, search within that location
-        if location:
-            search_query = f"{location.get('name', '')} {search_term}".strip()
-        else:
-            search_query = search_term
 
         params = (
             f"outputFormat=RapidJSON&"
             f"locationServerActive=1&"
             f"type_sf=stop&"
-            f"name_sf={search_query}&"
+            f"name_sf={search_term}&"
             f"SpEncId=0"
         )
 
