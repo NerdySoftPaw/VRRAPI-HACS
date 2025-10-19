@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity import DeviceInfo
 from .const import (
+    DOMAIN,
     DEFAULT_PLACE,
     DEFAULT_NAME,
     CONF_PROVIDER,
@@ -254,7 +255,6 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     # Store coordinator in hass.data for binary_sensor access
-    from .const import DOMAIN
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][f"{config_entry.entry_id}_coordinator"] = coordinator
 
