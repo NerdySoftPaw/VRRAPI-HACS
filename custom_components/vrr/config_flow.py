@@ -102,20 +102,28 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Find selected location
             selected_id = user_input["location"]
             for loc in self.hass.data.get(f"{DOMAIN}_temp_locations", []):
-                if loc["id"] == selected_id:
+                if isinstance(loc, dict) and loc.get("id") == selected_id:
                     self._selected_location = loc
                     break
 
             return await self.async_step_stop()
 
+        # Validate locations is a list
+        if not isinstance(locations, list):
+            _LOGGER.error("Invalid locations data: expected list, got %s", type(locations))
+            return await self.async_step_location(user_input=None)
+
         # Store locations temporarily
         self.hass.data[f"{DOMAIN}_temp_locations"] = locations
 
-        # Create options dict for dropdown
-        location_options = {
-            loc["id"]: f"{loc['name']} ({loc['type']})"
-            for loc in locations
-        }
+        # Create options dict for dropdown - filter out invalid entries
+        location_options = {}
+        for loc in locations:
+            if isinstance(loc, dict) and "id" in loc and "name" in loc:
+                loc_type = loc.get("type", "unknown")
+                location_options[loc["id"]] = f"{loc['name']} ({loc_type})"
+            else:
+                _LOGGER.warning("Skipping invalid location entry: %s", loc)
 
         schema = vol.Schema({
             vol.Required("location"): vol.In(location_options),
@@ -174,20 +182,28 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Find selected stop
             selected_id = user_input["stop"]
             for stop in self.hass.data.get(f"{DOMAIN}_temp_stops", []):
-                if stop["id"] == selected_id:
+                if isinstance(stop, dict) and stop.get("id") == selected_id:
                     self._selected_stop = stop
                     break
 
             return await self.async_step_settings()
 
+        # Validate stops is a list
+        if not isinstance(stops, list):
+            _LOGGER.error("Invalid stops data: expected list, got %s", type(stops))
+            return await self.async_step_stop(user_input=None)
+
         # Store stops temporarily
         self.hass.data[f"{DOMAIN}_temp_stops"] = stops
 
-        # Create options dict for dropdown
-        stop_options = {
-            stop["id"]: f"{stop['name']}" + (f" ({stop.get('place', '')})" if stop.get('place') else "")
-            for stop in stops
-        }
+        # Create options dict for dropdown - filter out invalid entries
+        stop_options = {}
+        for stop in stops:
+            if isinstance(stop, dict) and "id" in stop and "name" in stop:
+                place_suffix = f" ({stop['place']})" if stop.get('place') else ""
+                stop_options[stop["id"]] = f"{stop['name']}{place_suffix}"
+            else:
+                _LOGGER.warning("Skipping invalid stop entry: %s", stop)
 
         schema = vol.Schema({
             vol.Required("stop"): vol.In(stop_options),
@@ -326,9 +342,23 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         results = []
 
         try:
+            # Validate that data is a dictionary
+            if not isinstance(data, dict):
+                _LOGGER.error("Invalid API response: expected dict, got %s", type(data))
+                return []
+
             locations = data.get("locations", [])
 
+            # Validate that locations is a list
+            if not isinstance(locations, list):
+                _LOGGER.error("Invalid locations in API response: expected list, got %s", type(locations))
+                return []
+
             for location in locations:
+                # Skip non-dict entries
+                if not isinstance(location, dict):
+                    _LOGGER.debug("Skipping non-dict location entry: %s", location)
+                    continue
                 # Get basic info
                 loc_type = location.get("type", "unknown")
                 name = location.get("name", "")
