@@ -35,7 +35,7 @@ async def test_binary_sensor_no_delays(hass: HomeAssistant, mock_coordinator, mo
         ["bus", "train", "tram"],
     )
 
-    binary_sensor._handle_coordinator_update()
+    binary_sensor._process_delay_data(coordinator.data)
 
     # Should be OFF (no problem) when on time
     assert binary_sensor._attr_is_on is False
@@ -70,7 +70,7 @@ async def test_binary_sensor_with_delays(hass: HomeAssistant, mock_config_entry)
         ["bus", "train", "tram"],
     )
 
-    binary_sensor._handle_coordinator_update()
+    binary_sensor._process_delay_data(coordinator.data)
 
     # Should be ON (problem) when delays > 5 minutes
     assert binary_sensor._attr_is_on is True
@@ -102,7 +102,7 @@ async def test_binary_sensor_delay_threshold(hass: HomeAssistant, mock_config_en
         ["bus", "train", "tram"],
     )
 
-    binary_sensor._handle_coordinator_update()
+    binary_sensor._process_delay_data(coordinator.data)
 
     # Should be OFF when delay <= 5 minutes
     assert binary_sensor._attr_is_on is False
@@ -142,7 +142,7 @@ async def test_binary_sensor_no_departures(hass: HomeAssistant, mock_config_entr
         ["bus", "train", "tram"],
     )
 
-    binary_sensor._handle_coordinator_update()
+    binary_sensor._process_delay_data(coordinator.data)
 
     assert binary_sensor._attr_is_on is False
     assert binary_sensor._attributes["total_departures"] == 0
@@ -157,7 +157,7 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_co
 
     entities = []
 
-    async def mock_add_entities(new_entities):
+    def mock_add_entities(new_entities):
         entities.extend(new_entities)
 
     await async_setup_entry(hass, mock_config_entry, mock_add_entities)

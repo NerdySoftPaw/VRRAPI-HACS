@@ -93,7 +93,7 @@ async def test_sensor_state(hass: HomeAssistant, mock_coordinator, mock_config_e
     with patch("custom_components.vrr.sensor.dt_util.now") as mock_now:
         mock_now.return_value = dt_util.parse_datetime("2025-01-15T09:55:00Z")
 
-        sensor._handle_coordinator_update()
+        sensor._process_departure_data(mock_coordinator.data)
 
         # Verify state is set to next departure time
         assert sensor._state is not None
@@ -145,7 +145,7 @@ async def test_sensor_no_departures(hass: HomeAssistant, mock_config_entry):
         ["bus", "train", "tram"],
     )
 
-    sensor._handle_coordinator_update()
+    sensor._process_departure_data(coordinator.data)
 
     assert sensor._state == "No departures"
     assert sensor._attributes["total_departures"] == 0
@@ -162,7 +162,7 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_ap
     ):
         entities = []
 
-        async def mock_add_entities(new_entities):
+        def mock_add_entities(new_entities):
             entities.extend(new_entities)
 
         await async_setup_entry(hass, mock_config_entry, mock_add_entities)
@@ -214,7 +214,7 @@ async def test_sensor_transportation_type_filtering(hass: HomeAssistant, mock_co
 
     with patch("custom_components.vrr.sensor.dt_util.now") as mock_now:
         mock_now.return_value = dt_util.parse_datetime("2025-01-15T09:55:00Z")
-        sensor._handle_coordinator_update()
+        sensor._process_departure_data(coordinator.data)
 
     # Should only have tram departures
     departures = sensor._attributes.get("departures", [])

@@ -54,74 +54,58 @@ async def test_user_step_provider_selection(hass: HomeAssistant):
     assert result["step_id"] == "user"
 
 
-async def test_full_flow_with_single_results(hass: HomeAssistant, mock_stopfinder_locations, mock_stopfinder_stops):
-    """Test complete flow when each search returns single result."""
+async def test_full_flow_with_single_results(hass: HomeAssistant, mock_stopfinder_stops):
+    """Test complete flow when search returns single result."""
     # Step 1: Select provider
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Step 2: Select provider
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PROVIDER: PROVIDER_VRR},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "stop_search"
+
     with patch(
-        "custom_components.vrr.config_flow.VRRConfigFlow._search_locations",
-        return_value=mock_stopfinder_locations,
+        "custom_components.vrr.config_flow.VRRConfigFlow._search_stops",
+        return_value=mock_stopfinder_stops,
+    ), patch(
+        "custom_components.vrr.async_setup_entry",
+        return_value=True,
     ):
-        # Step 2: Enter location (single result, auto-advance)
+        # Step 3: Enter stop (single result, auto-advance to settings)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PROVIDER: PROVIDER_VRR},
+            user_input={"stop_search": "Hauptbahnhof"},
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "location"
+        assert result["step_id"] == "settings"
 
-        with patch(
-            "custom_components.vrr.config_flow.VRRConfigFlow._search_stops",
-            return_value=mock_stopfinder_stops,
-        ):
-            # Step 3: Enter stop (single result, auto-advance)
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={"location_search": "Düsseldorf"},
-            )
+        # Step 4: Complete
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_DEPARTURES: 10,
+                CONF_TRANSPORTATION_TYPES: ["bus", "train"],
+                CONF_SCAN_INTERVAL: 60,
+            },
+        )
 
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "stop"
-
-            # Step 4: Settings
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={"stop_search": "Hauptbahnhof"},
-            )
-
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "settings"
-
-            # Step 5: Complete
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={
-                    CONF_DEPARTURES: 10,
-                    CONF_TRANSPORTATION_TYPES: ["bus", "train"],
-                    CONF_SCAN_INTERVAL: 60,
-                },
-            )
-
-            assert result["type"] == FlowResultType.CREATE_ENTRY
-            assert result["title"] == "VRR Düsseldorf - Hauptbahnhof"
-            assert result["data"][CONF_PROVIDER] == PROVIDER_VRR
-            assert result["data"][CONF_STATION_ID] == "de:05111:5650"
-            assert result["data"]["place_dm"] == "Düsseldorf"
-            assert result["data"]["name_dm"] == "Hauptbahnhof"
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "VRR Düsseldorf - Hauptbahnhof"
+        assert result["data"][CONF_PROVIDER] == PROVIDER_VRR
+        assert result["data"][CONF_STATION_ID] == "de:05111:5650"
+        assert result["data"]["place_dm"] == "Düsseldorf"
+        assert result["data"]["name_dm"] == "Hauptbahnhof"
 
 
-async def test_location_select_with_multiple_results(hass: HomeAssistant):
-    """Test location selection when multiple results are found."""
-    # Multiple locations
-    multiple_locations = [
-        {"id": "loc1", "name": "Düsseldorf", "type": "locality", "place": ""},
-        {"id": "loc2", "name": "Düsseldorf-Benrath", "type": "locality", "place": ""},
-    ]
-
+async def test_stop_search_no_results(hass: HomeAssistant):
+    """Test stop search with no results."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -133,20 +117,21 @@ async def test_location_select_with_multiple_results(hass: HomeAssistant):
     )
 
     with patch(
-        "custom_components.vrr.config_flow.VRRConfigFlow._search_locations",
-        return_value=multiple_locations,
+        "custom_components.vrr.config_flow.VRRConfigFlow._search_stops",
+        return_value=[],
     ):
-        # Search location (multiple results)
+        # Search stop with no results
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"location_search": "Düsseldorf"},
+            user_input={"stop_search": "NonexistentStop"},
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "location_select"
+        assert result["step_id"] == "stop_search"
+        assert result["errors"]["stop_search"] == "no_results"
 
 
-async def test_stop_select_with_multiple_results(hass: HomeAssistant, mock_stopfinder_locations):
+async def test_stop_select_with_multiple_results(hass: HomeAssistant):
     """Test stop selection when multiple results are found."""
     # Multiple stops
     multiple_stops = [
@@ -165,95 +150,21 @@ async def test_stop_select_with_multiple_results(hass: HomeAssistant, mock_stopf
     )
 
     with patch(
-        "custom_components.vrr.config_flow.VRRConfigFlow._search_locations",
-        return_value=mock_stopfinder_locations,
+        "custom_components.vrr.config_flow.VRRConfigFlow._search_stops",
+        return_value=multiple_stops,
     ):
-        # Search location
+        # Search stop (multiple results)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"location_search": "Düsseldorf"},
-        )
-
-        with patch(
-            "custom_components.vrr.config_flow.VRRConfigFlow._search_stops",
-            return_value=multiple_stops,
-        ):
-            # Search stop (multiple results)
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={"stop_search": "Hauptbahnhof"},
-            )
-
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "stop_select"
-
-
-async def test_location_search_no_results(hass: HomeAssistant):
-    """Test location search with no results."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    # Select provider
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_PROVIDER: PROVIDER_VRR},
-    )
-
-    with patch(
-        "custom_components.vrr.config_flow.VRRConfigFlow._search_locations",
-        return_value=[],
-    ):
-        # Search with no results
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"location_search": "InvalidCity"},
+            user_input={"stop_search": "Hauptbahnhof"},
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "location"
-        assert result["errors"] == {"location_search": "no_results"}
+        assert result["step_id"] == "stop_select"
 
 
-async def test_stop_search_no_results(hass: HomeAssistant, mock_stopfinder_locations):
-    """Test stop search with no results."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    # Select provider
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_PROVIDER: PROVIDER_VRR},
-    )
-
-    with patch(
-        "custom_components.vrr.config_flow.VRRConfigFlow._search_locations",
-        return_value=mock_stopfinder_locations,
-    ):
-        # Search location
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"location_search": "Düsseldorf"},
-        )
-
-        with patch(
-            "custom_components.vrr.config_flow.VRRConfigFlow._search_stops",
-            return_value=[],
-        ):
-            # Search stop with no results
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={"stop_search": "InvalidStop"},
-            )
-
-            assert result["type"] == FlowResultType.FORM
-            assert result["step_id"] == "stop"
-            assert result["errors"] == {"stop_search": "no_results"}
-
-
-async def test_empty_location_search(hass: HomeAssistant):
-    """Test empty location search."""
+async def test_empty_stop_search(hass: HomeAssistant):
+    """Test empty stop search."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -267,12 +178,12 @@ async def test_empty_location_search(hass: HomeAssistant):
     # Empty search
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"location_search": ""},
+        user_input={"stop_search": ""},
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "location"
-    assert result["errors"] == {"location_search": "empty_search"}
+    assert result["step_id"] == "stop_search"
+    assert result["errors"] == {"stop_search": "empty_search"}
 
 
 async def test_options_flow(hass: HomeAssistant, mock_config_entry):

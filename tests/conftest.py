@@ -4,6 +4,7 @@ from unittest.mock import patch, MagicMock
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.const import CONF_NAME
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vrr.const import (
     DOMAIN,
@@ -19,10 +20,9 @@ from custom_components.vrr.const import (
 @pytest.fixture
 def mock_config_entry():
     """Return a mock config entry."""
-    from homeassistant.config_entries import ConfigEntry
-
-    return ConfigEntry(
+    return MockConfigEntry(
         version=1,
+        minor_version=1,
         domain=DOMAIN,
         title="Test Station",
         data={
@@ -37,6 +37,7 @@ def mock_config_entry():
         options={},
         source="user",
         entry_id="test_entry_id",
+        unique_id="test_unique_id",
     )
 
 
@@ -93,3 +94,9 @@ async def hass_with_integration(hass: HomeAssistant):
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     return hass
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations for all tests."""
+    yield
