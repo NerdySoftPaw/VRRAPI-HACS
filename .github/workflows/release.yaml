@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: Prepare Release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version from manifest
+        id: version
+        run: |
+          VERSION=$(cat custom_components/vrr/manifest.json | jq -r '.version')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Validate version matches tag
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+          MANIFEST_VERSION=${{ steps.version.outputs.version }}
+          if [ "$TAG_VERSION" != "v$MANIFEST_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match manifest version (v$MANIFEST_VERSION)"
+            exit 1
+          fi
+
+      - name: Create zip file
+        run: |
+          cd custom_components
+          zip -r ../vrr.zip vrr/
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./vrr.zip
+          asset_name: vrr.zip
+          asset_content_type: application/zip

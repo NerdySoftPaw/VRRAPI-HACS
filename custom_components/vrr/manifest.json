@@ -1,7 +1,7 @@
 {
   "domain": "vrr",
   "name": "NRW/KVV Departures",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "documentation": "https://github.com/NerdySoftPaw/VRRAPI-HACS/blob/main/README.md",
   "requirements": ["pytz"],
   "dependencies": [],
