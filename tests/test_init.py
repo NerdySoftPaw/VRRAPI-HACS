@@ -15,12 +15,11 @@ async def test_async_setup(hass: HomeAssistant):
 
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test setting up a config entry."""
+    # mock_config_entry already added to hass in fixture
     with patch(
         "custom_components.vrr.async_setup_entry",
         return_value=True,
     ):
-        mock_config_entry.add_to_hass(hass)
-
         with patch(
             "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
             return_value=AsyncMock(),
@@ -31,7 +30,7 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigE
 
 async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test unloading a config entry."""
-    mock_config_entry.add_to_hass(hass)
+    # mock_config_entry already added to hass in fixture
     hass.data[DOMAIN] = {f"{mock_config_entry.entry_id}_coordinator": {}}
 
     with patch(
@@ -44,7 +43,7 @@ async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: Config
 
 async def test_refresh_service(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test the refresh_departures service."""
-    mock_config_entry.add_to_hass(hass)
+    # mock_config_entry already added to hass in fixture
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",

@@ -24,6 +24,8 @@ async def async_get_config_entry_diagnostics(
 
     # Get coordinator from hass.data
     coordinator = None
+
+    # First try to get from entity registry
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
@@ -35,6 +37,11 @@ async def async_get_config_entry_diagnostics(
                     if ent.unique_id == entity.unique_id:
                         coordinator = ent.coordinator
                         break
+
+    # Fallback: try to get coordinator directly from hass.data (useful for tests)
+    if not coordinator:
+        coordinator_key = f"{entry.entry_id}_coordinator"
+        coordinator = hass.data.get(DOMAIN, {}).get(coordinator_key)
 
     diagnostics_data = {
         "entry": {

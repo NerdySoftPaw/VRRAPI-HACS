@@ -4,6 +4,8 @@ import voluptuous as vol
 import aiohttp
 import asyncio
 from typing import Any, Dict, List, Optional
+from difflib import SequenceMatcher
+from datetime import datetime, timedelta
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -39,6 +41,10 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._provider: Optional[str] = None
         self._selected_stop: Optional[Dict[str, Any]] = None
+
+        # API response cache to avoid duplicate requests
+        self._search_cache: Dict[str, Dict[str, Any]] = {}
+        self._cache_ttl: int = 300  # Cache TTL in seconds (5 minutes)
 
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle the initial step - select provider."""
@@ -194,7 +200,25 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _search_stops(self, search_term: str) -> List[Dict[str, Any]]:
-        """Search for stops/stations using STOPFINDER API."""
+        """Search for stops/stations using STOPFINDER API with caching.
+
+        Args:
+            search_term: Search term for stops
+
+        Returns:
+            List of stop dictionaries
+        """
+        # Check cache first
+        cache_key = self._get_cache_key(self._provider, search_term, "stop")
+        cached_results = self._get_from_cache(cache_key)
+
+        if cached_results is not None:
+            _LOGGER.debug("Returning %d cached results for: %s", len(cached_results), search_term)
+            return cached_results
+
+        # Cache miss - fetch from API
+        _LOGGER.debug("Cache miss, fetching from API for: %s", search_term)
+
         api_url = self._get_stopfinder_url()
 
         params = (
@@ -211,16 +235,39 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                 if response.status == 200:
-                    data = await response.json()
-                    _LOGGER.debug("API response type: %s, data: %s", type(data), data)
+                    try:
+                        data = await response.json()
+                    except (ValueError, aiohttp.ContentTypeError) as e:
+                        _LOGGER.error("Invalid JSON response from API: %s", e)
+                        return []
+
+                    # Validate response type
+                    if not isinstance(data, dict):
+                        _LOGGER.error("API returned non-dict response: %s", type(data))
+                        return []
+
+                    _LOGGER.debug("API response type: %s, locations count: %s",
+                                type(data), len(data.get("locations", [])))
+
                     result = self._parse_stopfinder_response(data, search_type="stop", search_term=search_term)
+
                     # Ensure we always return a list
                     if not isinstance(result, list):
                         _LOGGER.error("_parse_stopfinder_response returned %s instead of list", type(result))
                         return []
+
+                    # Store in cache before returning
+                    self._store_in_cache(cache_key, result)
+
                     return result
+                elif response.status == 404:
+                    _LOGGER.error("API endpoint not found (404)")
+                elif response.status >= 500:
+                    _LOGGER.error("API server error (status %s)", response.status)
                 else:
                     _LOGGER.error("API returned status %s", response.status)
+        except asyncio.TimeoutError:
+            _LOGGER.error("API request timeout after 10 seconds")
         except Exception as e:
             _LOGGER.error("Error searching stops: %s", e, exc_info=True)
 
@@ -263,24 +310,52 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not isinstance(location, dict):
                     _LOGGER.debug("Skipping non-dict location entry: %s", location)
                     continue
-                # Get basic info
+                # Get basic info with validation
                 loc_type = location.get("type", "unknown")
+                if not isinstance(loc_type, str):
+                    loc_type = "unknown"
+
                 name = location.get("name", "")
+                if not isinstance(name, str):
+                    _LOGGER.debug("Skipping location with invalid name: %s", location)
+                    continue
+
+                # Skip entries with empty names
+                if not name.strip():
+                    _LOGGER.debug("Skipping location with empty name")
+                    continue
 
                 # For VRR/KVV/HVV, the ID might be in different fields
+                properties = location.get("properties", {})
+                if not isinstance(properties, dict):
+                    properties = {}
+
+                ref = location.get("ref", {})
+                if not isinstance(ref, dict):
+                    ref = {}
+
                 loc_id = (
                     location.get("id") or
                     location.get("stateless") or
-                    location.get("properties", {}).get("stopId") or
-                    str(location.get("ref", {}).get("id", ""))
+                    properties.get("stopId") or
+                    str(ref.get("id", ""))
                 )
 
-                # Get place/city info
-                place = location.get("parent", {}).get("name", "")
+                # Validate that we have an ID
+                if not loc_id:
+                    _LOGGER.debug("Skipping location without valid ID: %s", name)
+                    continue
+
+                # Get place/city info with validation
+                parent = location.get("parent", {})
+                if not isinstance(parent, dict):
+                    parent = {}
+                place = parent.get("name", "")
+
                 if not place:
                     # Try to extract from disassembledName
                     disassembled = location.get("disassembledName", "")
-                    if disassembled:
+                    if isinstance(disassembled, str) and disassembled:
                         place = disassembled.split(",")[0] if "," in disassembled else ""
 
                 # Filter based on search type
@@ -320,37 +395,234 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return results
 
+    def _get_cache_key(self, provider: str, search_term: str, search_type: str = "stop") -> str:
+        """Generate cache key for search request.
+
+        Args:
+            provider: Provider name (vrr, kvv, hvv)
+            search_term: Search term
+            search_type: Type of search (stop, location)
+
+        Returns:
+            Cache key string
+        """
+        # Normalize search term for consistent caching
+        normalized_term = self._normalize_umlauts(search_term.lower().strip())
+        return f"{provider}:{search_type}:{normalized_term}"
+
+    def _get_from_cache(self, cache_key: str) -> Optional[List[Dict[str, Any]]]:
+        """Get cached search results if still valid.
+
+        Args:
+            cache_key: Cache key
+
+        Returns:
+            Cached results or None if expired/not found
+        """
+        if cache_key not in self._search_cache:
+            return None
+
+        cache_entry = self._search_cache[cache_key]
+        cached_time = cache_entry.get("timestamp")
+        cached_results = cache_entry.get("results")
+
+        # Check if cache is still valid
+        if cached_time and cached_results is not None:
+            age = (datetime.now() - cached_time).total_seconds()
+            if age < self._cache_ttl:
+                _LOGGER.debug("Cache hit for key: %s (age: %.1fs)", cache_key, age)
+                return cached_results
+            else:
+                _LOGGER.debug("Cache expired for key: %s (age: %.1fs)", cache_key, age)
+                # Remove expired entry
+                del self._search_cache[cache_key]
+
+        return None
+
+    def _store_in_cache(self, cache_key: str, results: List[Dict[str, Any]]) -> None:
+        """Store search results in cache.
+
+        Args:
+            cache_key: Cache key
+            results: Search results to cache
+        """
+        self._search_cache[cache_key] = {
+            "timestamp": datetime.now(),
+            "results": results,
+        }
+        _LOGGER.debug("Stored %d results in cache for key: %s", len(results), cache_key)
+
+        # Limit cache size (keep only last 20 searches)
+        if len(self._search_cache) > 20:
+            # Remove oldest entry
+            oldest_key = min(
+                self._search_cache.keys(),
+                key=lambda k: self._search_cache[k]["timestamp"]
+            )
+            del self._search_cache[oldest_key]
+            _LOGGER.debug("Cache size limit reached, removed oldest entry: %s", oldest_key)
+
+    def _normalize_umlauts(self, text: str) -> str:
+        """Normalize German umlauts for better matching.
+
+        Converts: ä→ae, ö→oe, ü→ue, ß→ss
+        """
+        replacements = {
+            'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss',
+            'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue'
+        }
+        for umlaut, replacement in replacements.items():
+            text = text.replace(umlaut, replacement)
+        return text
+
+    def _fuzzy_match_ratio(self, str1: str, str2: str) -> float:
+        """Calculate fuzzy match ratio between two strings.
+
+        Uses SequenceMatcher to calculate similarity ratio (0.0 to 1.0).
+        Higher values indicate better matches.
+
+        Args:
+            str1: First string to compare
+            str2: Second string to compare
+
+        Returns:
+            Similarity ratio between 0.0 (no match) and 1.0 (perfect match)
+        """
+        # Convert to lowercase for case-insensitive matching
+        str1_lower = str1.lower()
+        str2_lower = str2.lower()
+
+        # Use SequenceMatcher for similarity
+        return SequenceMatcher(None, str1_lower, str2_lower).ratio()
+
+    def _levenshtein_distance(self, str1: str, str2: str) -> int:
+        """Calculate Levenshtein distance between two strings.
+
+        The Levenshtein distance is the minimum number of single-character edits
+        (insertions, deletions, or substitutions) required to change one string
+        into the other.
+
+        Args:
+            str1: First string
+            str2: Second string
+
+        Returns:
+            Edit distance as integer (0 = identical strings)
+        """
+        if len(str1) < len(str2):
+            return self._levenshtein_distance(str2, str1)
+
+        if len(str2) == 0:
+            return len(str1)
+
+        # Create array with distances
+        previous_row = range(len(str2) + 1)
+        for i, c1 in enumerate(str1):
+            current_row = [i + 1]
+            for j, c2 in enumerate(str2):
+                # Cost of insertions, deletions, or substitutions
+                insertions = previous_row[j + 1] + 1
+                deletions = current_row[j] + 1
+                substitutions = previous_row[j] + (c1 != c2)
+                current_row.append(min(insertions, deletions, substitutions))
+            previous_row = current_row
+
+        return previous_row[-1]
+
     def _calculate_relevance(self, search_term: str, name: str, place: str) -> int:
         """Calculate relevance score for a search result.
 
-        Higher score = more relevant result.
+        Higher score = more relevant result. Includes fuzzy matching for typo tolerance.
+
+        Args:
+            search_term: User's search input
+            name: Name of the location/stop
+            place: City/place name
+
+        Returns:
+            Relevance score (higher = more relevant)
         """
         score = 0
         search_words = search_term.split()
 
-        # Bonus if place name is in search term
-        if place and any(word in place.lower() for word in search_words):
-            score += 100
+        # Normalize umlauts for better matching
+        search_term_norm = self._normalize_umlauts(search_term)
+        name_norm = self._normalize_umlauts(name)
+        place_norm = self._normalize_umlauts(place)
+        search_words_norm = search_term_norm.split()
 
-        # Bonus if place name matches a search word exactly
-        if place and place.lower() in search_words:
-            score += 200
+        # === Exact matching bonuses ===
 
-        # Bonus for exact name match
-        if name == search_term:
+        # Bonus if place name is in search term (with umlaut normalization)
+        if place:
+            # Check both original and normalized versions
+            if any(word in place for word in search_words) or any(word in place_norm for word in search_words_norm):
+                score += 100
+            # Check if place is a word in search
+            if place in search_words or place_norm in search_words_norm:
+                score += 200
+
+        # Bonus for exact name match (both versions)
+        if name == search_term or name_norm == search_term_norm:
             score += 300
 
-        # Bonus for name starting with search term
-        if name.startswith(search_term):
+        # Bonus for name starting with search term (both versions)
+        if name.startswith(search_term) or name_norm.startswith(search_term_norm):
             score += 150
 
         # Bonus for each matching word in name
         name_words = name.split()
-        for search_word in search_words:
+        name_words_norm = name_norm.split()
+        for i, search_word in enumerate(search_words):
             if len(search_word) > 2:  # Only consider words longer than 2 chars
-                for name_word in name_words:
-                    if search_word in name_word:
+                search_word_norm = search_words_norm[i] if i < len(search_words_norm) else search_word
+                for j, name_word in enumerate(name_words):
+                    name_word_norm = name_words_norm[j] if j < len(name_words_norm) else name_word
+                    # Check both original and normalized
+                    if search_word in name_word or search_word_norm in name_word_norm:
                         score += 50
+
+        # === Fuzzy matching bonuses ===
+
+        # Fuzzy match on full strings (for typos)
+        fuzzy_ratio = self._fuzzy_match_ratio(search_term_norm, name_norm)
+        if fuzzy_ratio > 0.8:  # High similarity (e.g., "Dusseldorf" vs "Düsseldorf")
+            score += int(fuzzy_ratio * 200)  # Up to +200 points
+        elif fuzzy_ratio > 0.6:  # Medium similarity (e.g., minor typos)
+            score += int(fuzzy_ratio * 100)  # Up to +100 points
+
+        # Fuzzy match on individual words (better for multi-word searches)
+        for search_word in search_words:
+            if len(search_word) > 3:  # Only for meaningful words
+                search_word_norm = self._normalize_umlauts(search_word.lower())
+                best_word_match = 0.0
+
+                # Find best matching word in name
+                for name_word in name_words:
+                    name_word_norm = self._normalize_umlauts(name_word.lower())
+                    word_ratio = self._fuzzy_match_ratio(search_word_norm, name_word_norm)
+
+                    if word_ratio > best_word_match:
+                        best_word_match = word_ratio
+
+                # Bonus for good word matches (typo tolerance)
+                if best_word_match > 0.8:
+                    score += int(best_word_match * 75)  # Up to +75 per word
+                elif best_word_match > 0.7:
+                    score += int(best_word_match * 40)  # Up to +40 per word
+
+        # Levenshtein distance bonus for very similar strings (catches small typos)
+        if len(search_term_norm) > 3 and len(name_norm) > 3:
+            distance = self._levenshtein_distance(search_term_norm, name_norm)
+            max_len = max(len(search_term_norm), len(name_norm))
+
+            # If distance is small relative to string length, give bonus
+            if distance <= 2 and max_len > 5:  # 1-2 character difference
+                score += 120
+            elif distance <= 3 and max_len > 8:  # 2-3 character difference
+                score += 80
+
+        # === Penalties ===
 
         # Penalty for very long place names (likely less specific)
         if place and len(place) > 20:

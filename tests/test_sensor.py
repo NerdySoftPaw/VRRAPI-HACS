@@ -93,7 +93,9 @@ async def test_sensor_state(hass: HomeAssistant, mock_coordinator, mock_config_e
     with patch("custom_components.vrr.sensor.dt_util.now") as mock_now:
         mock_now.return_value = dt_util.parse_datetime("2025-01-15T09:55:00Z")
 
-        sensor._handle_coordinator_update()
+        # Call _process_departure_data directly instead of _handle_coordinator_update
+        # to avoid needing hass to be set
+        sensor._process_departure_data(mock_coordinator.data)
 
         # Verify state is set to next departure time
         assert sensor._state is not None
@@ -145,7 +147,8 @@ async def test_sensor_no_departures(hass: HomeAssistant, mock_config_entry):
         ["bus", "train", "tram"],
     )
 
-    sensor._handle_coordinator_update()
+    # Call _process_departure_data directly to avoid needing hass
+    sensor._process_departure_data(coordinator.data)
 
     assert sensor._state == "No departures"
     assert sensor._attributes["total_departures"] == 0
@@ -154,7 +157,7 @@ async def test_sensor_no_departures(hass: HomeAssistant, mock_config_entry):
 
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_api_response):
     """Test sensor platform setup."""
-    mock_config_entry.add_to_hass(hass)
+    # mock_config_entry already added to hass in fixture
 
     with patch(
         "custom_components.vrr.sensor.VRRDataUpdateCoordinator._fetch_departures",
@@ -162,7 +165,8 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_ap
     ):
         entities = []
 
-        async def mock_add_entities(new_entities):
+        def mock_add_entities(new_entities):
+            """Mock add entities - synchronous callback."""
             entities.extend(new_entities)
 
         await async_setup_entry(hass, mock_config_entry, mock_add_entities)
@@ -214,7 +218,8 @@ async def test_sensor_transportation_type_filtering(hass: HomeAssistant, mock_co
 
     with patch("custom_components.vrr.sensor.dt_util.now") as mock_now:
         mock_now.return_value = dt_util.parse_datetime("2025-01-15T09:55:00Z")
-        sensor._handle_coordinator_update()
+        # Call _process_departure_data directly to avoid needing hass
+        sensor._process_departure_data(coordinator.data)
 
     # Should only have tram departures
     departures = sensor._attributes.get("departures", [])

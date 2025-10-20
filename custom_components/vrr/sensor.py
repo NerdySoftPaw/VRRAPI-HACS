@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 import aiohttp
 import asyncio
 import ssl
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import dt as dt_util
@@ -192,15 +193,32 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                     if response.status == 200:
                         try:
                             json_data = await response.json()
+                            # Validate response structure
                             if not isinstance(json_data, dict):
                                 _LOGGER.warning("%s API returned non-dict response: %s",
                                               self.provider.upper(), type(json_data))
                                 return None
+
+                            # Validate that response contains expected data
+                            if "stopEvents" not in json_data:
+                                _LOGGER.debug("%s API response missing 'stopEvents' field", self.provider.upper())
+                                # Return empty structure instead of None to avoid errors
+                                return {"stopEvents": []}
+
                             return json_data
                         except (ValueError, aiohttp.ContentTypeError) as e:
                             _LOGGER.warning("%s API returned invalid JSON: %s",
                                           self.provider.upper(), e)
                             return None
+                        except Exception as e:
+                            _LOGGER.warning("%s API JSON parsing failed: %s",
+                                          self.provider.upper(), e)
+                            return None
+                    elif response.status == 404:
+                        _LOGGER.warning("%s API endpoint not found (404)", self.provider.upper())
+                        return None
+                    elif response.status >= 500:
+                        _LOGGER.warning("%s API server error (status %s)", self.provider.upper(), response.status)
                     else:
                         _LOGGER.warning("%s API returned status %s", self.provider.upper(), response.status)
 
@@ -378,8 +396,15 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         # Force refresh
         await self.coordinator.async_request_refresh()
 
-    def _process_departure_data(self, data: Dict[str, Any]):
-        """Process the departure data from VRR/KVV/HVV API."""
+    def _process_departure_data(self, data: Dict[str, Any]) -> None:
+        """Process the departure data from VRR/KVV/HVV API.
+
+        Parses raw API response, filters departures by configured transportation types,
+        calculates statistics, and updates sensor state and attributes.
+
+        Args:
+            data: Raw API response containing stopEvents
+        """
         # Validate response structure
         if not isinstance(data, dict):
             _LOGGER.error("Invalid API response: expected dict, got %s", type(data))
@@ -392,15 +417,19 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             _LOGGER.error("Invalid stopEvents in API response: expected list, got %s", type(stop_events))
             return
 
+        # Cache frequently accessed values
+        station_name = f"{self.coordinator.place_dm} - {self.coordinator.name_dm}"
+        station_id = self.coordinator.station_id
+
         if not stop_events:
             self._state = "No departures"
             self._attributes = {
                 "departures": [],
                 "next_3_departures": [],
-                "station_name": f"{self.coordinator.place_dm} - {self.coordinator.name_dm}",
+                "station_name": station_name,
                 "last_updated": dt_util.utcnow().isoformat(),
                 "next_departure_minutes": None,
-                "station_id": self.coordinator.station_id,
+                "station_id": station_id,
                 "total_departures": 0,
                 "delayed_count": 0,
                 "on_time_count": 0,
@@ -414,25 +443,33 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         berlin_tz = dt_util.get_time_zone("Europe/Berlin")
         now = dt_util.now()
 
-        for stop in stop_events:
-            if self.coordinator.provider == PROVIDER_VRR:
-                dep = self._parse_departure_vrr(stop, berlin_tz, now)
-            elif self.coordinator.provider == PROVIDER_KVV:
-                dep = self._parse_departure_kvv(stop, berlin_tz, now)
-            elif self.coordinator.provider == PROVIDER_HVV:
-                dep = self._parse_departure_hvv(stop, berlin_tz, now)
-            else:
-                dep = None
+        # Cache provider and transportation_types to avoid repeated lookups
+        provider = self.coordinator.provider
+        transport_types_set = set(self.transportation_types)  # Set lookup is O(1) vs list O(n)
 
-            # Filter by configured transportation types
-            if dep and dep.get("transportation_type") in self.transportation_types:
-                departures.append(dep)
+        # Select parser function once instead of checking in loop
+        if provider == PROVIDER_VRR:
+            parse_fn = self._parse_departure_vrr
+        elif provider == PROVIDER_KVV:
+            parse_fn = self._parse_departure_kvv
+        elif provider == PROVIDER_HVV:
+            parse_fn = self._parse_departure_hvv
+        else:
+            parse_fn = None
+
+        if parse_fn:
+            for stop in stop_events:
+                dep = parse_fn(stop, berlin_tz, now)
+                # Filter by configured transportation types (set lookup is faster)
+                if dep and dep.get("transportation_type") in transport_types_set:
+                    departures.append(dep)
 
         # Sort by departure time
         departures.sort(key=lambda x: x.get("departure_time_obj", now))
 
         # Limit to requested number
-        departures = departures[:self.coordinator.departures_limit]
+        departures_limit = self.coordinator.departures_limit
+        departures = departures[:departures_limit]
 
         # Set state and attributes
         if departures:
@@ -443,37 +480,32 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             self._state = "No departures"
             next_minutes = None
 
-        # Remove internal objects before setting attributes
+        # Calculate statistics and clean departures in one pass
         clean_departures = []
-        for dep in departures:
-            clean_dep = dep.copy()
-            clean_dep.pop("departure_time_obj", None)
-            clean_departures.append(clean_dep)
-
-        # Calculate additional statistics
-        next_3_departures = []
+        departure_times = []
         delayed_count = 0
         on_time_count = 0
         total_delay = 0
-        departure_times = []
 
-        for dep in clean_departures:
+        for dep in departures:
+            # Extract and remove departure_time_obj for stats before cleaning
+            dep_time_obj = dep.pop("departure_time_obj", None)
+            if dep_time_obj:
+                departure_times.append(dep_time_obj)
+
             # Count delays
-            if dep.get("delay", 0) > 0:
+            delay = dep.get("delay", 0)
+            if delay > 0:
                 delayed_count += 1
-                total_delay += dep["delay"]
+                total_delay += delay
             else:
                 on_time_count += 1
 
-            # Collect departure times for earliest/latest
-            if "departure_time_obj" in departures:
-                # We still have the original departure with time_obj
-                original_dep = next((d for d in departures if d.get("line") == dep.get("line") and d.get("destination") == dep.get("destination")), None)
-                if original_dep and "departure_time_obj" in original_dep:
-                    departure_times.append(original_dep["departure_time_obj"])
+            # Add to clean list (departure_time_obj already removed)
+            clean_departures.append(dep)
 
         # Next 3 departures (simplified)
-        next_3_departures = clean_departures[:3] if len(clean_departures) >= 3 else clean_departures
+        next_3_departures = clean_departures[:3]
 
         # Average delay
         average_delay = round(total_delay / delayed_count, 1) if delayed_count > 0 else 0
@@ -488,10 +520,10 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         self._attributes = {
             "departures": clean_departures,
             "next_3_departures": next_3_departures,
-            "station_name": f"{self.coordinator.place_dm} - {self.coordinator.name_dm}",
+            "station_name": station_name,
             "last_updated": dt_util.utcnow().isoformat(),
             "next_departure_minutes": next_minutes,
-            "station_id": self.coordinator.station_id,
+            "station_id": station_id,
             "total_departures": len(clean_departures),
             "delayed_count": delayed_count,
             "on_time_count": on_time_count,
@@ -500,15 +532,45 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             "latest_departure": latest_departure,
         }
 
-    def _parse_departure_generic(self, stop: Dict[str, Any], berlin_tz, now: datetime,
-                                  get_transport_type_fn, get_platform_fn, get_realtime_fn) -> Optional[Dict[str, Any]]:
-        """Generic parser for departure data - shared logic across all providers."""
+    def _parse_departure_generic(
+        self,
+        stop: Dict[str, Any],
+        berlin_tz: Union[ZoneInfo, Any],
+        now: datetime,
+        get_transport_type_fn: Callable[[Dict[str, Any]], str],
+        get_platform_fn: Callable[[Dict[str, Any]], str],
+        get_realtime_fn: Callable[[Dict[str, Any], Optional[str], Optional[str]], bool]
+    ) -> Optional[Dict[str, Any]]:
+        """Generic parser for departure data - shared logic across all providers.
+
+        Args:
+            stop: Stop event data from API
+            berlin_tz: Berlin timezone object
+            now: Current datetime
+            get_transport_type_fn: Function to determine transportation type
+            get_platform_fn: Function to extract platform information
+            get_realtime_fn: Function to check if realtime data is available
+
+        Returns:
+            Parsed departure dictionary or None if parsing fails
+        """
         try:
+            # Validate stop data structure
+            if not isinstance(stop, dict):
+                _LOGGER.debug("Invalid stop data: expected dict, got %s", type(stop))
+                return None
+
             # Get times
             planned_time_str = stop.get("departureTimePlanned")
             estimated_time_str = stop.get("departureTimeEstimated")
 
             if not planned_time_str:
+                _LOGGER.debug("Missing departureTimePlanned in stop data")
+                return None
+
+            # Validate time strings
+            if not isinstance(planned_time_str, str):
+                _LOGGER.debug("Invalid departureTimePlanned: expected str, got %s", type(planned_time_str))
                 return None
 
             # Parse times
@@ -516,20 +578,33 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             estimated_time = dt_util.parse_datetime(estimated_time_str) if estimated_time_str else planned_time
 
             if not planned_time:
+                _LOGGER.debug("Failed to parse departureTimePlanned: %s", planned_time_str)
                 return None
 
-            # Convert to local timezone
-            planned_local = planned_time.astimezone(berlin_tz)
-            estimated_local = estimated_time.astimezone(berlin_tz)
+            # Convert to local timezone with validation
+            try:
+                planned_local = planned_time.astimezone(berlin_tz)
+                estimated_local = estimated_time.astimezone(berlin_tz) if estimated_time else planned_local
+            except (ValueError, TypeError) as e:
+                _LOGGER.debug("Failed to convert timezone: %s", e)
+                return None
 
             # Calculate delay
             delay_minutes = int((estimated_local - planned_local).total_seconds() / 60)
 
-            # Get transportation info
+            # Get transportation info with validation
             transportation = stop.get("transportation", {})
-            destination = transportation.get("destination", {}).get("name", "Unknown")
-            line_number = transportation.get("number", "")
-            description = transportation.get("description", "")
+            if not isinstance(transportation, dict):
+                _LOGGER.debug("Invalid transportation data: expected dict, got %s", type(transportation))
+                transportation = {}
+
+            destination_obj = transportation.get("destination", {})
+            if not isinstance(destination_obj, dict):
+                destination_obj = {}
+            destination = destination_obj.get("name", "Unknown")
+
+            line_number = str(transportation.get("number", ""))
+            description = str(transportation.get("description", ""))
 
             # Determine transportation type using provider-specific function
             transport_type = get_transport_type_fn(transportation)
@@ -563,8 +638,22 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             _LOGGER.debug("Error parsing departure: %s", e)
             return None
 
-    def _parse_departure_vrr(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
-        """Parse a single departure from VRR API response."""
+    def _parse_departure_vrr(
+        self,
+        stop: Dict[str, Any],
+        berlin_tz: Union[ZoneInfo, Any],
+        now: datetime
+    ) -> Optional[Dict[str, Any]]:
+        """Parse a single departure from VRR API response.
+
+        Args:
+            stop: Stop event data from VRR API
+            berlin_tz: Berlin timezone object
+            now: Current datetime
+
+        Returns:
+            Parsed departure dictionary or None if parsing fails
+        """
         return self._parse_departure_generic(
             stop, berlin_tz, now,
             get_transport_type_fn=self._determine_transport_type_vrr,
@@ -572,8 +661,22 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             get_realtime_fn=lambda s, est, plan: "MONITORED" in s.get("realtimeStatus", [])
         )
 
-    def _parse_departure_kvv(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
-        """Parse a single departure from KVV API response."""
+    def _parse_departure_kvv(
+        self,
+        stop: Dict[str, Any],
+        berlin_tz: Union[ZoneInfo, Any],
+        now: datetime
+    ) -> Optional[Dict[str, Any]]:
+        """Parse a single departure from KVV API response.
+
+        Args:
+            stop: Stop event data from KVV API
+            berlin_tz: Berlin timezone object
+            now: Current datetime
+
+        Returns:
+            Parsed departure dictionary or None if parsing fails
+        """
         return self._parse_departure_generic(
             stop, berlin_tz, now,
             get_transport_type_fn=lambda t: KVV_TRANSPORTATION_TYPES.get(
@@ -583,8 +686,22 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             get_realtime_fn=lambda s, est, plan: s.get("isRealtimeControlled", False)
         )
 
-    def _parse_departure_hvv(self, stop: Dict[str, Any], berlin_tz, now: datetime) -> Optional[Dict[str, Any]]:
-        """Parse a single departure from HVV API response."""
+    def _parse_departure_hvv(
+        self,
+        stop: Dict[str, Any],
+        berlin_tz: Union[ZoneInfo, Any],
+        now: datetime
+    ) -> Optional[Dict[str, Any]]:
+        """Parse a single departure from HVV API response.
+
+        Args:
+            stop: Stop event data from HVV API
+            berlin_tz: Berlin timezone object
+            now: Current datetime
+
+        Returns:
+            Parsed departure dictionary or None if parsing fails
+        """
         return self._parse_departure_generic(
             stop, berlin_tz, now,
             get_transport_type_fn=lambda t: HVV_TRANSPORTATION_TYPES.get(
