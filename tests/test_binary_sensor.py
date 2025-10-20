@@ -35,6 +35,7 @@ async def test_binary_sensor_no_delays(hass: HomeAssistant, mock_coordinator, mo
         ["bus", "train", "tram"],
     )
 
+    # Call _process_delay_data directly to avoid needing hass
     binary_sensor._process_delay_data(coordinator.data)
 
     # Should be OFF (no problem) when on time
@@ -70,6 +71,7 @@ async def test_binary_sensor_with_delays(hass: HomeAssistant, mock_config_entry)
         ["bus", "train", "tram"],
     )
 
+    # Call _process_delay_data directly to avoid needing hass
     binary_sensor._process_delay_data(coordinator.data)
 
     # Should be ON (problem) when delays > 5 minutes
@@ -102,6 +104,7 @@ async def test_binary_sensor_delay_threshold(hass: HomeAssistant, mock_config_en
         ["bus", "train", "tram"],
     )
 
+    # Call _process_delay_data directly to avoid needing hass
     binary_sensor._process_delay_data(coordinator.data)
 
     # Should be OFF when delay <= 5 minutes
@@ -142,6 +145,7 @@ async def test_binary_sensor_no_departures(hass: HomeAssistant, mock_config_entr
         ["bus", "train", "tram"],
     )
 
+    # Call _process_delay_data directly to avoid needing hass
     binary_sensor._process_delay_data(coordinator.data)
 
     assert binary_sensor._attr_is_on is False
@@ -150,7 +154,7 @@ async def test_binary_sensor_no_departures(hass: HomeAssistant, mock_config_entr
 
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_coordinator):
     """Test binary sensor platform setup."""
-    mock_config_entry.add_to_hass(hass)
+    # mock_config_entry already added to hass in fixture
 
     # Store coordinator in hass.data
     hass.data[DOMAIN] = {f"{mock_config_entry.entry_id}_coordinator": mock_coordinator}
@@ -158,6 +162,7 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_co
     entities = []
 
     def mock_add_entities(new_entities):
+        """Mock add entities - synchronous callback."""
         entities.extend(new_entities)
 
     await async_setup_entry(hass, mock_config_entry, mock_add_entities)
