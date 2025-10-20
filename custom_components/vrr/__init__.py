@@ -1,6 +1,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 from .const import DOMAIN
@@ -10,6 +11,8 @@ SERVICE_REFRESH = "refresh_departures"
 SERVICE_REFRESH_SCHEMA = vol.Schema({
     vol.Optional("entity_id"): str,
 })
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
