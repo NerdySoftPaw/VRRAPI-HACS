@@ -1,6 +1,6 @@
 """Tests for VRR integration initialization."""
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
@@ -16,13 +16,15 @@ async def test_async_setup(hass: HomeAssistant):
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test setting up a config entry."""
     # mock_config_entry already added to hass in fixture
+    
+    # Mock the coordinator's first refresh to avoid real API calls
     with patch(
-        "custom_components.vrr.async_setup_entry",
-        return_value=True,
+        "custom_components.vrr.VRRDataUpdateCoordinator.async_config_entry_first_refresh",
+        new_callable=AsyncMock,
     ):
         with patch(
             "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=AsyncMock(),
+            new_callable=AsyncMock,
         ):
             assert await async_setup_entry(hass, mock_config_entry) is True
             assert DOMAIN in hass.data
@@ -31,7 +33,7 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigE
 async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test unloading a config entry."""
     # mock_config_entry already added to hass in fixture
-    hass.data[DOMAIN] = {f"{mock_config_entry.entry_id}_coordinator": {}}
+    hass.data[DOMAIN] = {f"{mock_config_entry.entry_id}_coordinator": MagicMock()}
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
@@ -45,11 +47,16 @@ async def test_refresh_service(hass: HomeAssistant, mock_config_entry: ConfigEnt
     """Test the refresh_departures service."""
     # mock_config_entry already added to hass in fixture
 
+    # Mock the coordinator's first refresh to avoid real API calls
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        return_value=AsyncMock(),
+        "custom_components.vrr.VRRDataUpdateCoordinator.async_config_entry_first_refresh",
+        new_callable=AsyncMock,
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        with patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            new_callable=AsyncMock,
+        ):
+            await async_setup_entry(hass, mock_config_entry)
 
-        # Verify service is registered
-        assert hass.services.has_service(DOMAIN, "refresh_departures")
+            # Verify service is registered
+            assert hass.services.has_service(DOMAIN, "refresh_departures")

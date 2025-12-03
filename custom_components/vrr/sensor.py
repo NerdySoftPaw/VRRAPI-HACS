@@ -57,6 +57,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         station_id: Optional[str],
         departures_limit: int,
         scan_interval: int,
+        config_entry: Optional[ConfigEntry] = None,
     ):
         """Initialize."""
         self.provider = provider
@@ -72,6 +73,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{provider.upper()} {place_dm} - {name_dm}",
             update_interval=timedelta(seconds=scan_interval),
+            config_entry=config_entry,
         )
 
     def _check_rate_limit(self) -> bool:
@@ -239,42 +241,45 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the VRR/KVV sensor from a config entry."""
-    provider = config_entry.data.get(CONF_PROVIDER, PROVIDER_VRR)
-    place_dm = config_entry.data.get("place_dm", DEFAULT_PLACE)
-    name_dm = config_entry.data.get("name_dm", DEFAULT_NAME)
-    station_id = config_entry.data.get(CONF_STATION_ID)
+    # Reuse coordinator created in __init__.py
+    coordinator_key = f"{config_entry.entry_id}_coordinator"
+    coordinator = hass.data[DOMAIN].get(coordinator_key)
+    
+    if coordinator is None:
+        # Fallback: create coordinator if not found (shouldn't happen in normal flow)
+        provider = config_entry.data.get(CONF_PROVIDER, PROVIDER_VRR)
+        place_dm = config_entry.data.get("place_dm", DEFAULT_PLACE)
+        name_dm = config_entry.data.get("name_dm", DEFAULT_NAME)
+        station_id = config_entry.data.get(CONF_STATION_ID)
+        
+        departures = config_entry.options.get(
+            CONF_DEPARTURES,
+            config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
+        )
+        scan_interval = config_entry.options.get(
+            CONF_SCAN_INTERVAL,
+            config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        )
+        
+        coordinator = VRRDataUpdateCoordinator(
+            hass,
+            provider,
+            place_dm,
+            name_dm,
+            station_id,
+            departures,
+            scan_interval,
+            config_entry=config_entry,
+        )
+        hass.data.setdefault(DOMAIN, {})
+        hass.data[DOMAIN][coordinator_key] = coordinator
+        await coordinator.async_config_entry_first_refresh()
 
     # Use options if available, otherwise fall back to data
-    departures = config_entry.options.get(
-        CONF_DEPARTURES,
-        config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
-    )
     transportation_types = config_entry.options.get(
         CONF_TRANSPORTATION_TYPES,
         config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
     )
-    scan_interval = config_entry.options.get(
-        CONF_SCAN_INTERVAL,
-        config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
-
-    # Create coordinator
-    coordinator = VRRDataUpdateCoordinator(
-        hass,
-        provider,
-        place_dm,
-        name_dm,
-        station_id,
-        departures,
-        scan_interval,
-    )
-
-    # Fetch initial data
-    await coordinator.async_config_entry_first_refresh()
-
-    # Store coordinator in hass.data for binary_sensor access
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][f"{config_entry.entry_id}_coordinator"] = coordinator
 
     # Create sensor
     async_add_entities([
