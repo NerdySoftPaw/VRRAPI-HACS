@@ -1,8 +1,9 @@
 """Tests for VRR integration initialization."""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from custom_components.vrr import async_setup, async_setup_entry, async_unload_entry
 from custom_components.vrr.const import DOMAIN

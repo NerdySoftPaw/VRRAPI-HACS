@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import ssl
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 from zoneinfo import ZoneInfo
@@ -323,7 +322,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             manufacturer=f"{provider.upper()} Public Transport",
             model="Departure Monitor",
             sw_version="4.1.0",
-            configuration_url=f"https://github.com/NerdySoftPaw/VRRAPI-HACS",
+            configuration_url="https://github.com/NerdySoftPaw/VRRAPI-HACS",
             suggested_area=place_dm,
         )
 

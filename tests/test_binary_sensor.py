@@ -1,8 +1,9 @@
 """Tests for VRR binary sensor platform."""
-import pytest
 from unittest.mock import MagicMock
-from homeassistant.core import HomeAssistant
+
+import pytest
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from custom_components.vrr.binary_sensor import (
     VRRDelayBinarySensor,

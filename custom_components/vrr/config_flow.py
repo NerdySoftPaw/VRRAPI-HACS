@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional
 
@@ -302,7 +302,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Extract potential city/place names from search term for filtering
             search_lower = search_term.lower()
-            search_words = search_lower.split()
 
             for location in locations:
                 # Skip non-dict entries

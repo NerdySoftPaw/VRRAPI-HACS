@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONF_PROVIDER,
     CONF_TRANSPORTATION_TYPES,
     DOMAIN,
     TRANSPORTATION_TYPES,
@@ -37,7 +36,6 @@ async def async_setup_entry(
     if not coordinator:
         return
 
-    provider = config_entry.data.get(CONF_PROVIDER, "vrr")
     transportation_types = config_entry.options.get(
         CONF_TRANSPORTATION_TYPES, config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
     )

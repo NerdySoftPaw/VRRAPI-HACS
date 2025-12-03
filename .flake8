@@ -9,8 +9,8 @@ exclude =
     .vscode,
     tests
 ignore =
-    E501,  # line too long (handled by black)
-    W503,  # line break before binary operator
-    E203,  # whitespace before ':'
-    E266,  # too many leading '#' for block comment
-    W504   # line break after binary operator
+    E501,
+    W503,
+    E203,
+    E266,
+    W504

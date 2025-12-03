@@ -1,21 +1,22 @@
 """Tests for VRR sensor platform."""
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 from datetime import datetime, timedelta
-from homeassistant.core import HomeAssistant
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from custom_components.vrr.sensor import (
-    VRRDataUpdateCoordinator,
-    MultiProviderSensor,
-    async_setup_entry,
-)
 from custom_components.vrr.const import (
+    API_RATE_LIMIT_PER_DAY,
     DOMAIN,
     PROVIDER_VRR,
-    API_RATE_LIMIT_PER_DAY,
+)
+from custom_components.vrr.sensor import (
+    MultiProviderSensor,
+    VRRDataUpdateCoordinator,
+    async_setup_entry,
 )
 
 

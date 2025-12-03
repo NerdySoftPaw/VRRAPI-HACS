@@ -1,10 +1,10 @@
 """Tests for VRR diagnostics."""
 import pytest
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from custom_components.vrr.diagnostics import async_get_config_entry_diagnostics
 from custom_components.vrr.const import DOMAIN
+from custom_components.vrr.diagnostics import async_get_config_entry_diagnostics
 
 
 async def test_diagnostics(hass: HomeAssistant, mock_config_entry, mock_coordinator):

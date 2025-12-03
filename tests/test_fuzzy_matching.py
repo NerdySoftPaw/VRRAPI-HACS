@@ -1,5 +1,6 @@
 """Tests for fuzzy matching functionality in config flow."""
 import pytest
+
 from custom_components.vrr.config_flow import VRRConfigFlow
 
 
