@@ -1,18 +1,19 @@
 """Fixtures for VRR integration tests."""
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.const import CONF_NAME
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.vrr.const import (
-    DOMAIN,
-    CONF_PROVIDER,
-    CONF_STATION_ID,
     CONF_DEPARTURES,
-    CONF_TRANSPORTATION_TYPES,
+    CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
+    CONF_STATION_ID,
+    CONF_TRANSPORTATION_TYPES,
+    DOMAIN,
     PROVIDER_VRR,
 )
 
