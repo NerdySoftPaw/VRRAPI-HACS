@@ -1,45 +1,46 @@
-import logging
-from datetime import datetime, timedelta
-import aiohttp
 import asyncio
+import logging
 import ssl
+from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 from zoneinfo import ZoneInfo
 
+import aiohttp
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.util import dt as dt_util
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
     CoordinatorEntity,
+    DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.util import dt as dt_util
+
 from .const import (
-    DOMAIN,
-    DEFAULT_PLACE,
-    DEFAULT_NAME,
-    CONF_PROVIDER,
-    CONF_STATION_ID,
-    CONF_DEPARTURES,
-    CONF_TRANSPORTATION_TYPES,
-    CONF_SCAN_INTERVAL,
-    TRANSPORTATION_TYPES,
-    DEFAULT_DEPARTURES,
-    DEFAULT_SCAN_INTERVAL,
-    API_RATE_LIMIT_PER_DAY,
-    API_BASE_URL_VRR,
-    API_BASE_URL_KVV,
     API_BASE_URL_HVV,
-    PROVIDER_VRR,
-    PROVIDER_KVV,
-    PROVIDER_HVV,
-    KVV_TRANSPORTATION_TYPES,
+    API_BASE_URL_KVV,
+    API_BASE_URL_VRR,
+    API_RATE_LIMIT_PER_DAY,
+    CONF_DEPARTURES,
+    CONF_PROVIDER,
+    CONF_SCAN_INTERVAL,
+    CONF_STATION_ID,
+    CONF_TRANSPORTATION_TYPES,
+    DEFAULT_DEPARTURES,
+    DEFAULT_NAME,
+    DEFAULT_PLACE,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     HVV_TRANSPORTATION_TYPES,
+    KVV_TRANSPORTATION_TYPES,
+    PROVIDER_HVV,
+    PROVIDER_KVV,
+    PROVIDER_VRR,
+    TRANSPORTATION_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)

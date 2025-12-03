@@ -1,18 +1,18 @@
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 
 from .const import (
-    DOMAIN,
-    CONF_PROVIDER,
-    CONF_STATION_ID,
     CONF_DEPARTURES,
+    CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
+    CONF_STATION_ID,
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
 from .sensor import VRRDataUpdateCoordinator
 

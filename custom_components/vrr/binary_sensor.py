@@ -5,19 +5,19 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
-    DOMAIN,
     CONF_PROVIDER,
     CONF_TRANSPORTATION_TYPES,
+    DOMAIN,
     TRANSPORTATION_TYPES,
 )
 from .sensor import VRRDataUpdateCoordinator
