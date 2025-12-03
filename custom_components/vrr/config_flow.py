@@ -1,4 +1,5 @@
 """Config flow for VRR integration with autocomplete support."""
+
 import logging
 import voluptuous as vol
 import aiohttp
@@ -52,16 +53,14 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._provider = user_input[CONF_PROVIDER]
             return await self.async_step_stop_search()
 
-        schema = vol.Schema({
-            vol.Required(CONF_PROVIDER, default=PROVIDER_VRR): vol.In(PROVIDERS),
-        })
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_PROVIDER, default=PROVIDER_VRR): vol.In(PROVIDERS),
+            }
+        )
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=schema,
-            description_placeholders={
-                "info": "Wähle deinen ÖPNV-Anbieter aus"
-            }
+            step_id="user", data_schema=schema, description_placeholders={"info": "Wähle deinen ÖPNV-Anbieter aus"}
         )
 
     async def async_step_stop_search(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
@@ -91,9 +90,11 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Multiple results, let user choose
                     return await self.async_step_stop_select(stops)
 
-        schema = vol.Schema({
-            vol.Required("stop_search"): str,
-        })
+        schema = vol.Schema(
+            {
+                vol.Required("stop_search"): str,
+            }
+        )
 
         return self.async_show_form(
             step_id="stop_search",
@@ -101,11 +102,13 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "provider": self._provider.upper(),
-                "example": "z.B. Düsseldorf Hauptbahnhof, Köln Heumarkt..."
-            }
+                "example": "z.B. Düsseldorf Hauptbahnhof, Köln Heumarkt...",
+            },
         )
 
-    async def async_step_stop_select(self, stops: List[Dict[str, Any]] = None, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
+    async def async_step_stop_select(
+        self, stops: List[Dict[str, Any]] = None, user_input: Optional[Dict[str, Any]] = None
+    ) -> FlowResult:
         """Let user select from multiple stop results."""
         if user_input is not None:
             # Find selected stop
@@ -129,21 +132,19 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         stop_options = {}
         for stop in stops:
             if isinstance(stop, dict) and "id" in stop and "name" in stop:
-                place_suffix = f" ({stop['place']})" if stop.get('place') else ""
+                place_suffix = f" ({stop['place']})" if stop.get("place") else ""
                 stop_options[stop["id"]] = f"{stop['name']}{place_suffix}"
             else:
                 _LOGGER.warning("Skipping invalid stop entry: %s", stop)
 
-        schema = vol.Schema({
-            vol.Required("stop"): vol.In(stop_options),
-        })
+        schema = vol.Schema(
+            {
+                vol.Required("stop"): vol.In(stop_options),
+            }
+        )
 
         return self.async_show_form(
-            step_id="stop_select",
-            data_schema=schema,
-            description_placeholders={
-                "count": str(len(stops))
-            }
+            step_id="stop_select", data_schema=schema, description_placeholders={"count": str(len(stops))}
         )
 
     async def async_step_settings(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
@@ -176,27 +177,22 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=title, data=data)
 
-        schema = vol.Schema({
-            vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(
-                int, vol.Range(min=1, max=20)
-            ),
-            vol.Optional(
-                CONF_TRANSPORTATION_TYPES,
-                default=list(TRANSPORTATION_TYPES.keys())
-            ): cv.multi_select(TRANSPORTATION_TYPES),
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                int, vol.Range(min=10, max=3600)
-            ),
-        })
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
+                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
+                    TRANSPORTATION_TYPES
+                ),
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+                    int, vol.Range(min=10, max=3600)
+                ),
+            }
+        )
 
         stop_name = self._selected_stop.get("name", "Unknown") if self._selected_stop else "Unknown"
 
         return self.async_show_form(
-            step_id="settings",
-            data_schema=schema,
-            description_placeholders={
-                "stop": stop_name
-            }
+            step_id="settings", data_schema=schema, description_placeholders={"stop": stop_name}
         )
 
     async def _search_stops(self, search_term: str) -> List[Dict[str, Any]]:
@@ -246,8 +242,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         _LOGGER.error("API returned non-dict response: %s", type(data))
                         return []
 
-                    _LOGGER.debug("API response type: %s, locations count: %s",
-                                type(data), len(data.get("locations", [])))
+                    _LOGGER.debug(
+                        "API response type: %s, locations count: %s", type(data), len(data.get("locations", []))
+                    )
 
                     result = self._parse_stopfinder_response(data, search_type="stop", search_term=search_term)
 
@@ -284,7 +281,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return "https://openservice-test.vrr.de/static03/XML_STOPFINDER_REQUEST"
 
-    def _parse_stopfinder_response(self, data: Dict[str, Any], search_type: str = "stop", search_term: str = "") -> List[Dict[str, Any]]:
+    def _parse_stopfinder_response(
+        self, data: Dict[str, Any], search_type: str = "stop", search_term: str = ""
+    ) -> List[Dict[str, Any]]:
         """Parse STOPFINDER API response."""
         results = []
 
@@ -335,10 +334,10 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ref = {}
 
                 loc_id = (
-                    location.get("id") or
-                    location.get("stateless") or
-                    properties.get("stopId") or
-                    str(ref.get("id", ""))
+                    location.get("id")
+                    or location.get("stateless")
+                    or properties.get("stopId")
+                    or str(ref.get("id", ""))
                 )
 
                 # Validate that we have an ID
@@ -362,23 +361,27 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if search_type == "location":
                     # For location search, prefer localities and places
                     if loc_type in ["locality", "place", "poi"]:
-                        results.append({
-                            "id": loc_id,
-                            "name": name,
-                            "type": loc_type,
-                            "place": place,
-                            "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower())
-                        })
+                        results.append(
+                            {
+                                "id": loc_id,
+                                "name": name,
+                                "type": loc_type,
+                                "place": place,
+                                "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower()),
+                            }
+                        )
                 elif search_type == "stop":
                     # For stop search, prefer stops and stations
                     if loc_type in ["stop", "station", "platform"]:
-                        results.append({
-                            "id": loc_id,
-                            "name": name,
-                            "type": loc_type,
-                            "place": place,
-                            "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower())
-                        })
+                        results.append(
+                            {
+                                "id": loc_id,
+                                "name": name,
+                                "type": loc_type,
+                                "place": place,
+                                "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower()),
+                            }
+                        )
 
             # Sort by relevance (higher is better)
             results.sort(key=lambda x: x.get("relevance", 0), reverse=True)
@@ -455,10 +458,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Limit cache size (keep only last 20 searches)
         if len(self._search_cache) > 20:
             # Remove oldest entry
-            oldest_key = min(
-                self._search_cache.keys(),
-                key=lambda k: self._search_cache[k]["timestamp"]
-            )
+            oldest_key = min(self._search_cache.keys(), key=lambda k: self._search_cache[k]["timestamp"])
             del self._search_cache[oldest_key]
             _LOGGER.debug("Cache size limit reached, removed oldest entry: %s", oldest_key)
 
@@ -467,10 +467,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Converts: ä→ae, ö→oe, ü→ue, ß→ss
         """
-        replacements = {
-            'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss',
-            'Ä': 'Ae', 'Ö': 'Oe', 'Ü': 'Ue'
-        }
+        replacements = {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue"}
         for umlaut, replacement in replacements.items():
             text = text.replace(umlaut, replacement)
         return text
@@ -642,12 +639,18 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry=None):
         """Initialize options flow.
-        
+
         Note: In Home Assistant 2025.12+, config_entry is a read-only property
-        set automatically by the framework. We accept the parameter for 
-        compatibility but don't assign it.
+        set automatically by the framework. For older versions, we need to
+        set it manually.
         """
-        pass
+        # Try to set config_entry for older HA versions (pre-2025.12)
+        # In newer versions this will be ignored as it's a read-only property
+        try:
+            self.config_entry = config_entry
+        except AttributeError:
+            # HA 2025.12+ - config_entry is set automatically by the framework
+            pass
 
     async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Manage the options."""
@@ -656,28 +659,26 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
 
         # Get current values from options or fall back to data
         current_departures = self.config_entry.options.get(
-            CONF_DEPARTURES,
-            self.config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
+            CONF_DEPARTURES, self.config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
         )
         current_scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL,
-            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            CONF_SCAN_INTERVAL, self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )
         current_transport_types = self.config_entry.options.get(
             CONF_TRANSPORTATION_TYPES,
-            self.config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
+            self.config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys())),
         )
 
-        schema = vol.Schema({
-            vol.Optional(CONF_DEPARTURES, default=current_departures): vol.All(
-                int, vol.Range(min=1, max=20)
-            ),
-            vol.Optional(CONF_SCAN_INTERVAL, default=current_scan_interval): vol.All(
-                int, vol.Range(min=30, max=3600)
-            ),
-            vol.Optional(CONF_TRANSPORTATION_TYPES, default=current_transport_types): cv.multi_select(
-                TRANSPORTATION_TYPES
-            ),
-        })
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_DEPARTURES, default=current_departures): vol.All(int, vol.Range(min=1, max=20)),
+                vol.Optional(CONF_SCAN_INTERVAL, default=current_scan_interval): vol.All(
+                    int, vol.Range(min=30, max=3600)
+                ),
+                vol.Optional(CONF_TRANSPORTATION_TYPES, default=current_transport_types): cv.multi_select(
+                    TRANSPORTATION_TYPES
+                ),
+            }
+        )
 
         return self.async_show_form(step_id="init", data_schema=schema)

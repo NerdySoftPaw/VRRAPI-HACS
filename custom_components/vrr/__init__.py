@@ -18,9 +18,11 @@ from .sensor import VRRDataUpdateCoordinator
 
 SERVICE_REFRESH = "refresh_departures"
 
-SERVICE_REFRESH_SCHEMA = vol.Schema({
-    vol.Optional("entity_id"): str,
-})
+SERVICE_REFRESH_SCHEMA = vol.Schema(
+    {
+        vol.Optional("entity_id"): str,
+    }
+)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -33,23 +35,17 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Public Transport DE from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    
+
     # Create coordinator and do initial refresh before forwarding entry setups
     # This allows ConfigEntryNotReady to be raised before async_forward_entry_setups
     provider = entry.data.get(CONF_PROVIDER, "vrr")
     place_dm = entry.data.get("place_dm", "")
     name_dm = entry.data.get("name_dm", "")
     station_id = entry.data.get(CONF_STATION_ID)
-    
-    departures = entry.options.get(
-        CONF_DEPARTURES,
-        entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
-    )
-    scan_interval = entry.options.get(
-        CONF_SCAN_INTERVAL,
-        entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
-    
+
+    departures = entry.options.get(CONF_DEPARTURES, entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES))
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+
     coordinator = VRRDataUpdateCoordinator(
         hass,
         provider,
@@ -60,11 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         scan_interval,
         config_entry=entry,
     )
-    
+
     # Store coordinator before first refresh
     coordinator_key = f"{entry.entry_id}_coordinator"
     hass.data[DOMAIN][coordinator_key] = coordinator
-    
+
     # Do initial refresh - this can raise ConfigEntryNotReady
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -72,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Remove coordinator from hass.data if setup fails
         hass.data[DOMAIN].pop(coordinator_key, None)
         raise ConfigEntryNotReady(f"Failed to initialize VRR API: {err}") from err
-    
+
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor"])
 
     # Register service for manual refresh
@@ -96,10 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             # Refresh all VRR entities
             entity_registry = er.async_get(hass)
-            entities = [
-                e for e in entity_registry.entities.values()
-                if e.platform == DOMAIN
-            ]
+            entities = [e for e in entity_registry.entities.values() if e.platform == DOMAIN]
 
             entity_obj = hass.data.get("entity_components", {}).get("sensor")
             if entity_obj:

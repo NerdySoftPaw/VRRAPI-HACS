@@ -1,4 +1,5 @@
 """Diagnostics support for VRR integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,9 +18,7 @@ TO_REDACT = {
 }
 
 
-async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
     # Get coordinator from hass.data
@@ -55,7 +54,9 @@ async def async_get_config_entry_diagnostics(
         diagnostics_data["coordinator"] = {
             "provider": coordinator.provider,
             "last_update_success": coordinator.last_update_success,
-            "last_update_success_time": coordinator.last_update_success_time.isoformat() if coordinator.last_update_success_time else None,
+            "last_update_success_time": (
+                coordinator.last_update_success_time.isoformat() if coordinator.last_update_success_time else None
+            ),
             "update_interval": str(coordinator.update_interval),
             "api_calls_today": coordinator._api_calls_today,
             "last_api_reset": coordinator._last_api_reset.isoformat(),

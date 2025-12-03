@@ -1,4 +1,5 @@
 """Binary sensor platform for VRR integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -38,13 +39,10 @@ async def async_setup_entry(
 
     provider = config_entry.data.get(CONF_PROVIDER, "vrr")
     transportation_types = config_entry.options.get(
-        CONF_TRANSPORTATION_TYPES,
-        config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
+        CONF_TRANSPORTATION_TYPES, config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
     )
 
-    async_add_entities([
-        VRRDelayBinarySensor(coordinator, config_entry, transportation_types)
-    ])
+    async_add_entities([VRRDelayBinarySensor(coordinator, config_entry, transportation_types)])
 
 
 class VRRDelayBinarySensor(CoordinatorEntity, BinarySensorEntity):
