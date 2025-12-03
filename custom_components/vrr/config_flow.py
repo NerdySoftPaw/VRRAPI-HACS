@@ -640,9 +640,14 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class VRROptionsFlowHandler(config_entries.OptionsFlow):
     """Handle VRR options."""
 
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
+    def __init__(self, config_entry=None):
+        """Initialize options flow.
+        
+        Note: In Home Assistant 2025.12+, config_entry is a read-only property
+        set automatically by the framework. We accept the parameter for 
+        compatibility but don't assign it.
+        """
+        pass
 
     async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Manage the options."""

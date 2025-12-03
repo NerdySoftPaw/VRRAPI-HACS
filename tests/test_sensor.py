@@ -158,6 +158,9 @@ async def test_sensor_no_departures(hass: HomeAssistant, mock_config_entry):
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_api_response):
     """Test sensor platform setup."""
     # mock_config_entry already added to hass in fixture
+    
+    # Initialize hass.data[DOMAIN] as __init__.py would do
+    hass.data.setdefault(DOMAIN, {})
 
     with patch(
         "custom_components.vrr.sensor.VRRDataUpdateCoordinator._fetch_departures",
