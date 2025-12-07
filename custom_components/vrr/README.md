@@ -1,26 +1,43 @@
-# NRW/KVV Home Assistant Integration
+# Multi-Provider Public Transport Home Assistant Integration
 
-Diese Integration zeigt Abfahrten für VRR- und KVV-Haltestellen in Home Assistant an.
+This integration displays departures for various public transport providers in Home Assistant.
 
-## Einrichtung
+## Setup
 
-- Über HACS installieren oder als custom_component einbinden
-- Integration "NRW/KVV Departures" hinzufügen
-- Provider auswählen: `vrr` (Standard) oder `kvv`
-- Stadt und Haltestellenname angeben (z.B. Düsseldorf, Elbruchstrasse oder Karlsruhe, Essenweinstraße)
-- Optional: station_id, Anzahl Abfahrten, Transporttypen
+- Install via HACS or add as custom_component
+- Add integration "NRW/KVV Departures"
+- Select provider: `vrr`, `kvv`, `hvv` or `trafiklab_se`
+- Enter city and stop name (e.g. Düsseldorf, Elbruchstrasse or Karlsruhe, Essenweinstraße)
+- **For Trafiklab (Sweden):** API key from [trafiklab.se](https://www.trafiklab.se) required
+- Optional: station_id, number of departures, transport types
 
-## Unterstützte Provider
-- vrr: Verkehrsverbund Rhein-Ruhr (Standard)
-- kvv: Karlsruher Verkehrsverbund
+## Supported Providers
+- **vrr**: Verkehrsverbund Rhein-Ruhr (NRW) - Default
+- **kvv**: Karlsruher Verkehrsverbund
+- **hvv**: Hamburger Verkehrsverbund
+- **trafiklab_se**: Trafiklab Realtime API (Sweden) - **API key required**
 
-## Unterstützte Transporttypen
+### Trafiklab API Key
+
+To use the Trafiklab provider (Sweden), you need a free API key:
+
+1. Register at [trafiklab.se](https://www.trafiklab.se)
+2. Create a new project
+3. Select the "Realtime API"
+4. Copy the API key
+5. Enter it in the integration's Config Flow
+
+The API key is only required for Trafiklab sensors. No API key is required for VRR, KVV and HVV.
+
+## Supported Transport Types
 - bus
 - tram
 - subway
 - train
 
-## Beispiel
+## Examples
+
+### KVV (Karlsruhe)
 ```
 sensor:
   - platform: public_transport_de
@@ -33,43 +50,37 @@ sensor:
       - train
 ```
 
-## Hinweise
-- Die Integration nutzt die öffentliche VRR- und KVV-API (siehe Beispielantworten in `example_responses/`).
-- Die Felder werden automatisch aus der API geparst.
-## HVV Support
-
-HVV (Hamburger Verkehrsverbund) is now supported!
-
-- Use `provider: hvv` in your configuration to fetch departures from any HVV stop.
-- Platform information is parsed from `location.properties.platform` in the HVV API response.
-- All relevant transport types (bus, metrobus, expressbus, etc.) are mapped.
-- Real-time data is shown if HVV provides it via deviations between `departureTimePlanned` and `departureTimeEstimated`.
-
-**Example HVV API response:**
-```json
-{
-  "stopEvents": [
-    {
-      "location": {
-        "name": "Stadionstraße",
-        "properties": {
-          "stopId": "28582004",
-          "platform": "1"
-        }
-      },
-      "departureTimePlanned": "2025-06-22T20:00:00Z",
-      "transportation": {
-        "number": "2",
-        "description": "Berliner Tor > Hbf. > Altona > Schenefeld",
-        "product": {
-          "class": 5,
-          "name": "Bus"
-        },
-        "destination": {
-          "name": "Schenefeld, Schenefelder Platz"
-        }
-      }
-    }
-  ]
-}
+### HVV (Hamburg)
 ```
+sensor:
+  - platform: public_transport_de
+    provider: hvv
+    place_dm: Hamburg
+    name_dm: Hauptbahnhof
+    departures: 10
+    transportation_types:
+      - bus
+      - subway
+```
+
+### Trafiklab (Sweden)
+```
+sensor:
+  - platform: public_transport_de
+    provider: trafiklab_se
+    station_id: "740000001"  # Stop ID from Trafiklab
+    departures: 10
+    transportation_types:
+      - bus
+      - train
+      - tram
+```
+
+**Note:** For Trafiklab, you must enter the API key in the Config Flow. You can find the stop ID via the search in the Config Flow.
+
+## Notes
+- The integration uses the public APIs of the respective transport associations
+- **No API key** is required for VRR, KVV and HVV
+- For Trafiklab (Sweden), a **free API key** from [trafiklab.se](https://www.trafiklab.se) is required
+- Fields are automatically parsed from the API
+- Real-time data is displayed when available
