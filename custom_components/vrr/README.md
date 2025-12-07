@@ -5,8 +5,8 @@ This integration displays departures for various public transport providers in H
 ## Setup
 
 - Install via HACS or add as custom_component
-- Add integration "NRW/KVV Departures"
-- Select provider: `vrr`, `kvv`, `hvv` or `trafiklab_se`
+- Add integration "Public Transport Departures"
+- Select provider: `vrr`, `kvv`, `hvv`, `trafiklab_se` or `nta_ie`
 - Enter city and stop name (e.g. Düsseldorf, Elbruchstrasse or Karlsruhe, Essenweinstraße)
 - **For Trafiklab (Sweden):** API key from [trafiklab.se](https://www.trafiklab.se) required
 - Optional: station_id, number of departures, transport types
@@ -16,6 +16,7 @@ This integration displays departures for various public transport providers in H
 - **kvv**: Karlsruher Verkehrsverbund
 - **hvv**: Hamburger Verkehrsverbund
 - **trafiklab_se**: Trafiklab Realtime API (Sweden) - **API key required**
+- **nta_ie**: National Transport Authority (Ireland) - **API key required**
 
 ### Trafiklab API Key
 
@@ -27,7 +28,7 @@ To use the Trafiklab provider (Sweden), you need a free API key:
 4. Copy the API key
 5. Enter it in the integration's Config Flow
 
-The API key is only required for Trafiklab sensors. No API key is required for VRR, KVV and HVV.
+The API key is only required for Trafiklab and NTA sensors. No API key is required for VRR, KVV and HVV.
 
 ## Supported Transport Types
 - bus

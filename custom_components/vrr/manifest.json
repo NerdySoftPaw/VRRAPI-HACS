@@ -1,6 +1,6 @@
 {
   "domain": "vrr",
-  "name": "NRW/KVV Departures",
+  "name": "Public Transport Departures",
   "codeowners": ["@NerdySoftPaw"],
   "config_flow": true,
   "dependencies": [],
@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/NerdySoftPaw/VRRAPI-HACS/issues",
   "requirements": ["pytz", "aiofiles"],
-  "version": "2025.12.7"
+  "version": "2025.12.10"
 }

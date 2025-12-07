@@ -89,7 +89,7 @@ The integration uses an **intuitive multi-step setup wizard** with autocomplete 
 
 1. Go to **Settings** > **Devices & Services**
 2. Click **+ Add Integration**
-3. Search for "VRR" or "NRW/KVV Departures"
+3. Search for "VRR" or "Public Transport Departures"
 4. Follow the setup wizard
 
 ### Trafiklab API Key
@@ -136,7 +136,7 @@ For the NTA provider (Ireland), you need a free API key:
 After installation, add the integration via UI:
 1. Go to Settings > Devices & Services
 2. Click "+ Add Integration"
-3. Search for "VRR" or "NRW/KVV Departures"
+3. Search for "VRR" or "Public Transport Departures"
 4. Follow the setup wizard
 
 ## Lovelace Dashboard Examples
