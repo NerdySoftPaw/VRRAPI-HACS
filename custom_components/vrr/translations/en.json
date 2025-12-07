@@ -8,7 +8,7 @@
           "provider": "Provider"
         },
         "data_description": {
-          "provider": "VRR (NRW), KVV (Karlsruhe) or HVV (Hamburg)"
+          "provider": "VRR (NRW), KVV (Karlsruhe), HVV (Hamburg) or Trafiklab (Sweden)"
         }
       },
       "location": {
@@ -39,6 +39,16 @@
           "stop": "Stop"
         }
       },
+      "api_key": {
+        "title": "Enter Trafiklab API Key",
+        "description": "{info}",
+        "data": {
+          "trafiklab_api_key": "Trafiklab API Key"
+        },
+        "data_description": {
+          "trafiklab_api_key": "Trafiklab API key (available at trafiklab.se)"
+        }
+      },
       "settings": {
         "title": "Settings",
         "description": "Configure settings for {stop}",
@@ -57,7 +67,9 @@
     "error": {
       "missing_location": "Please provide either a station ID or location and stop name",
       "empty_search": "Please enter a search term",
-      "no_results": "No results found. Please try a different search term."
+      "no_results": "No results found. Please try a different search term.",
+      "api_key_required": "API key is required",
+      "trafiklab_api_key_required": "Trafiklab API key is required"
     }
   },
   "options": {
