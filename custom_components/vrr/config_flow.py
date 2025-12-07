@@ -153,9 +153,15 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_settings()
 
+        # If stops is None, try to load from temporary data
+        if stops is None:
+            stops = self.hass.data.get(f"{DOMAIN}_temp_stops", [])
+
         # Validate stops is a list
         if not isinstance(stops, list):
             _LOGGER.error("Invalid stops data: expected list, got %s", type(stops))
+            # Clear invalid data
+            self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
             return await self.async_step_stop_search(user_input=None)
 
         # Store stops temporarily
@@ -255,8 +261,15 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         cached_results = self._get_from_cache(cache_key)
 
         if cached_results is not None:
-            _LOGGER.debug("Returning %d cached results for: %s", len(cached_results), search_term)
-            return cached_results
+            # Double-check that cached results is a list (defensive programming)
+            if not isinstance(cached_results, list):
+                _LOGGER.warning(
+                    "Cache returned invalid type %s, expected list. Clearing cache entry.", type(cached_results)
+                )
+                self._search_cache.pop(cache_key, None)
+            else:
+                _LOGGER.debug("Returning %d cached results for: %s", len(cached_results), search_term)
+                return cached_results
 
         # Cache miss - fetch from API
         _LOGGER.debug("Cache miss, fetching from API for: %s", search_term)
@@ -556,6 +569,14 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if cache is still valid
         if cached_time and cached_results is not None:
+            # Validate that cached results is a list
+            if not isinstance(cached_results, list):
+                _LOGGER.warning(
+                    "Invalid cache entry: expected list, got %s. Removing from cache.", type(cached_results)
+                )
+                del self._search_cache[cache_key]
+                return None
+
             age = (datetime.now() - cached_time).total_seconds()
             if age < self._cache_ttl:
                 _LOGGER.debug("Cache hit for key: %s (age: %.1fs)", cache_key, age)
