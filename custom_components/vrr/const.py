@@ -11,6 +11,8 @@ CONF_DEPARTURES = "departures"
 CONF_TRANSPORTATION_TYPES = "transportation_types"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_TRAFIKLAB_API_KEY = "trafiklab_api_key"  # For Trafiklab API
+CONF_NTA_API_KEY = "nta_api_key"  # For NTA Ireland API (Primary Key)
+CONF_NTA_API_KEY_SECONDARY = "nta_api_key_secondary"  # For NTA Ireland API (Secondary Key, optional)
 CONF_USE_PROVIDER_LOGO = "use_provider_logo"  # Show provider logo instead of transport icon
 
 # Provider
@@ -18,7 +20,8 @@ PROVIDER_VRR = "vrr"
 PROVIDER_KVV = "kvv"
 PROVIDER_HVV = "hvv"
 PROVIDER_TRAFIKLAB_SE = "trafiklab_se"
-PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV, PROVIDER_TRAFIKLAB_SE]
+PROVIDER_NTA_IE = "nta_ie"
+PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV, PROVIDER_TRAFIKLAB_SE, PROVIDER_NTA_IE]
 
 # Transportation types mapping
 TRANSPORTATION_TYPES = {"bus": "Bus", "tram": "Tram", "subway": "U-Bahn", "train": "S-Bahn/Train"}
@@ -31,6 +34,8 @@ API_BASE_URL_VRR = "https://openservice-test.vrr.de/static03/XML_DM_REQUEST"
 API_BASE_URL_KVV = "https://projekte.kvv-efa.de/sl3-alone/XSLT_DM_REQUEST"
 API_BASE_URL_HVV = "https://hvv.efa.de/efa/XML_DM_REQUEST"
 API_BASE_URL_TRAFIKLAB = "https://realtime-api.trafiklab.se/v1"
+API_BASE_URL_NTA_GTFSR = "https://api.nationaltransport.ie/gtfsr"
+API_BASE_URL_NTA_GTFS_STATIC = "https://www.transportforireland.ie/transitData/Data/GTFS_Realtime.zip"
 # Mapping für KVV
 KVV_TRANSPORTATION_TYPES = {
     1: "train",  # S-Bahn
@@ -59,12 +64,26 @@ TRAFIKLAB_TRANSPORTATION_TYPES = {
     "FERRY": "ferry",
 }
 
+# Mapping für NTA Ireland (GTFS route_type)
+# GTFS route_type: 0=Tram, 1=Subway, 2=Rail, 3=Bus, 4=Ferry, 5=Cable tram, 6=Gondola, 7=Funicular
+NTA_TRANSPORTATION_TYPES = {
+    0: "tram",  # Tram, Streetcar, Light rail
+    1: "subway",  # Subway, Metro
+    2: "train",  # Rail
+    3: "bus",  # Bus
+    4: "ferry",  # Ferry
+    5: "tram",  # Cable tram
+    6: "tram",  # Gondola, Suspended cable car
+    7: "train",  # Funicular
+}
+
 # Provider-specific icons (MDI icons as fallback)
 PROVIDER_ICONS = {
     "vrr": "mdi:bus-clock",
     "kvv": "mdi:tram",
     "hvv": "mdi:ferry",
     "trafiklab_se": "mdi:train",
+    "nta_ie": "mdi:bus-multiple",
 }
 
 # Provider-specific entity pictures (logos)
@@ -75,4 +94,5 @@ PROVIDER_ENTITY_PICTURES = {
     "kvv": "https://www.kvv.de/favicon.ico",
     "hvv": "https://www.hvv.de/favicon.ico",
     "trafiklab_se": "https://www.trafiklab.se/favicon.ico",
+    "nta_ie": "https://www.transportforireland.ie/favicon.ico",
 }

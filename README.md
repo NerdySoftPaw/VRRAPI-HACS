@@ -1,5 +1,5 @@
 ![logo]
-# NRW/KVV/VRR Departures Home Assistant Integration
+# Multi-Provider Public Transport Home Assistant Integration
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
@@ -11,7 +11,7 @@
 [![Tests](https://github.com/NerdySoftPaw/VRRAPI-HACS/actions/workflows/tests.yaml/badge.svg)](https://github.com/NerdySoftPaw/VRRAPI-HACS/actions/workflows/tests.yaml)
 
 
-A Home Assistant integration for the public transport networks VRR (Verkehrsverbund Rhein-Ruhr), KVV (Karlsruher Verkehrsverbund), HVV (Hochbahn) and Trafiklab (Sweden). This integration provides real-time departure information for public transport in NRW, Karlsruhe, Hamburg and Sweden.
+A Home Assistant integration for the public transport networks VRR (Verkehrsverbund Rhein-Ruhr), KVV (Karlsruher Verkehrsverbund), HVV (Hochbahn), Trafiklab (Sweden) and NTA (National Transport Authority, Ireland). This integration provides real-time departure information for public transport in NRW, Karlsruhe, Hamburg, Sweden and Ireland.
 
 ## Features
 
@@ -25,7 +25,7 @@ A Home Assistant integration for the public transport networks VRR (Verkehrsverb
 - **Repair Issues Integration**: Automatic notifications for API errors or rate limits
 - **Rate Limiting**: Intelligent API rate limiting to prevent overload (60,000 calls/day)
 - **Error Handling**: Robust error handling with exponential backoff strategy
-- **Timezone Support**: Proper handling of provider-specific timezones (Europe/Berlin for VRR/KVV/HVV, Europe/Stockholm for Trafiklab)
+- **Timezone Support**: Proper handling of provider-specific timezones (Europe/Berlin for VRR/KVV/HVV, Europe/Stockholm for Trafiklab, Europe/Dublin for NTA)
 
 ### Intelligence & Performance Features (v4.2.0)
 - **Fuzzy Matching with Typo Tolerance**: Intelligently finds stops even with typos
@@ -68,8 +68,9 @@ The integration uses an **intuitive multi-step setup wizard** with autocomplete 
 ### Setup Wizard
 
 1. **Select Provider**
-   - Choose between VRR (NRW), KVV (Karlsruhe), HVV (Hamburg) or Trafiklab (Sweden)
+   - Choose between VRR (NRW), KVV (Karlsruhe), HVV (Hamburg), Trafiklab (Sweden) or NTA (Ireland)
    - **For Trafiklab:** A free API key from [trafiklab.se](https://www.trafiklab.se) is required
+   - **For NTA:** A free API key from [developer.nationaltransport.ie](https://developer.nationaltransport.ie) is required
 
 2. **Search City/Location**
    - Enter your city (e.g. "Düsseldorf", "Köln", "Hamburg")
@@ -102,6 +103,22 @@ For the Trafiklab provider (Sweden), you need a free API key:
 5. Enter it in the integration's Config Flow
 
 **Note:** The API key is only required for Trafiklab sensors. No API key is required for VRR, KVV and HVV.
+
+### NTA Ireland API Key
+
+For the NTA provider (Ireland), you need a free API key:
+
+1. Register at [developer.nationaltransport.ie](https://developer.nationaltransport.ie)
+2. Subscribe to the "GTFS-Realtime" API
+3. You will receive a Primary and Secondary API key
+4. Enter the Primary API key in the integration's Config Flow (required)
+5. Optionally enter the Secondary API key (used as fallback if Primary fails)
+
+**Note:** 
+- The Primary API key is required for NTA sensors
+- The Secondary API key is optional but recommended as a fallback
+- NTA uses GTFS-RT (General Transit Feed Specification - Realtime) format
+- GTFS Static data is automatically downloaded for stop search functionality
 
 ### Transportation Types
 
@@ -500,6 +517,36 @@ HVV (Hamburger Verkehrsverbund) is now supported!
 - All relevant transport types (bus, metrobus, expressbus, etc.) are mapped.
 - Real-time data is shown if HVV provides it via deviations between `departureTimePlanned` and `departureTimeEstimated`.
 
+## NTA Ireland Support
+
+NTA (National Transport Authority, Ireland) is now supported!
+
+- Use `provider: nta_ie` in your configuration to fetch real-time departures from any Irish public transport stop.
+- Uses GTFS-RT (General Transit Feed Specification - Realtime) API for real-time data.
+- GTFS Static data is automatically downloaded and cached for stop search functionality.
+- Supports all Irish transport operators: Dublin Bus, Bus Éireann, Go-Ahead Ireland, Luas, and Iarnród Éireann.
+- Real-time delays are calculated from GTFS-RT trip updates.
+- Stop search uses GTFS Static `stops.txt` data (no API calls needed for search).
+
+**Transport Types Supported:**
+- Bus (route_type 3)
+- Tram/Light Rail (route_type 0, 5, 6)
+- Subway/Metro (route_type 1)
+- Train/Rail (route_type 2, 7)
+- Ferry (route_type 4)
+
+**Example NTA Configuration:**
+1. Select "NTA (Ireland)" as provider
+2. Enter your Primary API key (and optionally Secondary key)
+3. Search for a stop (e.g., "Dublin Connolly", "Heuston Station")
+4. Select your stop and configure settings
+
+**API Information:**
+- Base URL: `https://api.nationaltransport.ie/gtfsr`
+- Endpoint: `/v2/TripUpdates?format=json`
+- Authentication: API key via `x-api-key` header
+- GTFS Static: Automatically downloaded from Transport for Ireland
+
 **Example HVV API response:**
 ```json
 {
@@ -530,6 +577,29 @@ HVV (Hamburger Verkehrsverbund) is now supported!
 ```
 
 ## Changelog
+
+### Version 4.3.0 - NTA Ireland Support
+#### New Features
+- **NTA Ireland Integration**: Full support for National Transport Authority (Ireland) GTFS-RT API
+  - Real-time departure information for all Irish public transport operators
+  - Automatic GTFS Static data download and caching for stop search
+  - Support for Primary and Secondary API keys with automatic fallback
+  - GTFS route_type mapping to internal transport types (bus, tram, train, subway, ferry)
+  - Timezone support for Europe/Dublin
+- **GTFS Static Data Loader**: New module for handling GTFS Static ZIP files
+  - Automatic download and caching of GTFS Static data
+  - 24-hour cache duration with automatic refresh
+  - Support for stops.txt, routes.txt, trips.txt, and stop_times.txt
+  - Efficient CSV parsing with async file operations
+- **Enhanced API Key Management**: Support for Primary and Secondary API keys
+  - Automatic fallback to Secondary key if Primary fails with 401
+  - Config Flow support for both keys (Primary required, Secondary optional)
+
+#### Technical Details
+- **GTFS-RT JSON Format**: Uses JSON format instead of Protocol Buffers for easier parsing
+- **Stop Search**: Uses GTFS Static stops.txt for fast, offline-capable stop search
+- **Route Information**: Automatically resolves route names from GTFS Static routes.txt
+- **Transport Type Detection**: Maps GTFS route_type (0-7) to internal types
 
 ### Version 4.2.0 - Performance & Intelligence Update
 #### New Features

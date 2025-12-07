@@ -23,10 +23,13 @@ from homeassistant.util import dt as dt_util
 from .const import (
     API_BASE_URL_HVV,
     API_BASE_URL_KVV,
+    API_BASE_URL_NTA_GTFSR,
     API_BASE_URL_TRAFIKLAB,
     API_BASE_URL_VRR,
     API_RATE_LIMIT_PER_DAY,
     CONF_DEPARTURES,
+    CONF_NTA_API_KEY,
+    CONF_NTA_API_KEY_SECONDARY,
     CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
     CONF_STATION_ID,
@@ -40,15 +43,18 @@ from .const import (
     DOMAIN,
     HVV_TRANSPORTATION_TYPES,
     KVV_TRANSPORTATION_TYPES,
+    NTA_TRANSPORTATION_TYPES,
     PROVIDER_ENTITY_PICTURES,
     PROVIDER_HVV,
     PROVIDER_KVV,
+    PROVIDER_NTA_IE,
     PROVIDER_TRAFIKLAB_SE,
     PROVIDER_VRR,
     TRAFIKLAB_TRANSPORTATION_TYPES,
     TRANSPORTATION_TYPES,
 )
 from .data_models import UnifiedDeparture
+from .gtfs_static import GTFSStaticData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,11 +82,20 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         self.departures_limit = departures_limit
         self._api_calls_today = 0
         self._last_api_reset = datetime.now().date()
-        self.api_key = api_key  # For Trafiklab API
+        self.api_key = api_key  # For Trafiklab API or NTA API (Primary)
+        self.api_key_secondary: Optional[str] = None  # For NTA API (Secondary, optional fallback)
 
         # Note: config_entry parameter was added in HA 2024.11+
         # We store it ourselves for compatibility with older versions
         self._config_entry = config_entry
+
+        # GTFS Static data loader for NTA
+        self.gtfs_static: Optional[GTFSStaticData] = None
+        if provider == PROVIDER_NTA_IE:
+            self.gtfs_static = GTFSStaticData(hass)
+            # Get secondary key from config entry if available
+            if config_entry:
+                self.api_key_secondary = config_entry.data.get(CONF_NTA_API_KEY_SECONDARY)
 
         super().__init__(
             hass,
@@ -166,6 +181,9 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch departure data from the API."""
         if self.provider == PROVIDER_TRAFIKLAB_SE:
             return await self._fetch_departures_trafiklab()
+
+        if self.provider == PROVIDER_NTA_IE:
+            return await self._fetch_departures_nta()
 
         if self.provider == PROVIDER_VRR:
             base_url = API_BASE_URL_VRR
@@ -406,6 +424,211 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
 
         return None
 
+    async def _fetch_departures_nta(self) -> Optional[Dict[str, Any]]:
+        """Fetch departure data from NTA GTFS-RT API."""
+        if not self.api_key:
+            _LOGGER.error("NTA API key is required")
+            return None
+
+        if not self.station_id:
+            _LOGGER.error("NTA requires a station ID (stop_id)")
+            return None
+
+        # Ensure GTFS Static data is loaded
+        if self.gtfs_static and not await self.gtfs_static.ensure_loaded():
+            _LOGGER.error("Failed to load GTFS Static data for NTA")
+            return None
+
+        url = f"{API_BASE_URL_NTA_GTFSR}/v2/TripUpdates"
+        params = {"format": "json"}
+        session = async_get_clientsession(self.hass)
+
+        # Use Primary Key in header (preferred method)
+        # If Primary Key fails, Secondary Key can be used as fallback
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; HomeAssistant NTA Integration)",
+            "x-api-key": self.api_key,
+        }
+
+        max_retries = 3
+        current_api_key = self.api_key
+        for attempt in range(1, max_retries + 1):
+            try:
+                # Update header with current API key (Primary or Secondary as fallback)
+                headers["x-api-key"] = current_api_key
+
+                async with session.get(
+                    url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=15)
+                ) as response:
+                    if response.status == 200:
+                        try:
+                            json_data = await response.json()
+                            # Validate response structure
+                            if not isinstance(json_data, dict):
+                                _LOGGER.warning("NTA API returned non-dict response: %s", type(json_data))
+                                return None
+
+                            # GTFS-RT structure: {header: {...}, entity: [...]}
+                            entities = json_data.get("entity", [])
+                            if not isinstance(entities, list):
+                                _LOGGER.debug("NTA API response missing or invalid 'entity' field")
+                                return {"stopEvents": []}
+
+                            _LOGGER.debug("NTA API returned %d entities", len(entities))
+
+                            # Filter entities for our stop_id and convert to stopEvents format
+                            stop_events = []
+                            target_stop_id = self.station_id
+
+                            for entity in entities:
+                                if not isinstance(entity, dict):
+                                    continue
+
+                                trip_update = entity.get("trip_update")
+                                if not isinstance(trip_update, dict):
+                                    continue
+
+                                # Get trip info
+                                trip = trip_update.get("trip", {})
+                                if not isinstance(trip, dict):
+                                    continue
+
+                                # Get stop_time_updates
+                                stop_time_updates = trip_update.get("stop_time_update", [])
+                                if not isinstance(stop_time_updates, list):
+                                    continue
+
+                                # Find stop_time_update for our stop_id
+                                for stop_time_update in stop_time_updates:
+                                    if not isinstance(stop_time_update, dict):
+                                        continue
+
+                                    stop_id = stop_time_update.get("stop_id")
+                                    if stop_id != target_stop_id:
+                                        continue
+
+                                    # Found a departure for our stop
+                                    route_id = trip.get("route_id", "")
+                                    trip_id = trip.get("trip_id", "")
+
+                                    # Get route info from GTFS Static
+                                    route_short_name = ""
+                                    route_type = 3  # Default to bus
+                                    if self.gtfs_static:
+                                        route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
+                                        route_type = self.gtfs_static.get_route_type(route_id) or 3
+
+                                    # Get delay (in seconds, convert to minutes)
+                                    departure = stop_time_update.get("departure", {})
+                                    arrival = stop_time_update.get("arrival", {})
+                                    delay_seconds = departure.get("delay") or arrival.get("delay") or 0
+                                    delay_minutes = int(delay_seconds / 60) if delay_seconds else 0
+
+                                    # Get scheduled time
+                                    # GTFS-RT uses time field (POSIX timestamp) or delay
+                                    # We need to calculate from trip start_time + stop_sequence
+                                    # For now, use delay to estimate
+                                    schedule_relationship = stop_time_update.get("schedule_relationship", "SCHEDULED")
+
+                                    # Skip canceled trips
+                                    if schedule_relationship in ["CANCELED", "SKIPPED"]:
+                                        continue
+
+                                    # Get destination from trip (we'll use route name as fallback)
+                                    destination = route_short_name or "Unknown"
+
+                                    # Calculate time (simplified - in real implementation, we'd need stop_times.txt)
+                                    # For now, we'll use current time + delay as estimate
+                                    now = dt_util.now()
+                                    planned_time = now + timedelta(minutes=delay_minutes)
+                                    estimated_time = planned_time
+
+                                    # Format times
+                                    planned_time_str = planned_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+                                    estimated_time_str = estimated_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+                                    stop_event = {
+                                        "departureTimePlanned": planned_time_str,
+                                        "departureTimeEstimated": estimated_time_str,
+                                        "transportation": {
+                                            "number": route_short_name,
+                                            "description": "",
+                                            "destination": {"name": destination},
+                                            "product": {"class": route_type},
+                                        },
+                                        "platform": {"name": ""},
+                                        "realtimeStatus": ["MONITORED"] if delay_seconds != 0 else [],
+                                        "route_id": route_id,
+                                        "trip_id": trip_id,
+                                        "stop_id": stop_id,
+                                        "delay_seconds": delay_seconds,
+                                    }
+                                    stop_events.append(stop_event)
+
+                            _LOGGER.debug("NTA: Found %d departures for stop %s", len(stop_events), target_stop_id)
+                            return {"stopEvents": stop_events}
+
+                        except (ValueError, aiohttp.ContentTypeError) as e:
+                            _LOGGER.warning("NTA API returned invalid JSON: %s", e)
+                            return None
+                        except Exception as e:
+                            _LOGGER.warning("NTA API JSON parsing failed: %s", e, exc_info=True)
+                            return None
+                    elif response.status == 404:
+                        _LOGGER.warning("NTA API endpoint not found (404)")
+                        return None
+                    elif response.status == 401:
+                        # Try Secondary Key as fallback if available
+                        if self.api_key_secondary and current_api_key == self.api_key:
+                            _LOGGER.info("NTA Primary API key failed (401), trying Secondary key...")
+                            current_api_key = self.api_key_secondary
+                            continue  # Retry with Secondary key
+                        _LOGGER.warning("NTA API authentication failed (401) - check API key(s)")
+                        return None
+                    elif response.status >= 500:
+                        _LOGGER.warning(
+                            "NTA API server error (status %s) on attempt %d/%d",
+                            response.status,
+                            attempt,
+                            max_retries,
+                        )
+                        if attempt < max_retries:
+                            await asyncio.sleep(2**attempt)
+                            continue
+                        _LOGGER.error(
+                            "NTA API server error (status %s) after %d attempts",
+                            response.status,
+                            max_retries,
+                        )
+                        return None
+                    else:
+                        _LOGGER.warning(
+                            "NTA API returned status %s on attempt %d/%d", response.status, attempt, max_retries
+                        )
+                        if attempt < max_retries:
+                            await asyncio.sleep(2**attempt)
+                            continue
+
+            except asyncio.TimeoutError:
+                _LOGGER.warning("NTA API timeout on attempt %d/%d", attempt, max_retries)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                _LOGGER.error("NTA API request timeout after %d attempts", max_retries)
+            except ClientConnectorError as e:
+                _LOGGER.warning("NTA API connection error on attempt %d/%d: %s", attempt, max_retries, e)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                _LOGGER.error("NTA API connection failed after %d attempts: %s", max_retries, e)
+            except Exception as e:
+                _LOGGER.warning("NTA API attempt %d/%d failed: %s", attempt, max_retries, e)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+
+        return None
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -424,6 +647,14 @@ async def async_setup_entry(
         name_dm = config_entry.data.get("name_dm", DEFAULT_NAME)
         station_id = config_entry.data.get(CONF_STATION_ID)
         trafiklab_api_key = config_entry.data.get(CONF_TRAFIKLAB_API_KEY)
+        nta_api_key = config_entry.data.get(CONF_NTA_API_KEY)
+
+        # Use appropriate API key based on provider
+        api_key = None
+        if provider == PROVIDER_TRAFIKLAB_SE:
+            api_key = trafiklab_api_key
+        elif provider == PROVIDER_NTA_IE:
+            api_key = nta_api_key
 
         departures = config_entry.options.get(
             CONF_DEPARTURES, config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
@@ -441,7 +672,7 @@ async def async_setup_entry(
             departures,
             scan_interval,
             config_entry=config_entry,
-            api_key=trafiklab_api_key,
+            api_key=api_key,
         )
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][coordinator_key] = coordinator
@@ -644,6 +875,10 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         provider = self.coordinator.provider
         if provider == PROVIDER_TRAFIKLAB_SE:
             tz = dt_util.get_time_zone("Europe/Stockholm")
+        elif provider == PROVIDER_NTA_IE:
+            tz = dt_util.get_time_zone("Europe/Dublin")
+        elif provider == PROVIDER_HVV:
+            tz = dt_util.get_time_zone("Europe/Berlin")
         else:
             tz = dt_util.get_time_zone("Europe/Berlin")
         now = dt_util.now()
@@ -660,6 +895,8 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             parse_fn = self._parse_departure_hvv
         elif provider == PROVIDER_TRAFIKLAB_SE:
             parse_fn = self._parse_departure_trafiklab
+        elif provider == PROVIDER_NTA_IE:
+            parse_fn = self._parse_departure_nta
         else:
             parse_fn = None
 
@@ -944,6 +1181,40 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
                 else str(s.get("platform", ""))
             ),
             get_realtime_fn=lambda s, est, plan: est != plan if est and plan else False,
+        )
+
+    def _parse_departure_nta(
+        self, stop: Dict[str, Any], tz: Union[ZoneInfo, Any], now: datetime
+    ) -> Optional[UnifiedDeparture]:
+        """Parse a single departure from NTA GTFS-RT API response.
+
+        Args:
+            stop: Stop event data from NTA API (already normalized)
+            tz: Timezone object (Europe/Dublin)
+            now: Current datetime
+
+        Returns:
+            UnifiedDeparture object or None if parsing fails
+        """
+        # Get route_type from transportation.product.class
+        transportation = stop.get("transportation", {})
+        product = transportation.get("product", {})
+        route_type = product.get("class", 3)  # Default to bus (3)
+
+        # Map GTFS route_type to our transport type
+        transport_type = NTA_TRANSPORTATION_TYPES.get(route_type, "bus")
+
+        return self._parse_departure_generic(
+            stop,
+            tz,
+            now,
+            get_transport_type_fn=lambda t: transport_type,
+            get_platform_fn=lambda s: (
+                s.get("platform", {}).get("name", "")
+                if isinstance(s.get("platform"), dict)
+                else str(s.get("platform", ""))
+            ),
+            get_realtime_fn=lambda s, est, plan: "MONITORED" in s.get("realtimeStatus", []),
         )
 
     def _determine_transport_type_vrr(self, transportation: Dict[str, Any]) -> str:

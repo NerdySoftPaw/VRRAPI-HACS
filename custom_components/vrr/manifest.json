@@ -7,6 +7,6 @@
   "documentation": "https://github.com/NerdySoftPaw/VRRAPI-HACS/blob/main/README.md",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/NerdySoftPaw/VRRAPI-HACS/issues",
-  "requirements": ["pytz"],
+  "requirements": ["pytz", "aiofiles"],
   "version": "2025.12.7"
 }
