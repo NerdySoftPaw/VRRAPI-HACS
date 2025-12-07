@@ -18,21 +18,26 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_DEPARTURES,
+    CONF_NTA_API_KEY,
+    CONF_NTA_API_KEY_SECONDARY,
     CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
     CONF_STATION_ID,
     CONF_TRAFIKLAB_API_KEY,
     CONF_TRANSPORTATION_TYPES,
+    CONF_USE_PROVIDER_LOGO,
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PROVIDER_HVV,
     PROVIDER_KVV,
+    PROVIDER_NTA_IE,
     PROVIDER_TRAFIKLAB_SE,
     PROVIDER_VRR,
     PROVIDERS,
     TRANSPORTATION_TYPES,
 )
+from .gtfs_static import GTFSStaticData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +51,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._provider: Optional[str] = None
         self._selected_stop: Optional[Dict[str, Any]] = None
-        self._api_key: Optional[str] = None  # For Trafiklab
+        self._api_key: Optional[str] = None  # For Trafiklab or NTA (Primary)
+        self._api_key_secondary: Optional[str] = None  # For NTA (Secondary, optional)
+        self._gtfs_static: Optional[GTFSStaticData] = None
 
         # API response cache to avoid duplicate requests
         self._search_cache: Dict[str, Dict[str, Any]] = {}
@@ -56,8 +63,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step - select provider."""
         if user_input is not None:
             self._provider = user_input[CONF_PROVIDER]
-            # Trafiklab requires API key
-            if self._provider == PROVIDER_TRAFIKLAB_SE:
+            # Trafiklab and NTA require API key
+            if self._provider == PROVIDER_TRAFIKLAB_SE or self._provider == PROVIDER_NTA_IE:
                 return await self.async_step_api_key()
             return await self.async_step_stop_search()
 
@@ -70,35 +77,62 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_api_key(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
-        """Handle Trafiklab API key input."""
+        """Handle API key input for Trafiklab or NTA."""
         errors = {}
 
         if user_input is not None:
-            trafiklab_api_key = user_input.get(CONF_TRAFIKLAB_API_KEY, "").strip()
-            if not trafiklab_api_key:
-                errors[CONF_TRAFIKLAB_API_KEY] = "trafiklab_api_key_required"
-            else:
-                # Store API key temporarily
-                self._api_key = trafiklab_api_key
-                return await self.async_step_stop_search()
+            if self._provider == PROVIDER_TRAFIKLAB_SE:
+                api_key = user_input.get(CONF_TRAFIKLAB_API_KEY, "").strip()
+                if not api_key:
+                    errors[CONF_TRAFIKLAB_API_KEY] = "trafiklab_api_key_required"
+                else:
+                    self._api_key = api_key
+                    return await self.async_step_stop_search()
+            elif self._provider == PROVIDER_NTA_IE:
+                api_key = user_input.get(CONF_NTA_API_KEY, "").strip()
+                api_key_secondary = user_input.get(CONF_NTA_API_KEY_SECONDARY, "").strip()
+                if not api_key:
+                    errors[CONF_NTA_API_KEY] = "nta_api_key_required"
+                else:
+                    self._api_key = api_key
+                    self._api_key_secondary = api_key_secondary if api_key_secondary else None
+                    # Initialize GTFS Static loader for stop search
+                    self._gtfs_static = GTFSStaticData(self.hass)
+                    if not await self._gtfs_static.ensure_loaded():
+                        errors["base"] = "gtfs_static_load_failed"
+                    else:
+                        return await self.async_step_stop_search()
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_TRAFIKLAB_API_KEY): str,
-            }
-        )
+        # Show appropriate schema based on provider
+        if self._provider == PROVIDER_TRAFIKLAB_SE:
+            schema = vol.Schema(
+                {
+                    vol.Required(CONF_TRAFIKLAB_API_KEY): str,
+                }
+            )
+            description = "Trafiklab API key is required. Get one at trafiklab.se"
+        else:  # NTA
+            schema = vol.Schema(
+                {
+                    vol.Required(CONF_NTA_API_KEY): str,
+                    vol.Optional(CONF_NTA_API_KEY_SECONDARY): str,
+                }
+            )
+            description = "NTA Primary API key is required. Secondary key is optional (used as fallback if Primary fails). Get both keys at developer.nationaltransport.ie"
 
         return self.async_show_form(
             step_id="api_key",
             data_schema=schema,
             errors=errors,
-            description_placeholders={"info": "Trafiklab API key is required. Get one at trafiklab.se"},
+            description_placeholders={"info": description},
         )
 
     async def async_step_stop_search(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle stop/station search step."""
-        # Validate that Trafiklab has API key configured
+        # Validate that Trafiklab or NTA has API key configured
         if self._provider == PROVIDER_TRAFIKLAB_SE and not self._api_key:
+            return await self.async_step_api_key()
+        if self._provider == PROVIDER_NTA_IE and not self._api_key:
             return await self.async_step_api_key()
 
         errors = {}
@@ -211,6 +245,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=10, max=3600)
                 ),
+                vol.Optional(CONF_USE_PROVIDER_LOGO, default=False): bool,
             }
         )
 
@@ -224,8 +259,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEPARTURES: user_input[CONF_DEPARTURES],
                 CONF_TRANSPORTATION_TYPES: user_input[CONF_TRANSPORTATION_TYPES],
                 CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                CONF_USE_PROVIDER_LOGO: user_input.get(CONF_USE_PROVIDER_LOGO, False),
             }
-            # Add API key for Trafiklab (required for Trafiklab)
+            # Add API key for Trafiklab or NTA (required)
             if self._provider == PROVIDER_TRAFIKLAB_SE:
                 if not self._api_key:
                     # This shouldn't happen if flow is correct, but validate anyway
@@ -235,6 +271,17 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors={"base": "trafiklab_api_key_required"},
                     )
                 data[CONF_TRAFIKLAB_API_KEY] = self._api_key
+            elif self._provider == PROVIDER_NTA_IE:
+                if not self._api_key:
+                    # This shouldn't happen if flow is correct, but validate anyway
+                    return self.async_show_form(
+                        step_id="settings",
+                        data_schema=schema,
+                        errors={"base": "nta_api_key_required"},
+                    )
+                data[CONF_NTA_API_KEY] = self._api_key
+                if self._api_key_secondary:
+                    data[CONF_NTA_API_KEY_SECONDARY] = self._api_key_secondary
 
             # Create unique ID
             unique_id = f"{self._provider}_{self._selected_stop['id']}"
@@ -285,9 +332,11 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Cache miss - fetch from API
         _LOGGER.debug("Cache miss, fetching from API for: %s", search_term)
 
-        # Trafiklab uses different API
+        # Trafiklab and NTA use different APIs
         if self._provider == PROVIDER_TRAFIKLAB_SE:
             return await self._search_stops_trafiklab(search_term)
+        if self._provider == PROVIDER_NTA_IE:
+            return await self._search_stops_nta(search_term)
 
         api_url = self._get_stopfinder_url()
 
@@ -347,6 +396,48 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error searching stops: %s", e, exc_info=True)
 
         return []
+
+    async def _search_stops_nta(self, search_term: str) -> List[Dict[str, Any]]:
+        """Search for stops using GTFS Static data.
+
+        Args:
+            search_term: Search term for stops
+
+        Returns:
+            List of stop dictionaries in expected format
+        """
+        if not self._gtfs_static:
+            self._gtfs_static = GTFSStaticData(self.hass)
+
+        if not await self._gtfs_static.ensure_loaded():
+            _LOGGER.error("Failed to load GTFS Static data for stop search")
+            return []
+
+        # Search stops using GTFS Static
+        results = self._gtfs_static.search_stops(search_term, limit=20)
+
+        # Convert to expected format (id, name, place)
+        stops = []
+        for stop in results:
+            stop_name = stop.get("stop_name", "")
+            # Try to extract place from stop name (e.g., "Stop Name, Dublin")
+            place = ""
+            if "," in stop_name:
+                parts = stop_name.rsplit(",", 1)
+                stop_name = parts[0].strip()
+                place = parts[1].strip() if len(parts) > 1 else ""
+
+            stops.append(
+                {
+                    "id": stop["stop_id"],
+                    "name": stop_name,
+                    "place": place,
+                    "area_type": "",
+                    "transport_modes": [],
+                }
+            )
+
+        return stops
 
     def _get_stopfinder_url(self) -> str:
         """Get the STOPFINDER API URL based on provider."""
@@ -903,6 +994,10 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
             CONF_TRANSPORTATION_TYPES,
             self.config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys())),
         )
+        current_use_logo = self.config_entry.options.get(
+            CONF_USE_PROVIDER_LOGO,
+            self.config_entry.data.get(CONF_USE_PROVIDER_LOGO, False),
+        )
 
         schema = vol.Schema(
             {
@@ -913,6 +1008,7 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(CONF_TRANSPORTATION_TYPES, default=current_transport_types): cv.multi_select(
                     TRANSPORTATION_TYPES
                 ),
+                vol.Optional(CONF_USE_PROVIDER_LOGO, default=current_use_logo): bool,
             }
         )
 

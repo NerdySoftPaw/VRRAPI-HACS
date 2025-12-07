@@ -7,6 +7,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_DEPARTURES,
+    CONF_NTA_API_KEY,
     CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
     CONF_STATION_ID,
@@ -14,6 +15,8 @@ from .const import (
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    PROVIDER_NTA_IE,
+    PROVIDER_TRAFIKLAB_SE,
 )
 from .sensor import VRRDataUpdateCoordinator
 
@@ -44,6 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name_dm = entry.data.get("name_dm", "")
     station_id = entry.data.get(CONF_STATION_ID)
     trafiklab_api_key = entry.data.get(CONF_TRAFIKLAB_API_KEY)  # For Trafiklab
+    nta_api_key = entry.data.get(CONF_NTA_API_KEY)  # For NTA
+
+    # Use appropriate API key based on provider
+    api_key = None
+    if provider == PROVIDER_TRAFIKLAB_SE:
+        api_key = trafiklab_api_key
+    elif provider == PROVIDER_NTA_IE:
+        api_key = nta_api_key
 
     departures = entry.options.get(CONF_DEPARTURES, entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES))
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
@@ -57,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         departures,
         scan_interval,
         config_entry=entry,
-        api_key=trafiklab_api_key,
+        api_key=api_key,
     )
 
     # Store coordinator before first refresh
