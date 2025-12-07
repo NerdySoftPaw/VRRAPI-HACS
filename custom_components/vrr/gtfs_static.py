@@ -30,8 +30,7 @@ class GTFSStaticData:
         self.hass = hass
         self.stops: Dict[str, Dict[str, str]] = {}  # stop_id -> stop data
         self.routes: Dict[str, Dict[str, str]] = {}  # route_id -> route data
-        self.trips: Dict[str, Dict[str, str]] = {}  # trip_id -> trip data
-        self.stop_times: Dict[str, List[Dict[str, str]]] = {}  # trip_id -> list of stop_times
+        # trips and stop_times are not loaded to save memory (not currently used)
         self._cache_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / "gtfs_static.zip"
         self._cache_timestamp_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / "gtfs_static_timestamp.txt"
         self._last_update: Optional[datetime] = None
@@ -103,14 +102,17 @@ class GTFSStaticData:
                     _LOGGER.error("Failed to download GTFS Static: HTTP %s", response.status)
                     return False
 
-                # Download to cache file
-
-                # Download to cache file
+                # Download to cache file in chunks to reduce memory usage
+                total_size = 0
                 async with aio_open(self._cache_path, "wb") as f:
-                    async for chunk in response.content.iter_chunked(8192):
+                    async for chunk in response.content.iter_chunked(65536):  # 64KB chunks
                         await f.write(chunk)
+                        total_size += len(chunk)
+                        # Log progress every 10MB
+                        if total_size % (10 * 1024 * 1024) < 65536:
+                            _LOGGER.debug("Downloaded %.2f MB...", total_size / 1024 / 1024)
 
-                _LOGGER.info("GTFS Static ZIP downloaded successfully")
+                _LOGGER.info("GTFS Static ZIP downloaded successfully (%.2f MB)", total_size / 1024 / 1024)
 
                 # Save timestamp
                 async with aio_open(self._cache_timestamp_path, "w") as f:
@@ -136,18 +138,13 @@ class GTFSStaticData:
             return False
 
         try:
-            # Read ZIP file
+            # Use ZipFile directly from file path to avoid loading entire file into memory
             _LOGGER.debug("Reading GTFS Static cache file: %s", self._cache_path)
-            async with aio_open(self._cache_path, "rb") as f:
-                zip_data = await f.read()
+            file_size = self._cache_path.stat().st_size
+            _LOGGER.debug("GTFS Static ZIP file size: %d bytes (%.2f MB)", file_size, file_size / 1024 / 1024)
 
-            if len(zip_data) == 0:
-                _LOGGER.error("GTFS Static cache file is empty")
-                return False
-
-            _LOGGER.debug("GTFS Static ZIP file size: %d bytes", len(zip_data))
-
-            with zipfile.ZipFile(io.BytesIO(zip_data)) as zip_file:
+            # Open ZIP file directly from disk (more memory efficient)
+            with zipfile.ZipFile(self._cache_path, "r") as zip_file:
                 file_list = zip_file.namelist()
                 _LOGGER.debug("GTFS Static ZIP contains %d files: %s", len(file_list), ", ".join(file_list[:10]))
 
@@ -156,38 +153,32 @@ class GTFSStaticData:
                     _LOGGER.error("stops.txt not found in GTFS Static ZIP")
                     return False
 
+                # Load stops.txt in chunks to reduce memory usage
                 with zip_file.open("stops.txt") as stops_file:
                     reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="utf-8"))
-                    self.stops = {row["stop_id"]: row for row in reader}
-                    _LOGGER.info("Loaded %d stops from GTFS Static", len(self.stops))
+                    stop_count = 0
+                    for row in reader:
+                        self.stops[row["stop_id"]] = row
+                        stop_count += 1
+                        # Log progress every 10000 stops
+                        if stop_count % 10000 == 0:
+                            _LOGGER.debug("Loaded %d stops...", stop_count)
+                    _LOGGER.info("Loaded %d stops from GTFS Static", stop_count)
 
-                # Load routes.txt (optional but recommended)
+                # Load routes.txt (optional but recommended) in chunks
                 if "routes.txt" in file_list:
                     with zip_file.open("routes.txt") as routes_file:
                         reader = csv.DictReader(io.TextIOWrapper(routes_file, encoding="utf-8"))
-                        self.routes = {row["route_id"]: row for row in reader}
-                        _LOGGER.info("Loaded %d routes from GTFS Static", len(self.routes))
+                        route_count = 0
+                        for row in reader:
+                            self.routes[row["route_id"]] = row
+                            route_count += 1
+                        _LOGGER.info("Loaded %d routes from GTFS Static", route_count)
                 else:
                     _LOGGER.warning("routes.txt not found in GTFS Static ZIP - route names will not be available")
 
-                # Load trips.txt (optional)
-                if "trips.txt" in file_list:
-                    with zip_file.open("trips.txt") as trips_file:
-                        reader = csv.DictReader(io.TextIOWrapper(trips_file, encoding="utf-8"))
-                        self.trips = {row["trip_id"]: row for row in reader}
-                        _LOGGER.info("Loaded %d trips from GTFS Static", len(self.trips))
-
-                # Load stop_times.txt (optional, for future use)
-                if "stop_times.txt" in file_list:
-                    with zip_file.open("stop_times.txt") as stop_times_file:
-                        reader = csv.DictReader(io.TextIOWrapper(stop_times_file, encoding="utf-8"))
-                        self.stop_times = {}
-                        for row in reader:
-                            trip_id = row["trip_id"]
-                            if trip_id not in self.stop_times:
-                                self.stop_times[trip_id] = []
-                            self.stop_times[trip_id].append(row)
-                        _LOGGER.info("Loaded stop_times for %d trips from GTFS Static", len(self.stop_times))
+                # Note: trips.txt and stop_times.txt are NOT loaded to save memory
+                # They are not currently used and can be very large (millions of entries)
 
             if len(self.stops) == 0:
                 _LOGGER.error("No stops loaded from GTFS Static - stops.txt may be empty or invalid")
