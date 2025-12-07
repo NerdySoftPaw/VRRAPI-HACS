@@ -285,48 +285,62 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                             departures = json_data.get("departures", [])
                             _LOGGER.debug("Trafiklab API returned %d departures", len(departures))
                             stop_events = []
+
+                            # Get Stockholm timezone offset once (not for each departure)
+                            stockholm_tz = dt_util.get_time_zone("Europe/Stockholm")
+                            offset_formatted = "+01:00"  # Default to CET
+                            if stockholm_tz:
+                                now_stockholm = datetime.now(stockholm_tz)
+                                offset = now_stockholm.strftime("%z")
+                                offset_formatted = f"{offset[:3]}:{offset[3:]}"  # +0100 -> +01:00
+
                             for dep in departures:
+                                # Skip invalid entries
+                                if not isinstance(dep, dict):
+                                    continue
+
                                 # Map Trafiklab structure to our stopEvents format
                                 # Trafiklab uses: scheduled, realtime, route.designation, route.destination.name
                                 scheduled_time = dep.get("scheduled")
                                 realtime_time = dep.get("realtime")
-                                route = dep.get("route", {})
-                                platform_data = dep.get("scheduled_platform", {}) or dep.get("realtime_platform", {})
-                                transport_mode = route.get("transport_mode", "BUS")
+                                route = dep.get("route") or {}  # Handle None
+                                platform_data = dep.get("scheduled_platform") or dep.get("realtime_platform") or {}
+                                transport_mode = route.get("transport_mode", "BUS") if route else "BUS"
+
+                                # Get destination safely (handle None)
+                                destination_obj = route.get("destination") if route else None
+                                destination_name = (
+                                    destination_obj.get("name", "Unknown")
+                                    if isinstance(destination_obj, dict)
+                                    else "Unknown"
+                                )
 
                                 # Trafiklab returns time without timezone, it's in local Swedish time
-                                # Parse as Swedish time by appending timezone offset
-                                # Sweden uses CET (UTC+1) in winter and CEST (UTC+2) in summer
-                                # For simplicity, we'll use the current offset from Europe/Stockholm
-                                stockholm_tz = dt_util.get_time_zone("Europe/Stockholm")
-                                if stockholm_tz:
-                                    # Get current offset
-                                    now_stockholm = datetime.now(stockholm_tz)
-                                    offset = now_stockholm.strftime("%z")
-                                    offset_formatted = f"{offset[:3]}:{offset[3:]}"  # +0100 -> +01:00
-                                    if scheduled_time and "+" not in scheduled_time and "Z" not in scheduled_time:
-                                        scheduled_time = f"{scheduled_time}{offset_formatted}"
-                                    if realtime_time and "+" not in realtime_time and "Z" not in realtime_time:
-                                        realtime_time = f"{realtime_time}{offset_formatted}"
+                                if scheduled_time and "+" not in scheduled_time and "Z" not in scheduled_time:
+                                    scheduled_time = f"{scheduled_time}{offset_formatted}"
+                                if realtime_time and "+" not in realtime_time and "Z" not in realtime_time:
+                                    realtime_time = f"{realtime_time}{offset_formatted}"
 
                                 stop_event = {
                                     "departureTimePlanned": scheduled_time,
                                     "departureTimeEstimated": realtime_time or scheduled_time,
                                     "transportation": {
-                                        "number": route.get("designation", ""),
-                                        "description": route.get("name") or route.get("direction", ""),
-                                        "destination": {"name": route.get("destination", {}).get("name", "Unknown")},
+                                        "number": route.get("designation", "") if route else "",
+                                        "description": (
+                                            (route.get("name") or route.get("direction", "")) if route else ""
+                                        ),
+                                        "destination": {"name": destination_name},
                                         "product": {"class": 0},  # Will be mapped from transportMode
                                     },
-                                    "platform": {"name": platform_data.get("designation", "")},
+                                    "platform": {"name": platform_data.get("designation", "") if platform_data else ""},
                                     "realtimeStatus": ["MONITORED"] if dep.get("is_realtime") else [],
                                     "transportMode": transport_mode,  # Trafiklab specific (TRAIN, BUS, etc.)
                                 }
                                 stop_events.append(stop_event)
                                 _LOGGER.debug(
                                     "Trafiklab departure: Line %s to %s at %s (mode: %s)",
-                                    route.get("designation"),
-                                    route.get("destination", {}).get("name"),
+                                    route.get("designation") if route else "?",
+                                    destination_name,
                                     scheduled_time,
                                     transport_mode,
                                 )
