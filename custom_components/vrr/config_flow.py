@@ -128,9 +128,10 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_settings()
                 else:
                     # Multiple results, let user choose
-                    # Ensure stops is a list before passing
+                    # Store stops in temp storage before calling stop_select
                     if isinstance(stops, list):
-                        return await self.async_step_stop_select(stops)
+                        self.hass.data[f"{DOMAIN}_temp_stops"] = stops
+                        return await self.async_step_stop_select()
                     else:
                         _LOGGER.error("Stops is not a list before passing to stop_select: %s", type(stops))
                         errors["stop_search"] = "api_error"
@@ -150,33 +151,21 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_stop_select(
-        self, stops: List[Dict[str, Any]] = None, user_input: Optional[Dict[str, Any]] = None
-    ) -> FlowResult:
+    async def async_step_stop_select(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Let user select from multiple stop results."""
         if user_input is not None:
             # Find selected stop
-            selected_id = user_input["stop"]
-            for stop in self.hass.data.get(f"{DOMAIN}_temp_stops", []):
-                if isinstance(stop, dict) and stop.get("id") == selected_id:
-                    self._selected_stop = stop
-                    break
+            selected_id = user_input.get("stop")
+            if selected_id:
+                for stop in self.hass.data.get(f"{DOMAIN}_temp_stops", []):
+                    if isinstance(stop, dict) and stop.get("id") == selected_id:
+                        self._selected_stop = stop
+                        break
 
             return await self.async_step_settings()
 
-        # If stops is None, try to load from temporary data
-        if stops is None:
-            temp_stops = self.hass.data.get(f"{DOMAIN}_temp_stops", [])
-            # Validate that temp_stops is a list
-            if isinstance(temp_stops, list):
-                stops = temp_stops
-            else:
-                _LOGGER.error(
-                    "Invalid stops data in temp storage: expected list, got %s. Data: %s", type(temp_stops), temp_stops
-                )
-                # Clear invalid data
-                self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
-                stops = []
+        # Load stops from temporary storage
+        stops = self.hass.data.get(f"{DOMAIN}_temp_stops", [])
 
         # Validate stops is a list
         if not isinstance(stops, list):
@@ -185,11 +174,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
             return await self.async_step_stop_search(user_input=None)
 
-        # Store stops temporarily - ensure it's a list
-        if isinstance(stops, list):
-            self.hass.data[f"{DOMAIN}_temp_stops"] = stops
-        else:
-            _LOGGER.error("Cannot store stops: expected list, got %s. Data: %s", type(stops), stops)
+        if not stops:
+            _LOGGER.warning("No stops found in temp storage")
             return await self.async_step_stop_search(user_input=None)
 
         # Create options dict for dropdown - filter out invalid entries
