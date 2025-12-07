@@ -77,7 +77,7 @@
       "api_key_required": "API-Schlüssel ist erforderlich",
       "trafiklab_api_key_required": "Trafiklab API-Schlüssel ist erforderlich",
       "nta_api_key_required": "NTA API-Schlüssel ist erforderlich",
-      "gtfs_static_load_failed": "Fehler beim Laden der GTFS Static Daten"
+      "gtfs_static_load_failed": "Fehler beim Laden der GTFS Static Daten. Bitte Logs prüfen. Mögliche Ursachen: Netzwerkprobleme oder temporär nicht verfügbare GTFS-Datei."
     }
   },
   "options": {
