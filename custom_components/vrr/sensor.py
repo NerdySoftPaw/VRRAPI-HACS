@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from zoneinfo import ZoneInfo
 
 import aiohttp
+from aiohttp import ClientConnectorError
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -316,17 +317,48 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                         _LOGGER.warning("Trafiklab API authentication failed (401) - check API key")
                         return None
                     elif response.status >= 500:
-                        _LOGGER.warning("Trafiklab API server error (status %s)", response.status)
+                        _LOGGER.warning(
+                            "Trafiklab API server error (status %s) on attempt %d/%d",
+                            response.status,
+                            attempt,
+                            max_retries,
+                        )
+                        # Retry on server errors
+                        if attempt < max_retries:
+                            await asyncio.sleep(2**attempt)
+                            continue
+                        _LOGGER.error(
+                            "Trafiklab API server error (status %s) after %d attempts. "
+                            "The Trafiklab service may be temporarily unavailable. Please try again later.",
+                            response.status,
+                            max_retries,
+                        )
+                        return None
                     else:
-                        _LOGGER.warning("Trafiklab API returned status %s", response.status)
+                        _LOGGER.warning(
+                            "Trafiklab API returned status %s on attempt %d/%d", response.status, attempt, max_retries
+                        )
+                        if attempt < max_retries:
+                            await asyncio.sleep(2**attempt)
+                            continue
 
             except asyncio.TimeoutError:
-                _LOGGER.warning("Trafiklab API timeout on attempt %s", attempt)
+                _LOGGER.warning("Trafiklab API timeout on attempt %d/%d", attempt, max_retries)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                _LOGGER.error("Trafiklab API request timeout after %d attempts", max_retries)
+            except ClientConnectorError as e:
+                _LOGGER.warning("Trafiklab API connection error on attempt %d/%d: %s", attempt, max_retries, e)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                _LOGGER.error("Trafiklab API connection failed after %d attempts: %s", max_retries, e)
             except Exception as e:
-                _LOGGER.warning("Attempt %s failed: %s", attempt, e)
-
-            if attempt < max_retries:
-                await asyncio.sleep(2**attempt)
+                _LOGGER.warning("Attempt %d/%d failed: %s", attempt, max_retries, e)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
 
         return None
 

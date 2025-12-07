@@ -5,10 +5,12 @@ import logging
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional
+from urllib.parse import quote
 
 import aiohttp
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+from aiohttp import ClientConnectorError
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -340,7 +342,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         elif self._provider == PROVIDER_KVV:
             return "https://projekte.kvv-efa.de/sl3-alone/XML_STOPFINDER_REQUEST"
         elif self._provider == PROVIDER_HVV:
-            return "https://efa-api.hochbahn.de/gti/XML_STOPFINDER_REQUEST"
+            # HVV uses the same efa.de domain as the departure API
+            return "https://hvv.efa.de/efa/XML_STOPFINDER_REQUEST"
         else:
             return "https://openservice-test.vrr.de/static03/XML_STOPFINDER_REQUEST"
 
@@ -357,66 +360,115 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Trafiklab API key is required for stop search")
             return []
 
-        url = f"https://realtime-api.trafiklab.se/v1/stops/name/{search_term}"
+        # URL encode the search term to handle special characters
+        encoded_search = quote(search_term, safe="")
+        url = f"https://realtime-api.trafiklab.se/v1/stops/name/{encoded_search}"
         params = {"key": self._api_key}
         session = async_get_clientsession(self.hass)
 
-        try:
-            async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10)) as response:
-                if response.status == 200:
-                    try:
-                        data = await response.json()
-                    except (ValueError, aiohttp.ContentTypeError) as e:
-                        _LOGGER.error("Invalid JSON response from Trafiklab API: %s", e)
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            try:
+                async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        try:
+                            data = await response.json()
+                        except (ValueError, aiohttp.ContentTypeError) as e:
+                            _LOGGER.error("Invalid JSON response from Trafiklab API: %s", e)
+                            if attempt < max_retries:
+                                await asyncio.sleep(2**attempt)
+                                continue
+                            return []
+
+                        # Validate response type
+                        if not isinstance(data, dict):
+                            _LOGGER.error("Trafiklab API returned non-dict response: %s", type(data))
+                            if attempt < max_retries:
+                                await asyncio.sleep(2**attempt)
+                                continue
+                            return []
+
+                        # Parse Trafiklab response
+                        stop_groups = data.get("stop_groups", [])
+                        results = []
+
+                        for stop_group in stop_groups:
+                            if not isinstance(stop_group, dict):
+                                continue
+
+                            # Get the first stop's place if available
+                            stops = stop_group.get("stops", [])
+                            place = None
+                            if stops and isinstance(stops[0], dict):
+                                # Try to extract place from stop name or use area name
+                                stop_name = stop_group.get("name", "")
+                                place = stop_name.split(",")[-1].strip() if "," in stop_name else None
+
+                            result = {
+                                "id": stop_group.get("id", ""),
+                                "name": stop_group.get("name", ""),
+                                "place": place or "",
+                                "area_type": stop_group.get("area_type", ""),
+                                "transport_modes": stop_group.get("transport_modes", []),
+                            }
+                            results.append(result)
+
+                        # Store in cache only on success
+                        cache_key = self._get_cache_key(self._provider, search_term, "stop")
+                        self._store_in_cache(cache_key, results)
+
+                        return results
+                    elif response.status == 401:
+                        _LOGGER.error("Trafiklab API authentication failed (401) - check API key")
+                        # Don't retry on auth errors
                         return []
-
-                    # Validate response type
-                    if not isinstance(data, dict):
-                        _LOGGER.error("Trafiklab API returned non-dict response: %s", type(data))
+                    elif response.status == 404:
+                        _LOGGER.warning("Trafiklab API endpoint not found (404) - stop may not exist")
+                        # Don't retry on 404
                         return []
-
-                    # Parse Trafiklab response
-                    stop_groups = data.get("stop_groups", [])
-                    results = []
-
-                    for stop_group in stop_groups:
-                        if not isinstance(stop_group, dict):
+                    elif response.status >= 500:
+                        _LOGGER.warning(
+                            "Trafiklab API server error (status %s) on attempt %d/%d",
+                            response.status,
+                            attempt,
+                            max_retries,
+                        )
+                        # Retry on server errors
+                        if attempt < max_retries:
+                            await asyncio.sleep(2**attempt)
                             continue
-
-                        # Get the first stop's place if available
-                        stops = stop_group.get("stops", [])
-                        place = None
-                        if stops and isinstance(stops[0], dict):
-                            # Try to extract place from stop name or use area name
-                            stop_name = stop_group.get("name", "")
-                            place = stop_name.split(",")[-1].strip() if "," in stop_name else None
-
-                        result = {
-                            "id": stop_group.get("id", ""),
-                            "name": stop_group.get("name", ""),
-                            "place": place or "",
-                            "area_type": stop_group.get("area_type", ""),
-                            "transport_modes": stop_group.get("transport_modes", []),
-                        }
-                        results.append(result)
-
-                    # Store in cache
-                    cache_key = self._get_cache_key(self._provider, search_term, "stop")
-                    self._store_in_cache(cache_key, results)
-
-                    return results
-                elif response.status == 401:
-                    _LOGGER.error("Trafiklab API authentication failed (401) - check API key")
-                elif response.status == 404:
-                    _LOGGER.error("Trafiklab API endpoint not found (404)")
-                elif response.status >= 500:
-                    _LOGGER.error("Trafiklab API server error (status %s)", response.status)
-                else:
-                    _LOGGER.error("Trafiklab API returned status %s", response.status)
-        except asyncio.TimeoutError:
-            _LOGGER.error("Trafiklab API request timeout after 10 seconds")
-        except Exception as e:
-            _LOGGER.error("Error searching Trafiklab stops: %s", e, exc_info=True)
+                        _LOGGER.error(
+                            "Trafiklab API server error (status %s) after %d attempts. "
+                            "The Trafiklab service may be temporarily unavailable.",
+                            response.status,
+                            max_retries,
+                        )
+                    else:
+                        _LOGGER.warning(
+                            "Trafiklab API returned status %s on attempt %d/%d", response.status, attempt, max_retries
+                        )
+                        if attempt < max_retries:
+                            await asyncio.sleep(2**attempt)
+                            continue
+            except asyncio.TimeoutError:
+                _LOGGER.warning("Trafiklab API request timeout on attempt %d/%d", attempt, max_retries)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                _LOGGER.error("Trafiklab API request timeout after %d attempts", max_retries)
+            except ClientConnectorError as e:
+                _LOGGER.warning("Trafiklab API connection error on attempt %d/%d: %s", attempt, max_retries, e)
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
+                _LOGGER.error("Trafiklab API connection failed after %d attempts: %s", max_retries, e)
+            except Exception as e:
+                _LOGGER.error(
+                    "Error searching Trafiklab stops on attempt %d/%d: %s", attempt, max_retries, e, exc_info=True
+                )
+                if attempt < max_retries:
+                    await asyncio.sleep(2**attempt)
+                    continue
 
         return []
 
