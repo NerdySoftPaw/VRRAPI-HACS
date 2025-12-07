@@ -42,6 +42,7 @@ class UnifiedDeparture:
     minutes_until_departure: int
     departure_time_obj: datetime  # For internal sorting
     description: Optional[str] = None  # Optional line description
+    agency: Optional[str] = None  # Optional agency/operator name (for GTFS)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for Home Assistant attributes."""
@@ -58,6 +59,8 @@ class UnifiedDeparture:
         }
         if self.description:
             result["description"] = self.description
+        if self.agency:
+            result["agency"] = self.agency
         return result
 
 

@@ -535,10 +535,38 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
 
                                 # Get route info from GTFS Static
                                 route_short_name = ""
-                                route_type = 3  # Default to bus
+                                route_type = None  # Will be determined from GTFS Static
+                                agency_name = None
                                 if self.gtfs_static:
                                     route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
-                                    route_type = self.gtfs_static.get_route_type(route_id) or 3
+                                    route_type = self.gtfs_static.get_route_type(route_id)
+                                    agency_name = self.gtfs_static.get_agency_name(route_id)
+
+                                    if route_type is None:
+                                        _LOGGER.warning(
+                                            "NTA: route_type not found for route_id=%s (route_short_name=%s), "
+                                            "this may indicate missing data in GTFS Static routes.txt",
+                                            route_id,
+                                            route_short_name,
+                                        )
+                                        # Try to infer from route name (Luas lines are often "Red", "Green")
+                                        if route_short_name and route_short_name.lower() in ["red", "green"]:
+                                            route_type = 0  # Tram/Light rail for Luas
+                                            _LOGGER.info(
+                                                "NTA: Inferred route_type=0 (tram) for Luas line '%s'",
+                                                route_short_name,
+                                            )
+                                        else:
+                                            route_type = 3  # Default to bus if unknown
+                                    else:
+                                        _LOGGER.debug(
+                                            "NTA: route_id=%s, route_short_name=%s, route_type=%d",
+                                            route_id,
+                                            route_short_name,
+                                            route_type,
+                                        )
+                                else:
+                                    route_type = 3  # Default to bus if GTFS Static not loaded
 
                                 # Get delay (in seconds)
                                 departure = stop_time_update.get("departure", {})
@@ -595,12 +623,22 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                 planned_time_str = planned_time.strftime("%Y-%m-%dT%H:%M:%S%z")
                                 estimated_time_str = estimated_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
+                                # Map route_type to transport type for logging
+                                transport_type_mapped = NTA_TRANSPORTATION_TYPES.get(route_type, "bus")
+                                _LOGGER.debug(
+                                    "NTA Departure: line=%s, destination=%s, route_type=%d -> transport_type=%s",
+                                    route_short_name,
+                                    destination,
+                                    route_type,
+                                    transport_type_mapped,
+                                )
+
                                 stop_event = {
                                     "departureTimePlanned": planned_time_str,
                                     "departureTimeEstimated": estimated_time_str,
                                     "transportation": {
                                         "number": route_short_name,
-                                        "description": "",
+                                        "description": agency_name or "",
                                         "destination": {"name": destination},
                                         "product": {"class": route_type},
                                     },
@@ -610,6 +648,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                     "trip_id": trip_id,
                                     "stop_id": stop_id,
                                     "delay_seconds": delay_seconds,
+                                    "agency": agency_name,  # Add agency as separate field
                                 }
                                 stop_events.append(stop_event)
                                 processed_entities += 1
@@ -1116,6 +1155,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
 
             line_number = str(transportation.get("number", ""))
             description = str(transportation.get("description", ""))
+            agency = stop.get("agency")  # Agency name from GTFS (NTA)
 
             # Determine transportation type using provider-specific function
             transport_type = get_transport_type_fn(transportation)
@@ -1142,6 +1182,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
                 minutes_until_departure=minutes_until,
                 departure_time_obj=estimated_local,
                 description=description if description else None,
+                agency=agency if agency else None,
             )
 
         except Exception as e:
