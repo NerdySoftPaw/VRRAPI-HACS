@@ -291,15 +291,19 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         api_url = self._get_stopfinder_url()
 
+        # URL-encode the search term to handle special characters (spaces, umlauts, etc.)
+        encoded_search = quote(search_term, safe="")
+
         params = (
             f"outputFormat=RapidJSON&"
             f"locationServerActive=1&"
             f"type_sf=stop&"
-            f"name_sf={search_term}&"
+            f"name_sf={encoded_search}&"
             f"SpEncId=0"
         )
 
         url = f"{api_url}?{params}"
+        _LOGGER.debug("VRR/KVV/HVV stop search URL: %s", url)
         session = async_get_clientsession(self.hass)
 
         try:
@@ -500,6 +504,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Invalid locations in API response: expected list, got %s", type(locations))
                 return []
 
+            _LOGGER.debug("STOPFINDER returned %d locations for '%s'", len(locations), search_term)
+
             # Extract potential city/place names from search term for filtering
             search_lower = search_term.lower()
 
@@ -512,6 +518,14 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 loc_type = location.get("type", "unknown")
                 if not isinstance(loc_type, str):
                     loc_type = "unknown"
+
+                # Debug log all locations and their types
+                _LOGGER.debug(
+                    "Location: name='%s', type='%s', parent='%s'",
+                    location.get("name", "?"),
+                    loc_type,
+                    location.get("parent", {}).get("name", "?") if isinstance(location.get("parent"), dict) else "?",
+                )
 
                 name = location.get("name", "")
                 if not isinstance(name, str):
@@ -570,8 +584,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             }
                         )
                 elif search_type == "stop":
-                    # For stop search, prefer stops and stations
-                    if loc_type in ["stop", "station", "platform"]:
+                    # For stop search, accept stops, stations, platforms, and any type
+                    # Some APIs use different type names, so be permissive
+                    if loc_type in ["stop", "station", "platform", "poi", "any", "unknown"]:
                         results.append(
                             {
                                 "id": loc_id,
@@ -581,6 +596,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 "relevance": self._calculate_relevance(search_lower, name.lower(), place.lower()),
                             }
                         )
+                    else:
+                        _LOGGER.debug("Skipping location with type '%s': %s", loc_type, name)
 
             # Sort by relevance (higher is better)
             results.sort(key=lambda x: x.get("relevance", 0), reverse=True)
