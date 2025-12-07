@@ -11,6 +11,7 @@ CONF_DEPARTURES = "departures"
 CONF_TRANSPORTATION_TYPES = "transportation_types"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_TRAFIKLAB_API_KEY = "trafiklab_api_key"  # For Trafiklab API
+CONF_USE_PROVIDER_LOGO = "use_provider_logo"  # Show provider logo instead of transport icon
 
 # Provider
 PROVIDER_VRR = "vrr"
@@ -56,4 +57,22 @@ TRAFIKLAB_TRANSPORTATION_TYPES = {
     "TRAM": "tram",
     "METRO": "subway",
     "FERRY": "ferry",
+}
+
+# Provider-specific icons (MDI icons as fallback)
+PROVIDER_ICONS = {
+    "vrr": "mdi:bus-clock",
+    "kvv": "mdi:tram",
+    "hvv": "mdi:ferry",
+    "trafiklab_se": "mdi:train",
+}
+
+# Provider-specific entity pictures (logos)
+# These can be overridden by the user or use external URLs
+# Format: URL to a small logo image (recommended: 256x256 or smaller)
+PROVIDER_ENTITY_PICTURES = {
+    "vrr": "https://www.vrr.de/favicon.ico",
+    "kvv": "https://www.kvv.de/favicon.ico",
+    "hvv": "https://www.hvv.de/favicon.ico",
+    "trafiklab_se": "https://www.trafiklab.se/favicon.ico",
 }

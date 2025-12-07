@@ -23,6 +23,7 @@ from .const import (
     CONF_STATION_ID,
     CONF_TRAFIKLAB_API_KEY,
     CONF_TRANSPORTATION_TYPES,
+    CONF_USE_PROVIDER_LOGO,
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -211,6 +212,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=10, max=3600)
                 ),
+                vol.Optional(CONF_USE_PROVIDER_LOGO, default=False): bool,
             }
         )
 
@@ -224,6 +226,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEPARTURES: user_input[CONF_DEPARTURES],
                 CONF_TRANSPORTATION_TYPES: user_input[CONF_TRANSPORTATION_TYPES],
                 CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                CONF_USE_PROVIDER_LOGO: user_input.get(CONF_USE_PROVIDER_LOGO, False),
             }
             # Add API key for Trafiklab (required for Trafiklab)
             if self._provider == PROVIDER_TRAFIKLAB_SE:
@@ -903,6 +906,10 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
             CONF_TRANSPORTATION_TYPES,
             self.config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys())),
         )
+        current_use_logo = self.config_entry.options.get(
+            CONF_USE_PROVIDER_LOGO,
+            self.config_entry.data.get(CONF_USE_PROVIDER_LOGO, False),
+        )
 
         schema = vol.Schema(
             {
@@ -913,6 +920,7 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(CONF_TRANSPORTATION_TYPES, default=current_transport_types): cv.multi_select(
                     TRANSPORTATION_TYPES
                 ),
+                vol.Optional(CONF_USE_PROVIDER_LOGO, default=current_use_logo): bool,
             }
         )
 

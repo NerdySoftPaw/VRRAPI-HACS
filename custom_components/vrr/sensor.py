@@ -32,6 +32,7 @@ from .const import (
     CONF_STATION_ID,
     CONF_TRAFIKLAB_API_KEY,
     CONF_TRANSPORTATION_TYPES,
+    CONF_USE_PROVIDER_LOGO,
     DEFAULT_DEPARTURES,
     DEFAULT_NAME,
     DEFAULT_PLACE,
@@ -39,6 +40,7 @@ from .const import (
     DOMAIN,
     HVV_TRANSPORTATION_TYPES,
     KVV_TRANSPORTATION_TYPES,
+    PROVIDER_ENTITY_PICTURES,
     PROVIDER_HVV,
     PROVIDER_KVV,
     PROVIDER_TRAFIKLAB_SE,
@@ -479,6 +481,11 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         self._state = None
         self._attributes = {}
 
+        # Get option for provider logo display
+        self._use_provider_logo = config_entry.options.get(
+            CONF_USE_PROVIDER_LOGO, config_entry.data.get(CONF_USE_PROVIDER_LOGO, False)
+        )
+
         # Setup entity
         provider = coordinator.provider
         station_id = coordinator.station_id
@@ -541,6 +548,18 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
 
         return "mdi:bus-clock"  # Default icon
 
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture (provider logo) to use in the frontend.
+
+        Note: When entity_picture is set, it takes precedence over the icon.
+        To use icons instead, this returns None when use_provider_logo is False.
+        """
+        # Only return provider logo if the option is enabled
+        if self._use_provider_logo:
+            return PROVIDER_ENTITY_PICTURES.get(self._provider)
+        return None
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -554,6 +573,12 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         self.transportation_types = config_entry.options.get(
             CONF_TRANSPORTATION_TYPES,
             config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys())),
+        )
+
+        # Update provider logo setting
+        self._use_provider_logo = config_entry.options.get(
+            CONF_USE_PROVIDER_LOGO,
+            config_entry.data.get(CONF_USE_PROVIDER_LOGO, False),
         )
 
         # Update coordinator settings
