@@ -532,15 +532,20 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                 # Found a departure for our stop
                                 route_id = trip.get("route_id", "")
                                 trip_id = trip.get("trip_id", "")
+                                stop_id = stop_time_update.get(
+                                    "stop_id", target_stop_id
+                                )  # Use stop_id from update if available
 
                                 # Get route info from GTFS Static
                                 route_short_name = ""
                                 route_type = None  # Will be determined from GTFS Static
                                 agency_name = None
+                                platform_code = None
                                 if self.gtfs_static:
                                     route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
                                     route_type = self.gtfs_static.get_route_type(route_id)
                                     agency_name = self.gtfs_static.get_agency_name(route_id)
+                                    platform_code = self.gtfs_static.get_stop_platform_code(stop_id)
 
                                     if route_type is None:
                                         _LOGGER.warning(
@@ -633,6 +638,14 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                     transport_type_mapped,
                                 )
 
+                                # Try to get platform from stop_time_update first (GTFS-RT extension)
+                                # Some GTFS-RT feeds include platform_code in stop_time_update
+                                platform_from_rt = stop_time_update.get("platform_code") or stop_time_update.get(
+                                    "platform"
+                                )
+                                # Fallback to GTFS Static platform_code if not in RT data
+                                platform = platform_from_rt or platform_code or ""
+
                                 stop_event = {
                                     "departureTimePlanned": planned_time_str,
                                     "departureTimeEstimated": estimated_time_str,
@@ -642,7 +655,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                         "destination": {"name": destination},
                                         "product": {"class": route_type},
                                     },
-                                    "platform": {"name": ""},
+                                    "platform": {"name": platform},
                                     "realtimeStatus": ["MONITORED"] if delay_seconds != 0 else [],
                                     "route_id": route_id,
                                     "trip_id": trip_id,
