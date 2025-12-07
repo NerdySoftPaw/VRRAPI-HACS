@@ -8,32 +8,13 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
 import aiohttp
-from aiohttp import ClientConnectorError
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
+from aiohttp import ClientConnectorError
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .const import (
-    CONF_DEPARTURES,
-    CONF_PROVIDER,
-    CONF_SCAN_INTERVAL,
-    CONF_STATION_ID,
-    CONF_TRAFIKLAB_API_KEY,
-    CONF_TRANSPORTATION_TYPES,
-    DEFAULT_DEPARTURES,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    PROVIDER_HVV,
-    PROVIDER_KVV,
-    PROVIDER_TRAFIKLAB_SE,
-    PROVIDER_VRR,
-    PROVIDERS,
-    TRANSPORTATION_TYPES,
-)
 
 from .const import (
     CONF_DEPARTURES,
