@@ -5,15 +5,35 @@ import logging
 from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional
+from urllib.parse import quote
 
 import aiohttp
 from aiohttp import ClientConnectorError
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import (
+    CONF_DEPARTURES,
+    CONF_PROVIDER,
+    CONF_SCAN_INTERVAL,
+    CONF_STATION_ID,
+    CONF_TRAFIKLAB_API_KEY,
+    CONF_TRANSPORTATION_TYPES,
+    DEFAULT_DEPARTURES,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    PROVIDER_HVV,
+    PROVIDER_KVV,
+    PROVIDER_TRAFIKLAB_SE,
+    PROVIDER_VRR,
+    PROVIDERS,
+    TRANSPORTATION_TYPES,
+)
 
 from .const import (
     CONF_DEPARTURES,
@@ -360,8 +380,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return []
 
         # URL encode the search term to handle special characters
-        from urllib.parse import quote
-
         encoded_search = quote(search_term, safe="")
         url = f"https://realtime-api.trafiklab.se/v1/stops/name/{encoded_search}"
         params = {"key": self._api_key}
