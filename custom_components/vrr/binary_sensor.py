@@ -13,10 +13,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_TRANSPORTATION_TYPES,
     DOMAIN,
+    PROVIDER_HVV,
+    PROVIDER_KVV,
+    PROVIDER_TRAFIKLAB_SE,
+    PROVIDER_VRR,
     TRANSPORTATION_TYPES,
 )
 from .sensor import VRRDataUpdateCoordinator
@@ -101,53 +106,106 @@ class VRRDelayBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     def _process_delay_data(self, data: dict[str, Any]) -> None:
-        """Process delay data from API."""
-        stop_events = data.get("stopEvents", [])
+        """Process delay data using unified departure structure.
 
-        if not stop_events:
-            self._attr_is_on = False
-            self._attributes = {
-                "delayed_departures": 0,
-                "on_time_departures": 0,
-                "average_delay": 0,
-                "max_delay": 0,
-                "total_departures": 0,
-            }
-            return
+        Uses the already parsed departures from the sensor if available,
+        otherwise falls back to parsing the raw data using the same unified model.
+        """
+        # Try to get already parsed departures from the sensor
+        departures = None
+        if self.hass and hasattr(self.hass, "data"):
+            sensor_entities = self.hass.data.get("entity_components", {}).get("sensor")
+            if sensor_entities:
+                for entity in sensor_entities.entities:
+                    if (
+                        hasattr(entity, "coordinator")
+                        and entity.coordinator == self.coordinator
+                        and hasattr(entity, "_attributes")
+                    ):
+                        departures = entity._attributes.get("departures", [])
+                        if departures:
+                            break
 
-        delayed_count = 0
-        on_time_count = 0
-        total_delay = 0
-        max_delay = 0
-        delays = []
+        # If we have parsed departures, use them (unified model)
+        if departures:
+            delayed_count = 0
+            on_time_count = 0
+            total_delay = 0
+            max_delay = 0
+            delays = []
 
-        for stop in stop_events:
-            # Get times
-            planned_time_str = stop.get("departureTimePlanned")
-            estimated_time_str = stop.get("departureTimeEstimated")
+            for dep in departures:
+                if not isinstance(dep, dict):
+                    continue
+                delay = dep.get("delay", 0)
+                if delay > 0:
+                    delayed_count += 1
+                    total_delay += delay
+                    delays.append(delay)
+                    max_delay = max(max_delay, delay)
+                else:
+                    on_time_count += 1
+        else:
+            # Fallback: parse raw data using unified model (same as sensor)
+            stop_events = data.get("stopEvents", [])
+            if not stop_events:
+                self._attr_is_on = False
+                self._attributes = {
+                    "delayed_departures": 0,
+                    "on_time_departures": 0,
+                    "average_delay": 0,
+                    "max_delay": 0,
+                    "total_departures": 0,
+                }
+                return
 
-            if not planned_time_str:
-                continue
-
-            # Parse delay
-            if estimated_time_str and estimated_time_str != planned_time_str:
-                from homeassistant.util import dt as dt_util
-
-                planned_time = dt_util.parse_datetime(planned_time_str)
-                estimated_time = dt_util.parse_datetime(estimated_time_str)
-
-                if planned_time and estimated_time:
-                    delay_minutes = int((estimated_time - planned_time).total_seconds() / 60)
-
-                    if delay_minutes > 0:
-                        delayed_count += 1
-                        total_delay += delay_minutes
-                        delays.append(delay_minutes)
-                        max_delay = max(max_delay, delay_minutes)
-                    else:
-                        on_time_count += 1
+            # Use same parsing logic as sensor
+            provider = self.coordinator.provider
+            if provider == PROVIDER_TRAFIKLAB_SE:
+                tz = dt_util.get_time_zone("Europe/Stockholm")
             else:
-                on_time_count += 1
+                tz = dt_util.get_time_zone("Europe/Berlin")
+            now = dt_util.now()
+
+            from .sensor import MultiProviderSensor
+
+            temp_sensor = MultiProviderSensor(
+                self.coordinator,
+                self._config_entry,
+                self.transportation_types,
+            )
+
+            # Select parser function (same as sensor)
+            if provider == PROVIDER_VRR:
+                parse_fn = temp_sensor._parse_departure_vrr
+            elif provider == PROVIDER_KVV:
+                parse_fn = temp_sensor._parse_departure_kvv
+            elif provider == PROVIDER_HVV:
+                parse_fn = temp_sensor._parse_departure_hvv
+            elif provider == PROVIDER_TRAFIKLAB_SE:
+                parse_fn = temp_sensor._parse_departure_trafiklab
+            else:
+                parse_fn = None
+
+            delayed_count = 0
+            on_time_count = 0
+            total_delay = 0
+            max_delay = 0
+            delays = []
+
+            if parse_fn:
+                transport_types_set = set(self.transportation_types)
+                for stop in stop_events:
+                    dep = parse_fn(stop, tz, now)
+                    if dep and dep.transportation_type in transport_types_set:
+                        delay = dep.delay
+                        if delay > 0:
+                            delayed_count += 1
+                            total_delay += delay
+                            delays.append(delay)
+                            max_delay = max(max_delay, delay)
+                        else:
+                            on_time_count += 1
 
         total_departures = delayed_count + on_time_count
         average_delay = total_delay / delayed_count if delayed_count > 0 else 0

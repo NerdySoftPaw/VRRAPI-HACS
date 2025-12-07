@@ -10,6 +10,7 @@ from .const import (
     CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
     CONF_STATION_ID,
+    CONF_TRAFIKLAB_API_KEY,
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -42,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     place_dm = entry.data.get("place_dm", "")
     name_dm = entry.data.get("name_dm", "")
     station_id = entry.data.get(CONF_STATION_ID)
+    trafiklab_api_key = entry.data.get(CONF_TRAFIKLAB_API_KEY)  # For Trafiklab
 
     departures = entry.options.get(CONF_DEPARTURES, entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES))
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
@@ -55,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         departures,
         scan_interval,
         config_entry=entry,
+        api_key=trafiklab_api_key,
     )
 
     # Store coordinator before first refresh

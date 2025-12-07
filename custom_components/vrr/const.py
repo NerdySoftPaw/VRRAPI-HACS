@@ -10,12 +10,14 @@ CONF_STATION_ID = "station_id"
 CONF_DEPARTURES = "departures"
 CONF_TRANSPORTATION_TYPES = "transportation_types"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_TRAFIKLAB_API_KEY = "trafiklab_api_key"  # For Trafiklab API
 
 # Provider
 PROVIDER_VRR = "vrr"
 PROVIDER_KVV = "kvv"
 PROVIDER_HVV = "hvv"
-PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV]
+PROVIDER_TRAFIKLAB_SE = "trafiklab_se"
+PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV, PROVIDER_TRAFIKLAB_SE]
 
 # Transportation types mapping
 TRANSPORTATION_TYPES = {"bus": "Bus", "tram": "Tram", "subway": "U-Bahn", "train": "S-Bahn/Train"}
@@ -27,6 +29,7 @@ API_RATE_LIMIT_PER_DAY = 60000
 API_BASE_URL_VRR = "https://openservice-test.vrr.de/static03/XML_DM_REQUEST"
 API_BASE_URL_KVV = "https://projekte.kvv-efa.de/sl3-alone/XSLT_DM_REQUEST"
 API_BASE_URL_HVV = "https://hvv.efa.de/efa/XML_DM_REQUEST"
+API_BASE_URL_TRAFIKLAB = "https://realtime-api.trafiklab.se/v1"
 # Mapping für KVV
 KVV_TRANSPORTATION_TYPES = {
     1: "train",  # S-Bahn
@@ -44,4 +47,13 @@ HVV_TRANSPORTATION_TYPES = {
     6: "ferry",  # Fähre
     7: "on_demand",  # Rufbus, On-Demand
     # ... ergänzen je nach Bedarf und API
+}
+
+# Mapping für Trafiklab (Sweden)
+TRAFIKLAB_TRANSPORTATION_TYPES = {
+    "BUS": "bus",
+    "TRAIN": "train",
+    "TRAM": "tram",
+    "METRO": "subway",
+    "FERRY": "ferry",
 }

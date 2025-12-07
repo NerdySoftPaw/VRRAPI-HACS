@@ -39,6 +39,16 @@
           "stop": "Haltestelle"
         }
       },
+      "api_key": {
+        "title": "Trafiklab API-Schlüssel eingeben",
+        "description": "{info}",
+        "data": {
+          "trafiklab_api_key": "Trafiklab API-Schlüssel"
+        },
+        "data_description": {
+          "trafiklab_api_key": "Trafiklab API-Schlüssel (erhältlich auf trafiklab.se)"
+        }
+      },
       "settings": {
         "title": "Einstellungen",
         "description": "Konfiguriere die Einstellungen für {stop}",
@@ -57,7 +67,9 @@
     "error": {
       "missing_location": "Bitte geben Sie entweder eine Stations-ID oder Ort und Haltestelle an",
       "empty_search": "Bitte geben Sie einen Suchbegriff ein",
-      "no_results": "Keine Ergebnisse gefunden. Bitte versuchen Sie einen anderen Suchbegriff."
+      "no_results": "Keine Ergebnisse gefunden. Bitte versuchen Sie einen anderen Suchbegriff.",
+      "api_key_required": "API-Schlüssel ist erforderlich",
+      "trafiklab_api_key_required": "Trafiklab API-Schlüssel ist erforderlich"
     }
   },
   "options": {

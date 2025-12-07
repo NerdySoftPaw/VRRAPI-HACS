@@ -11,7 +11,7 @@
 [![Tests](https://github.com/NerdySoftPaw/VRRAPI-HACS/actions/workflows/tests.yaml/badge.svg)](https://github.com/NerdySoftPaw/VRRAPI-HACS/actions/workflows/tests.yaml)
 
 
-A Home Assistant integration for the public transport networks VRR (Verkehrsverbund Rhein-Ruhr), KVV (Karlsruher Verkehrsverbund) and HVV (Hochbahn). This integration provides real-time departure information for public transport in NRW, Karlsruhe and Hamburg.
+A Home Assistant integration for the public transport networks VRR (Verkehrsverbund Rhein-Ruhr), KVV (Karlsruher Verkehrsverbund), HVV (Hochbahn) and Trafiklab (Sweden). This integration provides real-time departure information for public transport in NRW, Karlsruhe, Hamburg and Sweden.
 
 ## Features
 
@@ -25,7 +25,7 @@ A Home Assistant integration for the public transport networks VRR (Verkehrsverb
 - **Repair Issues Integration**: Automatic notifications for API errors or rate limits
 - **Rate Limiting**: Intelligent API rate limiting to prevent overload (60,000 calls/day)
 - **Error Handling**: Robust error handling with exponential backoff strategy
-- **Timezone Support**: Proper handling of German timezone (Europe/Berlin)
+- **Timezone Support**: Proper handling of provider-specific timezones (Europe/Berlin for VRR/KVV/HVV, Europe/Stockholm for Trafiklab)
 
 ### Intelligence & Performance Features (v4.2.0)
 - **Fuzzy Matching with Typo Tolerance**: Intelligently finds stops even with typos
@@ -63,32 +63,45 @@ A Home Assistant integration for the public transport networks VRR (Verkehrsverb
 
 ## Configuration
 
-Die Integration verwendet einen **intuitiven Multi-Step Setup-Wizard** mit Autocomplete-Funktion:
+The integration uses an **intuitive multi-step setup wizard** with autocomplete functionality:
 
 ### Setup Wizard
 
-1. **Anbieter auswählen**
-   - Wähle zwischen VRR (NRW), KVV (Karlsruhe) oder HVV (Hamburg)
+1. **Select Provider**
+   - Choose between VRR (NRW), KVV (Karlsruhe), HVV (Hamburg) or Trafiklab (Sweden)
+   - **For Trafiklab:** A free API key from [trafiklab.se](https://www.trafiklab.se) is required
 
-2. **Stadt/Ort suchen**
-   - Gib deine Stadt ein (z.B. "Düsseldorf", "Köln", "Hamburg")
-   - Die Integration sucht automatisch nach passenden Orten
+2. **Search City/Location**
+   - Enter your city (e.g. "Düsseldorf", "Köln", "Hamburg")
+   - The integration automatically searches for matching locations
 
-3. **Haltestelle auswählen**
-   - Gib den Namen deiner Haltestelle ein (z.B. "Hauptbahnhof", "Marktplatz")
-   - Die Integration schlägt automatisch Haltestellen in deinem Ort vor
+3. **Select Stop**
+   - Enter the name of your stop (e.g. "Hauptbahnhof", "Marktplatz")
+   - The integration automatically suggests stops in your location
 
-4. **Einstellungen konfigurieren**
-   - Anzahl der Abfahrten (1-20)
-   - Verkehrsmittel-Filter (Bus, Bahn, Tram, etc.)
-   - Update-Intervall (10-3600 Sekunden)
+4. **Configure Settings**
+   - Number of departures (1-20)
+   - Transport type filter (Bus, Train, Tram, etc.)
+   - Update interval (10-3600 seconds)
 
-### Schritte zur Installation
+### Installation Steps
 
-1. Gehe zu **Einstellungen** > **Geräte & Dienste**
-2. Klicke auf **+ Integration hinzufügen**
-3. Suche nach "VRR" oder "NRW/KVV Departures"
-4. Folge dem Setup-Wizard
+1. Go to **Settings** > **Devices & Services**
+2. Click **+ Add Integration**
+3. Search for "VRR" or "NRW/KVV Departures"
+4. Follow the setup wizard
+
+### Trafiklab API Key
+
+For the Trafiklab provider (Sweden), you need a free API key:
+
+1. Register at [trafiklab.se](https://www.trafiklab.se)
+2. Create a new project
+3. Select the "Realtime API"
+4. Copy the API key
+5. Enter it in the integration's Config Flow
+
+**Note:** The API key is only required for Trafiklab sensors. No API key is required for VRR, KVV and HVV.
 
 ### Transportation Types
 

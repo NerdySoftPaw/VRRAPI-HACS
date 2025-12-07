@@ -19,12 +19,14 @@ from .const import (
     CONF_PROVIDER,
     CONF_SCAN_INTERVAL,
     CONF_STATION_ID,
+    CONF_TRAFIKLAB_API_KEY,
     CONF_TRANSPORTATION_TYPES,
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PROVIDER_HVV,
     PROVIDER_KVV,
+    PROVIDER_TRAFIKLAB_SE,
     PROVIDER_VRR,
     PROVIDERS,
     TRANSPORTATION_TYPES,
@@ -42,6 +44,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._provider: Optional[str] = None
         self._selected_stop: Optional[Dict[str, Any]] = None
+        self._api_key: Optional[str] = None  # For Trafiklab
 
         # API response cache to avoid duplicate requests
         self._search_cache: Dict[str, Dict[str, Any]] = {}
@@ -51,6 +54,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step - select provider."""
         if user_input is not None:
             self._provider = user_input[CONF_PROVIDER]
+            # Trafiklab requires API key
+            if self._provider == PROVIDER_TRAFIKLAB_SE:
+                return await self.async_step_api_key()
             return await self.async_step_stop_search()
 
         schema = vol.Schema(
@@ -59,12 +65,40 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        return self.async_show_form(step_id="user", data_schema=schema)
+
+    async def async_step_api_key(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
+        """Handle Trafiklab API key input."""
+        errors = {}
+
+        if user_input is not None:
+            trafiklab_api_key = user_input.get(CONF_TRAFIKLAB_API_KEY, "").strip()
+            if not trafiklab_api_key:
+                errors[CONF_TRAFIKLAB_API_KEY] = "trafiklab_api_key_required"
+            else:
+                # Store API key temporarily
+                self._api_key = trafiklab_api_key
+                return await self.async_step_stop_search()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_TRAFIKLAB_API_KEY): str,
+            }
+        )
+
         return self.async_show_form(
-            step_id="user", data_schema=schema, description_placeholders={"info": "Wähle deinen ÖPNV-Anbieter aus"}
+            step_id="api_key",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"info": "Trafiklab API key is required. Get one at trafiklab.se"},
         )
 
     async def async_step_stop_search(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle stop/station search step."""
+        # Validate that Trafiklab has API key configured
+        if self._provider == PROVIDER_TRAFIKLAB_SE and not self._api_key:
+            return await self.async_step_api_key()
+
         errors = {}
 
         if user_input is not None:
@@ -102,7 +136,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "provider": self._provider.upper(),
-                "example": "z.B. Düsseldorf Hauptbahnhof, Köln Heumarkt...",
             },
         )
 
@@ -144,11 +177,26 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="stop_select", data_schema=schema, description_placeholders={"count": str(len(stops))}
+            step_id="stop_select",
+            data_schema=schema,
+            description_placeholders={"count": str(len(stops))},
         )
 
     async def async_step_settings(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle settings step - departures, transport types, scan interval."""
+        # Define schema first (needed for error handling)
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
+                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
+                    TRANSPORTATION_TYPES
+                ),
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+                    int, vol.Range(min=10, max=3600)
+                ),
+            }
+        )
+
         if user_input is not None:
             # Combine all collected data
             data = {
@@ -160,6 +208,16 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_TRANSPORTATION_TYPES: user_input[CONF_TRANSPORTATION_TYPES],
                 CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
             }
+            # Add API key for Trafiklab (required for Trafiklab)
+            if self._provider == PROVIDER_TRAFIKLAB_SE:
+                if not self._api_key:
+                    # This shouldn't happen if flow is correct, but validate anyway
+                    return self.async_show_form(
+                        step_id="settings",
+                        data_schema=schema,
+                        errors={"base": "trafiklab_api_key_required"},
+                    )
+                data[CONF_TRAFIKLAB_API_KEY] = self._api_key
 
             # Create unique ID
             unique_id = f"{self._provider}_{self._selected_stop['id']}"
@@ -176,18 +234,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
 
             return self.async_create_entry(title=title, data=data)
-
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
-                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
-                    TRANSPORTATION_TYPES
-                ),
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                    int, vol.Range(min=10, max=3600)
-                ),
-            }
-        )
 
         stop_name = self._selected_stop.get("name", "Unknown") if self._selected_stop else "Unknown"
 
@@ -214,6 +260,10 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Cache miss - fetch from API
         _LOGGER.debug("Cache miss, fetching from API for: %s", search_term)
+
+        # Trafiklab uses different API
+        if self._provider == PROVIDER_TRAFIKLAB_SE:
+            return await self._search_stops_trafiklab(search_term)
 
         api_url = self._get_stopfinder_url()
 
@@ -280,6 +330,82 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return "https://efa-api.hochbahn.de/gti/XML_STOPFINDER_REQUEST"
         else:
             return "https://openservice-test.vrr.de/static03/XML_STOPFINDER_REQUEST"
+
+    async def _search_stops_trafiklab(self, search_term: str) -> List[Dict[str, Any]]:
+        """Search for stops using Trafiklab Stop Lookup API.
+
+        Args:
+            search_term: Search term for stops
+
+        Returns:
+            List of stop dictionaries
+        """
+        if not self._api_key:
+            _LOGGER.error("Trafiklab API key is required for stop search")
+            return []
+
+        url = f"https://realtime-api.trafiklab.se/v1/stops/name/{search_term}"
+        params = {"key": self._api_key}
+        session = async_get_clientsession(self.hass)
+
+        try:
+            async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                if response.status == 200:
+                    try:
+                        data = await response.json()
+                    except (ValueError, aiohttp.ContentTypeError) as e:
+                        _LOGGER.error("Invalid JSON response from Trafiklab API: %s", e)
+                        return []
+
+                    # Validate response type
+                    if not isinstance(data, dict):
+                        _LOGGER.error("Trafiklab API returned non-dict response: %s", type(data))
+                        return []
+
+                    # Parse Trafiklab response
+                    stop_groups = data.get("stop_groups", [])
+                    results = []
+
+                    for stop_group in stop_groups:
+                        if not isinstance(stop_group, dict):
+                            continue
+
+                        # Get the first stop's place if available
+                        stops = stop_group.get("stops", [])
+                        place = None
+                        if stops and isinstance(stops[0], dict):
+                            # Try to extract place from stop name or use area name
+                            stop_name = stop_group.get("name", "")
+                            place = stop_name.split(",")[-1].strip() if "," in stop_name else None
+
+                        result = {
+                            "id": stop_group.get("id", ""),
+                            "name": stop_group.get("name", ""),
+                            "place": place or "",
+                            "area_type": stop_group.get("area_type", ""),
+                            "transport_modes": stop_group.get("transport_modes", []),
+                        }
+                        results.append(result)
+
+                    # Store in cache
+                    cache_key = self._get_cache_key(self._provider, search_term, "stop")
+                    self._store_in_cache(cache_key, results)
+
+                    return results
+                elif response.status == 401:
+                    _LOGGER.error("Trafiklab API authentication failed (401) - check API key")
+                elif response.status == 404:
+                    _LOGGER.error("Trafiklab API endpoint not found (404)")
+                elif response.status >= 500:
+                    _LOGGER.error("Trafiklab API server error (status %s)", response.status)
+                else:
+                    _LOGGER.error("Trafiklab API returned status %s", response.status)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Trafiklab API request timeout after 10 seconds")
+        except Exception as e:
+            _LOGGER.error("Error searching Trafiklab stops: %s", e, exc_info=True)
+
+        return []
 
     def _parse_stopfinder_response(
         self, data: Dict[str, Any], search_type: str = "stop", search_term: str = ""
@@ -466,7 +592,15 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Converts: ä→ae, ö→oe, ü→ue, ß→ss
         """
-        replacements = {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue"}
+        replacements = {
+            "ä": "ae",
+            "ö": "oe",
+            "ü": "ue",
+            "ß": "ss",
+            "Ä": "Ae",
+            "Ö": "Oe",
+            "Ü": "Ue",
+        }
         for umlaut, replacement in replacements.items():
             text = text.replace(umlaut, replacement)
         return text
@@ -552,7 +686,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Bonus if place name is in search term (with umlaut normalization)
         if place:
             # Check both original and normalized versions
-            if any(word in place for word in search_words) or any(word in place_norm for word in search_words_norm):
+            place_match = any(word in place for word in search_words)
+            place_norm_match = any(word in place_norm for word in search_words_norm)
+            if place_match or place_norm_match:
                 score += 100
             # Check if place is a word in search
             if place in search_words or place_norm in search_words_norm:
@@ -661,7 +797,8 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
             CONF_DEPARTURES, self.config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
         )
         current_scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            CONF_SCAN_INTERVAL,
+            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
         )
         current_transport_types = self.config_entry.options.get(
             CONF_TRANSPORTATION_TYPES,
