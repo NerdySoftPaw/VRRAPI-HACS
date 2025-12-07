@@ -318,7 +318,10 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                         return None
                     elif response.status >= 500:
                         _LOGGER.warning(
-                            "Trafiklab API server error (status %s) on attempt %d/%d", response.status, attempt, max_retries
+                            "Trafiklab API server error (status %s) on attempt %d/%d",
+                            response.status,
+                            attempt,
+                            max_retries,
                         )
                         # Retry on server errors
                         if attempt < max_retries:
@@ -332,7 +335,9 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                         )
                         return None
                     else:
-                        _LOGGER.warning("Trafiklab API returned status %s on attempt %d/%d", response.status, attempt, max_retries)
+                        _LOGGER.warning(
+                            "Trafiklab API returned status %s on attempt %d/%d", response.status, attempt, max_retries
+                        )
                         if attempt < max_retries:
                             await asyncio.sleep(2**attempt)
                             continue
@@ -343,7 +348,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                     await asyncio.sleep(2**attempt)
                     continue
                 _LOGGER.error("Trafiklab API request timeout after %d attempts", max_retries)
-            except aiohttp.ClientConnectorError as e:
+            except ClientConnectorError as e:
                 _LOGGER.warning("Trafiklab API connection error on attempt %d/%d: %s", attempt, max_retries, e)
                 if attempt < max_retries:
                     await asyncio.sleep(2**attempt)
