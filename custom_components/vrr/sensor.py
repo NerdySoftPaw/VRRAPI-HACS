@@ -777,7 +777,8 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         )
 
         # Setup entity
-        provider = coordinator.provider
+        self._provider = coordinator.provider
+        provider = self._provider
         station_id = coordinator.station_id
         place_dm = coordinator.place_dm
         name_dm = coordinator.name_dm
