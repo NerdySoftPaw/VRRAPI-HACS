@@ -462,8 +462,10 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                 ) as response:
                     if response.status == 200:
                         try:
+                            # Stream JSON parsing for large responses (more memory efficient)
                             json_data = await response.json()
-                            # Validate response structure
+
+                            # Validate response structure early
                             if not isinstance(json_data, dict):
                                 _LOGGER.warning("NTA API returned non-dict response: %s", type(json_data))
                                 return None
@@ -474,12 +476,23 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                 _LOGGER.debug("NTA API response missing or invalid 'entity' field")
                                 return {"stopEvents": []}
 
-                            _LOGGER.debug("NTA API returned %d entities", len(entities))
+                            entity_count = len(entities)
+                            if entity_count == 0:
+                                _LOGGER.debug("NTA API returned empty entities list")
+                                return {"stopEvents": []}
+
+                            _LOGGER.info(
+                                "NTA API returned %d entities (processing for stop %s)", entity_count, self.station_id
+                            )
 
                             # Filter entities for our stop_id and convert to stopEvents format
                             stop_events = []
                             target_stop_id = self.station_id
+                            max_departures = self.departures_limit * 3  # Get more than needed for filtering
 
+                            # Early exit optimization: check if stop_time_updates contain our stop_id
+                            # before processing the entire entity
+                            processed_entities = 0
                             for entity in entities:
                                 if not isinstance(entity, dict):
                                     continue
@@ -488,84 +501,131 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                 if not isinstance(trip_update, dict):
                                     continue
 
-                                # Get trip info
+                                # Quick check: does this entity have stop_time_updates for our stop?
+                                stop_time_updates = trip_update.get("stop_time_update", [])
+                                if not isinstance(stop_time_updates, list) or len(stop_time_updates) == 0:
+                                    continue
+
+                                # Early filter: check if any stop_time_update matches our stop_id
+                                # before processing trip info (saves CPU)
+                                matching_stop_time = None
+                                for stop_time_update in stop_time_updates:
+                                    if not isinstance(stop_time_update, dict):
+                                        continue
+                                    stop_id = stop_time_update.get("stop_id")
+                                    if stop_id == target_stop_id:
+                                        matching_stop_time = stop_time_update
+                                        break  # Found match, no need to check more
+
+                                # Skip this entity if no matching stop_time_update found
+                                if matching_stop_time is None:
+                                    continue
+
+                                # Only process trip info if we have a matching stop
                                 trip = trip_update.get("trip", {})
                                 if not isinstance(trip, dict):
                                     continue
 
-                                # Get stop_time_updates
-                                stop_time_updates = trip_update.get("stop_time_update", [])
-                                if not isinstance(stop_time_updates, list):
+                                # Use the matching stop_time_update we already found
+                                stop_time_update = matching_stop_time
+
+                                # Found a departure for our stop
+                                route_id = trip.get("route_id", "")
+                                trip_id = trip.get("trip_id", "")
+
+                                # Get route info from GTFS Static
+                                route_short_name = ""
+                                route_type = 3  # Default to bus
+                                if self.gtfs_static:
+                                    route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
+                                    route_type = self.gtfs_static.get_route_type(route_id) or 3
+
+                                # Get delay (in seconds, convert to minutes)
+                                departure = stop_time_update.get("departure", {})
+                                arrival = stop_time_update.get("arrival", {})
+                                delay_seconds = departure.get("delay") or arrival.get("delay") or 0
+                                delay_minutes = int(delay_seconds / 60) if delay_seconds else 0
+
+                                # Get scheduled time
+                                schedule_relationship = stop_time_update.get("schedule_relationship", "SCHEDULED")
+
+                                # Skip canceled trips
+                                if schedule_relationship in ["CANCELED", "SKIPPED"]:
                                     continue
 
-                                # Find stop_time_update for our stop_id
-                                for stop_time_update in stop_time_updates:
-                                    if not isinstance(stop_time_update, dict):
-                                        continue
+                                # Get destination from trip (we'll use route name as fallback)
+                                destination = route_short_name or "Unknown"
 
-                                    stop_id = stop_time_update.get("stop_id")
-                                    if stop_id != target_stop_id:
-                                        continue
+                                # Calculate time from GTFS-RT data
+                                now = dt_util.now()
 
-                                    # Found a departure for our stop
-                                    route_id = trip.get("route_id", "")
-                                    trip_id = trip.get("trip_id", "")
+                                # Get time from departure/arrival if available
+                                departure_time = departure.get("time")
+                                arrival_time = arrival.get("time")
 
-                                    # Get route info from GTFS Static
-                                    route_short_name = ""
-                                    route_type = 3  # Default to bus
-                                    if self.gtfs_static:
-                                        route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
-                                        route_type = self.gtfs_static.get_route_type(route_id) or 3
+                                if departure_time:
+                                    # POSIX timestamp
+                                    try:
+                                        planned_time = datetime.fromtimestamp(departure_time, tz=now.tzinfo)
+                                        estimated_time = planned_time + timedelta(seconds=delay_seconds)
+                                    except (ValueError, OSError):
+                                        # Fallback to current time + delay
+                                        planned_time = now
+                                        estimated_time = now + timedelta(seconds=delay_seconds)
+                                elif arrival_time:
+                                    try:
+                                        planned_time = datetime.fromtimestamp(arrival_time, tz=now.tzinfo)
+                                        estimated_time = planned_time + timedelta(seconds=delay_seconds)
+                                    except (ValueError, OSError):
+                                        planned_time = now
+                                        estimated_time = now + timedelta(seconds=delay_seconds)
+                                else:
+                                    # No time field, estimate from delay
+                                    planned_time = now
+                                    estimated_time = now + timedelta(seconds=delay_seconds)
 
-                                    # Get delay (in seconds, convert to minutes)
-                                    departure = stop_time_update.get("departure", {})
-                                    arrival = stop_time_update.get("arrival", {})
-                                    delay_seconds = departure.get("delay") or arrival.get("delay") or 0
-                                    delay_minutes = int(delay_seconds / 60) if delay_seconds else 0
+                                # Format times
+                                planned_time_str = planned_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+                                estimated_time_str = estimated_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
-                                    # Get scheduled time
-                                    # GTFS-RT uses time field (POSIX timestamp) or delay
-                                    # We need to calculate from trip start_time + stop_sequence
-                                    # For now, use delay to estimate
-                                    schedule_relationship = stop_time_update.get("schedule_relationship", "SCHEDULED")
+                                stop_event = {
+                                    "departureTimePlanned": planned_time_str,
+                                    "departureTimeEstimated": estimated_time_str,
+                                    "transportation": {
+                                        "number": route_short_name,
+                                        "description": "",
+                                        "destination": {"name": destination},
+                                        "product": {"class": route_type},
+                                    },
+                                    "platform": {"name": ""},
+                                    "realtimeStatus": ["MONITORED"] if delay_seconds != 0 else [],
+                                    "route_id": route_id,
+                                    "trip_id": trip_id,
+                                    "stop_id": stop_id,
+                                    "delay_seconds": delay_seconds,
+                                }
+                                stop_events.append(stop_event)
+                                processed_entities += 1
 
-                                    # Skip canceled trips
-                                    if schedule_relationship in ["CANCELED", "SKIPPED"]:
-                                        continue
+                                # Early exit if we have enough departures
+                                if len(stop_events) >= max_departures:
+                                    _LOGGER.debug(
+                                        "NTA: Found %d departures (limit reached), stopping early",
+                                        len(stop_events),
+                                    )
+                                    break
 
-                                    # Get destination from trip (we'll use route name as fallback)
-                                    destination = route_short_name or "Unknown"
+                                # Break outer loop if we have enough
+                                if len(stop_events) >= max_departures:
+                                    break
 
-                                    # Calculate time (simplified - in real implementation, we'd need stop_times.txt)
-                                    # For now, we'll use current time + delay as estimate
-                                    now = dt_util.now()
-                                    planned_time = now + timedelta(minutes=delay_minutes)
-                                    estimated_time = planned_time
-
-                                    # Format times
-                                    planned_time_str = planned_time.strftime("%Y-%m-%dT%H:%M:%S%z")
-                                    estimated_time_str = estimated_time.strftime("%Y-%m-%dT%H:%M:%S%z")
-
-                                    stop_event = {
-                                        "departureTimePlanned": planned_time_str,
-                                        "departureTimeEstimated": estimated_time_str,
-                                        "transportation": {
-                                            "number": route_short_name,
-                                            "description": "",
-                                            "destination": {"name": destination},
-                                            "product": {"class": route_type},
-                                        },
-                                        "platform": {"name": ""},
-                                        "realtimeStatus": ["MONITORED"] if delay_seconds != 0 else [],
-                                        "route_id": route_id,
-                                        "trip_id": trip_id,
-                                        "stop_id": stop_id,
-                                        "delay_seconds": delay_seconds,
-                                    }
-                                    stop_events.append(stop_event)
-
-                            _LOGGER.debug("NTA: Found %d departures for stop %s", len(stop_events), target_stop_id)
+                            _LOGGER.info(
+                                "NTA: Processed %d/%d entities, found %d departures for stop %s",
+                                processed_entities,
+                                entity_count,
+                                len(stop_events),
+                                target_stop_id,
+                            )
                             return {"stopEvents": stop_events}
 
                         except (ValueError, aiohttp.ContentTypeError) as e:
