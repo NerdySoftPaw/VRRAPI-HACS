@@ -31,7 +31,6 @@ from .const import (
     PROVIDERS,
     TRANSPORTATION_TYPES,
 )
-from .data_models import UnifiedStop
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,6 +184,19 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_settings(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle settings step - departures, transport types, scan interval."""
+        # Define schema first (needed for error handling)
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
+                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
+                    TRANSPORTATION_TYPES
+                ),
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+                    int, vol.Range(min=10, max=3600)
+                ),
+            }
+        )
+
         if user_input is not None:
             # Combine all collected data
             data = {
@@ -222,18 +234,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
 
             return self.async_create_entry(title=title, data=data)
-
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
-                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
-                    TRANSPORTATION_TYPES
-                ),
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-                    int, vol.Range(min=10, max=3600)
-                ),
-            }
-        )
 
         stop_name = self._selected_stop.get("name", "Unknown") if self._selected_stop else "Unknown"
 

@@ -24,7 +24,7 @@ from .const import (
     PROVIDER_VRR,
     TRANSPORTATION_TYPES,
 )
-from .sensor import MultiProviderSensor, VRRDataUpdateCoordinator
+from .sensor import VRRDataUpdateCoordinator
 
 
 async def async_setup_entry(
