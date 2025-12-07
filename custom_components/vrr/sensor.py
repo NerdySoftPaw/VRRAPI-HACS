@@ -540,11 +540,10 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                     route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
                                     route_type = self.gtfs_static.get_route_type(route_id) or 3
 
-                                # Get delay (in seconds, convert to minutes)
+                                # Get delay (in seconds)
                                 departure = stop_time_update.get("departure", {})
                                 arrival = stop_time_update.get("arrival", {})
                                 delay_seconds = departure.get("delay") or arrival.get("delay") or 0
-                                delay_minutes = int(delay_seconds / 60) if delay_seconds else 0
 
                                 # Get scheduled time
                                 schedule_relationship = stop_time_update.get("schedule_relationship", "SCHEDULED")
