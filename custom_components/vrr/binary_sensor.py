@@ -113,17 +113,18 @@ class VRRDelayBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """
         # Try to get already parsed departures from the sensor
         departures = None
-        sensor_entities = self.hass.data.get("entity_components", {}).get("sensor")
-        if sensor_entities:
-            for entity in sensor_entities.entities:
-                if (
-                    hasattr(entity, "coordinator")
-                    and entity.coordinator == self.coordinator
-                    and hasattr(entity, "_attributes")
-                ):
-                    departures = entity._attributes.get("departures", [])
-                    if departures:
-                        break
+        if self.hass and hasattr(self.hass, "data"):
+            sensor_entities = self.hass.data.get("entity_components", {}).get("sensor")
+            if sensor_entities:
+                for entity in sensor_entities.entities:
+                    if (
+                        hasattr(entity, "coordinator")
+                        and entity.coordinator == self.coordinator
+                        and hasattr(entity, "_attributes")
+                    ):
+                        departures = entity._attributes.get("departures", [])
+                        if departures:
+                            break
 
         # If we have parsed departures, use them (unified model)
         if departures:

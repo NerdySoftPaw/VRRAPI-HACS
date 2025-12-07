@@ -91,7 +91,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="api_key",
             data_schema=schema,
             errors=errors,
-            description_placeholders={"info": "Trafiklab API key is required. Get one at trafiklab.se"},
+            description_placeholders={
+                "info": "Trafiklab API key is required. Get one at trafiklab.se"
+            },
         )
 
     async def async_step_stop_search(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
@@ -224,9 +226,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
-                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
-                    TRANSPORTATION_TYPES
-                ),
+                vol.Optional(
+                    CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())
+                ): cv.multi_select(TRANSPORTATION_TYPES),
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=10, max=3600)
                 ),
@@ -373,7 +375,12 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         place = None
                         if stops and isinstance(stops[0], dict):
                             # Try to extract place from stop name or use area name
-                            place = stop_group.get("name", "").split(",")[-1].strip() if "," in stop_group.get("name", "") else None
+                            stop_name = stop_group.get("name", "")
+                            place = (
+                                stop_name.split(",")[-1].strip()
+                                if "," in stop_name
+                                else None
+                            )
 
                         result = {
                             "id": stop_group.get("id", ""),
@@ -675,7 +682,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Bonus if place name is in search term (with umlaut normalization)
         if place:
             # Check both original and normalized versions
-            if any(word in place for word in search_words) or any(word in place_norm for word in search_words_norm):
+            place_match = any(word in place for word in search_words)
+            place_norm_match = any(word in place_norm for word in search_words_norm)
+            if place_match or place_norm_match:
                 score += 100
             # Check if place is a word in search
             if place in search_words or place_norm in search_words_norm:
@@ -694,7 +703,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name_words_norm = name_norm.split()
         for i, search_word in enumerate(search_words):
             if len(search_word) > 2:  # Only consider words longer than 2 chars
-                search_word_norm = search_words_norm[i] if i < len(search_words_norm) else search_word
+                search_word_norm = (
+                    search_words_norm[i] if i < len(search_words_norm) else search_word
+                )
                 for j, name_word in enumerate(name_words):
                     name_word_norm = name_words_norm[j] if j < len(name_words_norm) else name_word
                     # Check both original and normalized

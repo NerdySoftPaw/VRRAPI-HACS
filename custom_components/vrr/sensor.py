@@ -197,7 +197,9 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         url = f"{base_url}?{params}"
         session = async_get_clientsession(self.hass)
 
-        headers = {"User-Agent": f"Mozilla/5.0 (compatible; HomeAssistant {self.provider.upper()} Integration)"}
+        headers = {
+            "User-Agent": f"Mozilla/5.0 (compatible; HomeAssistant {self.provider.upper()} Integration)"
+        }
 
         max_retries = 3
         for attempt in range(1, max_retries + 1):
@@ -258,12 +260,16 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         params = {"key": self.api_key}
         session = async_get_clientsession(self.hass)
 
-        headers = {"User-Agent": f"Mozilla/5.0 (compatible; HomeAssistant Trafiklab Integration)"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; HomeAssistant Trafiklab Integration)"
+        }
 
         max_retries = 3
         for attempt in range(1, max_retries + 1):
             try:
-                async with session.get(url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                async with session.get(
+                    url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
                     if response.status == 200:
                         try:
                             json_data = await response.json()
@@ -283,17 +289,21 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                             stop_events = []
                             for dep in departures:
                                 # Map Trafiklab structure to our stopEvents format
+                                estimated_time = dep.get("estimatedTime")
+                                scheduled_time = dep.get("scheduledTime")
                                 stop_event = {
-                                    "departureTimePlanned": dep.get("scheduledTime"),
-                                    "departureTimeEstimated": dep.get("estimatedTime") or dep.get("scheduledTime"),
+                                    "departureTimePlanned": scheduled_time,
+                                    "departureTimeEstimated": estimated_time or scheduled_time,
                                     "transportation": {
                                         "number": dep.get("line", {}).get("number", ""),
                                         "description": dep.get("line", {}).get("name", ""),
-                                        "destination": {"name": dep.get("destination", {}).get("name", "Unknown")},
+                                        "destination": {
+                                            "name": dep.get("destination", {}).get("name", "Unknown")
+                                        },
                                         "product": {"class": 0},  # Will be mapped from transportMode
                                     },
                                     "platform": {"name": dep.get("platform", "")},
-                                    "realtimeStatus": ["MONITORED"] if dep.get("estimatedTime") else [],
+                                    "realtimeStatus": ["MONITORED"] if estimated_time else [],
                                     "transportMode": dep.get("transportMode", "BUS"),  # Trafiklab specific
                                 }
                                 stop_events.append(stop_event)
@@ -406,12 +416,16 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         place_dm = coordinator.place_dm
         name_dm = coordinator.name_dm
 
-        self._attr_unique_id = f"{provider}_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}"
+        station_key = (
+            station_id
+            or f"{place_dm}_{name_dm}".lower().replace(" ", "_")
+        )
+        self._attr_unique_id = f"{provider}_{station_key}"
         self._attr_name = f"{provider.upper()} {place_dm} - {name_dm}"
 
         # Device info
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{provider}_{station_id or f'{place_dm}_{name_dm}'.lower().replace(' ', '_')}")},
+            identifiers={(DOMAIN, f"{provider}_{station_key}")},
             name=f"{place_dm} - {name_dm}",
             manufacturer=f"{provider.upper()} Public Transport",
             model="Departure Monitor",
@@ -455,7 +469,12 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         # Try to get the transportation type of the next departure
         departures = self._attributes.get("departures", [])
         if departures and len(departures) > 0:
-            next_transport_type = departures[0].get("transportation_type", "bus") if isinstance(departures[0], dict) else "bus"
+            first_dep = departures[0]
+            next_transport_type = (
+                first_dep.get("transportation_type", "bus")
+                if isinstance(first_dep, dict)
+                else "bus"
+            )
             return icon_mapping.get(next_transport_type, "mdi:bus-clock")
 
         return "mdi:bus-clock"  # Default icon
@@ -832,7 +851,11 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             tz,
             now,
             get_transport_type_fn=lambda t: transport_type,
-            get_platform_fn=lambda s: s.get("platform", {}).get("name", "") if isinstance(s.get("platform"), dict) else str(s.get("platform", "")),
+            get_platform_fn=lambda s: (
+                s.get("platform", {}).get("name", "")
+                if isinstance(s.get("platform"), dict)
+                else str(s.get("platform", ""))
+            ),
             get_realtime_fn=lambda s, est, plan: est != plan if est and plan else False,
         )
 
