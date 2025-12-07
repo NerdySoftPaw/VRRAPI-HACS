@@ -157,9 +157,9 @@ class GTFSStaticData:
                     return False
 
                 with zip_file.open("stops.txt") as stops_file:
-                        reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="utf-8"))
-                        self.stops = {row["stop_id"]: row for row in reader}
-                        _LOGGER.info("Loaded %d stops from GTFS Static", len(self.stops))
+                    reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="utf-8"))
+                    self.stops = {row["stop_id"]: row for row in reader}
+                    _LOGGER.info("Loaded %d stops from GTFS Static", len(self.stops))
 
                 # Load routes.txt (optional but recommended)
                 if "routes.txt" in file_list:
