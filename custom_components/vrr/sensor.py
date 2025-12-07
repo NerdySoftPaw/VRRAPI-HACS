@@ -552,8 +552,16 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                 if schedule_relationship in ["CANCELED", "SKIPPED"]:
                                     continue
 
-                                # Get destination from trip (we'll use route name as fallback)
-                                destination = route_short_name or "Unknown"
+                                # Get destination from GTFS Static trips.txt (trip_headsign)
+                                destination = "Unknown"
+                                if self.gtfs_static:
+                                    trip_headsign = self.gtfs_static.get_trip_headsign(trip_id)
+                                    if trip_headsign:
+                                        destination = trip_headsign
+                                    else:
+                                        # Fallback to route long name if trip_headsign not available
+                                        route = self.gtfs_static.routes.get(route_id, {})
+                                        destination = route.get("route_long_name") or route_short_name or "Unknown"
 
                                 # Calculate time from GTFS-RT data
                                 now = dt_util.now()
