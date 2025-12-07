@@ -283,25 +283,53 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
 
                             # Convert Trafiklab format to our expected format
                             departures = json_data.get("departures", [])
+                            _LOGGER.debug("Trafiklab API returned %d departures", len(departures))
                             stop_events = []
                             for dep in departures:
                                 # Map Trafiklab structure to our stopEvents format
-                                estimated_time = dep.get("estimatedTime")
-                                scheduled_time = dep.get("scheduledTime")
+                                # Trafiklab uses: scheduled, realtime, route.designation, route.destination.name
+                                scheduled_time = dep.get("scheduled")
+                                realtime_time = dep.get("realtime")
+                                route = dep.get("route", {})
+                                platform_data = dep.get("scheduled_platform", {}) or dep.get("realtime_platform", {})
+                                transport_mode = route.get("transport_mode", "BUS")
+
+                                # Trafiklab returns time without timezone, it's in local Swedish time
+                                # Parse as Swedish time by appending timezone offset
+                                # Sweden uses CET (UTC+1) in winter and CEST (UTC+2) in summer
+                                # For simplicity, we'll use the current offset from Europe/Stockholm
+                                stockholm_tz = dt_util.get_time_zone("Europe/Stockholm")
+                                if stockholm_tz:
+                                    # Get current offset
+                                    now_stockholm = datetime.now(stockholm_tz)
+                                    offset = now_stockholm.strftime("%z")
+                                    offset_formatted = f"{offset[:3]}:{offset[3:]}"  # +0100 -> +01:00
+                                    if scheduled_time and "+" not in scheduled_time and "Z" not in scheduled_time:
+                                        scheduled_time = f"{scheduled_time}{offset_formatted}"
+                                    if realtime_time and "+" not in realtime_time and "Z" not in realtime_time:
+                                        realtime_time = f"{realtime_time}{offset_formatted}"
+
                                 stop_event = {
                                     "departureTimePlanned": scheduled_time,
-                                    "departureTimeEstimated": estimated_time or scheduled_time,
+                                    "departureTimeEstimated": realtime_time or scheduled_time,
                                     "transportation": {
-                                        "number": dep.get("line", {}).get("number", ""),
-                                        "description": dep.get("line", {}).get("name", ""),
-                                        "destination": {"name": dep.get("destination", {}).get("name", "Unknown")},
+                                        "number": route.get("designation", ""),
+                                        "description": route.get("name") or route.get("direction", ""),
+                                        "destination": {"name": route.get("destination", {}).get("name", "Unknown")},
                                         "product": {"class": 0},  # Will be mapped from transportMode
                                     },
-                                    "platform": {"name": dep.get("platform", "")},
-                                    "realtimeStatus": ["MONITORED"] if estimated_time else [],
-                                    "transportMode": dep.get("transportMode", "BUS"),  # Trafiklab specific
+                                    "platform": {"name": platform_data.get("designation", "")},
+                                    "realtimeStatus": ["MONITORED"] if dep.get("is_realtime") else [],
+                                    "transportMode": transport_mode,  # Trafiklab specific (TRAIN, BUS, etc.)
                                 }
                                 stop_events.append(stop_event)
+                                _LOGGER.debug(
+                                    "Trafiklab departure: Line %s to %s at %s (mode: %s)",
+                                    route.get("designation"),
+                                    route.get("destination", {}).get("name"),
+                                    scheduled_time,
+                                    transport_mode,
+                                )
 
                             return {"stopEvents": stop_events}
                         except (ValueError, aiohttp.ContentTypeError) as e:
