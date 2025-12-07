@@ -30,7 +30,8 @@ class GTFSStaticData:
         self.hass = hass
         self.stops: Dict[str, Dict[str, str]] = {}  # stop_id -> stop data
         self.routes: Dict[str, Dict[str, str]] = {}  # route_id -> route data
-        # trips and stop_times are not loaded to save memory (not currently used)
+        self.trips: Dict[str, str] = {}  # trip_id -> trip_headsign (only headsign loaded to save memory)
+        self.agencies: Dict[str, Dict[str, str]] = {}  # agency_id -> agency data
         self._cache_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / "gtfs_static.zip"
         self._cache_timestamp_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / "gtfs_static_timestamp.txt"
         self._last_update: Optional[datetime] = None
@@ -177,8 +178,39 @@ class GTFSStaticData:
                 else:
                     _LOGGER.warning("routes.txt not found in GTFS Static ZIP - route names will not be available")
 
-                # Note: trips.txt and stop_times.txt are NOT loaded to save memory
-                # They are not currently used and can be very large (millions of entries)
+                # Load trips.txt (only trip_headsign for destination, to save memory)
+                if "trips.txt" in file_list:
+                    with zip_file.open("trips.txt") as trips_file:
+                        reader = csv.DictReader(io.TextIOWrapper(trips_file, encoding="utf-8"))
+                        trip_count = 0
+                        for row in reader:
+                            trip_id = row.get("trip_id", "")
+                            trip_headsign = row.get("trip_headsign", "")
+                            if trip_id and trip_headsign:
+                                self.trips[trip_id] = trip_headsign
+                                trip_count += 1
+                        _LOGGER.info("Loaded %d trip headsigns from GTFS Static", trip_count)
+                else:
+                    _LOGGER.warning("trips.txt not found in GTFS Static ZIP - destinations will not be available")
+
+                # Load agency.txt (for operator information)
+                if "agency.txt" in file_list:
+                    with zip_file.open("agency.txt") as agency_file:
+                        reader = csv.DictReader(io.TextIOWrapper(agency_file, encoding="utf-8"))
+                        agency_count = 0
+                        for row in reader:
+                            agency_id = row.get("agency_id", "")
+                            # If no agency_id, use agency_name as key (some GTFS feeds don't have agency_id)
+                            if not agency_id:
+                                agency_id = row.get("agency_name", "")
+                            if agency_id:
+                                self.agencies[agency_id] = row
+                                agency_count += 1
+                        _LOGGER.info("Loaded %d agencies from GTFS Static", agency_count)
+                else:
+                    _LOGGER.warning("agency.txt not found in GTFS Static ZIP - agency info will not be available")
+
+                # Note: stop_times.txt is NOT loaded to save memory (can be millions of entries)
 
             if len(self.stops) == 0:
                 _LOGGER.error("No stops loaded from GTFS Static - stops.txt may be empty or invalid")
@@ -222,9 +254,45 @@ class GTFSStaticData:
         route = self.routes.get(route_id)
         if route:
             try:
-                return int(route.get("route_type", 3))  # Default to bus (3)
-            except (ValueError, TypeError):
-                return 3
+                route_type_str = route.get("route_type", "")
+                if route_type_str:
+                    route_type = int(route_type_str)
+                    _LOGGER.debug("GTFS Static: route_id=%s, route_type=%d", route_id, route_type)
+                    return route_type
+                else:
+                    _LOGGER.warning("GTFS Static: route_type missing for route_id=%s", route_id)
+                    return None
+            except (ValueError, TypeError) as e:
+                _LOGGER.warning("GTFS Static: Invalid route_type for route_id=%s: %s", route_id, e)
+                return None
+        else:
+            _LOGGER.debug("GTFS Static: route_id=%s not found in routes", route_id)
+        return None
+
+    def get_trip_headsign(self, trip_id: str) -> Optional[str]:
+        """Get trip headsign (destination) by trip_id."""
+        return self.trips.get(trip_id)
+
+    def get_agency_name(self, route_id: str) -> Optional[str]:
+        """Get agency name for a route_id."""
+        route = self.routes.get(route_id)
+        if not route:
+            return None
+
+        # Get agency_id from route
+        agency_id = route.get("agency_id", "")
+        if not agency_id:
+            # Some GTFS feeds don't have agency_id in routes.txt
+            # Try to get first agency if only one exists
+            if len(self.agencies) == 1:
+                agency = next(iter(self.agencies.values()))
+                return agency.get("agency_name")
+            return None
+
+        # Get agency by agency_id
+        agency = self.agencies.get(agency_id)
+        if agency:
+            return agency.get("agency_name")
         return None
 
     def search_stops(self, search_term: str, limit: int = 20) -> List[Dict[str, str]]:
