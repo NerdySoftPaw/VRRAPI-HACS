@@ -77,7 +77,7 @@
       "api_key_required": "API key is required",
       "trafiklab_api_key_required": "Trafiklab API key is required",
       "nta_api_key_required": "NTA API key is required",
-      "gtfs_static_load_failed": "Failed to load GTFS Static data"
+      "gtfs_static_load_failed": "Failed to load GTFS Static data. Check logs for details. This may be due to network issues or the GTFS file being temporarily unavailable."
     }
   },
   "options": {

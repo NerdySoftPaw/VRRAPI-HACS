@@ -97,11 +97,17 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._api_key = api_key
                     self._api_key_secondary = api_key_secondary if api_key_secondary else None
                     # Initialize GTFS Static loader for stop search
-                    self._gtfs_static = GTFSStaticData(self.hass)
-                    if not await self._gtfs_static.ensure_loaded():
+                    try:
+                        self._gtfs_static = GTFSStaticData(self.hass)
+                        if not await self._gtfs_static.ensure_loaded():
+                            _LOGGER.error("Failed to load GTFS Static data for NTA")
+                            errors["base"] = "gtfs_static_load_failed"
+                        else:
+                            _LOGGER.info("GTFS Static data loaded successfully for NTA")
+                            return await self.async_step_stop_search()
+                    except Exception as e:
+                        _LOGGER.error("Exception while loading GTFS Static data: %s", e, exc_info=True)
                         errors["base"] = "gtfs_static_load_failed"
-                    else:
-                        return await self.async_step_stop_search()
 
         # Show appropriate schema based on provider
         if self._provider == PROVIDER_TRAFIKLAB_SE:
