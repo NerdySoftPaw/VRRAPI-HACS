@@ -91,9 +91,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="api_key",
             data_schema=schema,
             errors=errors,
-            description_placeholders={
-                "info": "Trafiklab API key is required. Get one at trafiklab.se"
-            },
+            description_placeholders={"info": "Trafiklab API key is required. Get one at trafiklab.se"},
         )
 
     async def async_step_stop_search(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
@@ -180,7 +178,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="stop_select", data_schema=schema, description_placeholders={"count": str(len(stops))}
+            step_id="stop_select",
+            data_schema=schema,
+            description_placeholders={"count": str(len(stops))},
         )
 
     async def async_step_settings(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
@@ -226,9 +226,9 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Optional(CONF_DEPARTURES, default=DEFAULT_DEPARTURES): vol.All(int, vol.Range(min=1, max=20)),
-                vol.Optional(
-                    CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())
-                ): cv.multi_select(TRANSPORTATION_TYPES),
+                vol.Optional(CONF_TRANSPORTATION_TYPES, default=list(TRANSPORTATION_TYPES.keys())): cv.multi_select(
+                    TRANSPORTATION_TYPES
+                ),
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
                     int, vol.Range(min=10, max=3600)
                 ),
@@ -376,11 +376,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         if stops and isinstance(stops[0], dict):
                             # Try to extract place from stop name or use area name
                             stop_name = stop_group.get("name", "")
-                            place = (
-                                stop_name.split(",")[-1].strip()
-                                if "," in stop_name
-                                else None
-                            )
+                            place = stop_name.split(",")[-1].strip() if "," in stop_name else None
 
                         result = {
                             "id": stop_group.get("id", ""),
@@ -596,7 +592,15 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Converts: ä→ae, ö→oe, ü→ue, ß→ss
         """
-        replacements = {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue"}
+        replacements = {
+            "ä": "ae",
+            "ö": "oe",
+            "ü": "ue",
+            "ß": "ss",
+            "Ä": "Ae",
+            "Ö": "Oe",
+            "Ü": "Ue",
+        }
         for umlaut, replacement in replacements.items():
             text = text.replace(umlaut, replacement)
         return text
@@ -703,9 +707,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name_words_norm = name_norm.split()
         for i, search_word in enumerate(search_words):
             if len(search_word) > 2:  # Only consider words longer than 2 chars
-                search_word_norm = (
-                    search_words_norm[i] if i < len(search_words_norm) else search_word
-                )
+                search_word_norm = search_words_norm[i] if i < len(search_words_norm) else search_word
                 for j, name_word in enumerate(name_words):
                     name_word_norm = name_words_norm[j] if j < len(name_words_norm) else name_word
                     # Check both original and normalized
@@ -795,7 +797,8 @@ class VRROptionsFlowHandler(config_entries.OptionsFlow):
             CONF_DEPARTURES, self.config_entry.data.get(CONF_DEPARTURES, DEFAULT_DEPARTURES)
         )
         current_scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+            CONF_SCAN_INTERVAL,
+            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
         )
         current_transport_types = self.config_entry.options.get(
             CONF_TRANSPORTATION_TYPES,

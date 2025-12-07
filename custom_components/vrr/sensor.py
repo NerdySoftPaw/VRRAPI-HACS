@@ -197,9 +197,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         url = f"{base_url}?{params}"
         session = async_get_clientsession(self.hass)
 
-        headers = {
-            "User-Agent": f"Mozilla/5.0 (compatible; HomeAssistant {self.provider.upper()} Integration)"
-        }
+        headers = {"User-Agent": f"Mozilla/5.0 (compatible; HomeAssistant {self.provider.upper()} Integration)"}
 
         max_retries = 3
         for attempt in range(1, max_retries + 1):
@@ -260,9 +258,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         params = {"key": self.api_key}
         session = async_get_clientsession(self.hass)
 
-        headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; HomeAssistant Trafiklab Integration)"
-        }
+        headers = {"User-Agent": "Mozilla/5.0 (compatible; HomeAssistant Trafiklab Integration)"}
 
         max_retries = 3
         for attempt in range(1, max_retries + 1):
@@ -297,9 +293,7 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                     "transportation": {
                                         "number": dep.get("line", {}).get("number", ""),
                                         "description": dep.get("line", {}).get("name", ""),
-                                        "destination": {
-                                            "name": dep.get("destination", {}).get("name", "Unknown")
-                                        },
+                                        "destination": {"name": dep.get("destination", {}).get("name", "Unknown")},
                                         "product": {"class": 0},  # Will be mapped from transportMode
                                     },
                                     "platform": {"name": dep.get("platform", "")},
@@ -379,7 +373,8 @@ async def async_setup_entry(
 
     # Use options if available, otherwise fall back to data
     transportation_types = config_entry.options.get(
-        CONF_TRANSPORTATION_TYPES, config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys()))
+        CONF_TRANSPORTATION_TYPES,
+        config_entry.data.get(CONF_TRANSPORTATION_TYPES, list(TRANSPORTATION_TYPES.keys())),
     )
 
     # Create sensor
@@ -416,10 +411,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         place_dm = coordinator.place_dm
         name_dm = coordinator.name_dm
 
-        station_key = (
-            station_id
-            or f"{place_dm}_{name_dm}".lower().replace(" ", "_")
-        )
+        station_key = station_id or f"{place_dm}_{name_dm}".lower().replace(" ", "_")
         self._attr_unique_id = f"{provider}_{station_key}"
         self._attr_name = f"{provider.upper()} {place_dm} - {name_dm}"
 
@@ -470,11 +462,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         departures = self._attributes.get("departures", [])
         if departures and len(departures) > 0:
             first_dep = departures[0]
-            next_transport_type = (
-                first_dep.get("transportation_type", "bus")
-                if isinstance(first_dep, dict)
-                else "bus"
-            )
+            next_transport_type = first_dep.get("transportation_type", "bus") if isinstance(first_dep, dict) else "bus"
             return icon_mapping.get(next_transport_type, "mdi:bus-clock")
 
         return "mdi:bus-clock"  # Default icon
@@ -774,7 +762,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             tz,
             now,
             get_transport_type_fn=self._determine_transport_type_vrr,
-            get_platform_fn=lambda s: s.get("platform", {}).get("name") or s.get("platformName", ""),
+            get_platform_fn=lambda s: (s.get("platform", {}).get("name") or s.get("platformName", "")),
             get_realtime_fn=lambda s, est, plan: "MONITORED" in s.get("realtimeStatus", []),
         )
 
@@ -798,7 +786,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             get_transport_type_fn=lambda t: KVV_TRANSPORTATION_TYPES.get(
                 t.get("product", {}).get("class", 0), "unknown"
             ),
-            get_platform_fn=lambda s: s.get("location", {}).get("disassembledName") or s.get("platformName", ""),
+            get_platform_fn=lambda s: (s.get("location", {}).get("disassembledName") or s.get("platformName", "")),
             get_realtime_fn=lambda s, est, plan: s.get("isRealtimeControlled", False),
         )
 
