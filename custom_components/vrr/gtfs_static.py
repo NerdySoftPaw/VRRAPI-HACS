@@ -295,6 +295,15 @@ class GTFSStaticData:
             return agency.get("agency_name")
         return None
 
+    def get_stop_platform_code(self, stop_id: str) -> Optional[str]:
+        """Get platform code for a stop_id from GTFS Static stops.txt."""
+        stop = self.stops.get(stop_id)
+        if not stop:
+            return None
+        # GTFS Static stops.txt can have platform_code field
+        platform_code = stop.get("platform_code", "")
+        return platform_code if platform_code else None
+
     def search_stops(self, search_term: str, limit: int = 20) -> List[Dict[str, str]]:
         """Search stops by name (case-insensitive)."""
         search_term_lower = search_term.lower()
