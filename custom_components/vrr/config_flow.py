@@ -114,7 +114,11 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 # Validate that stops is a list
                 if not isinstance(stops, list):
-                    _LOGGER.error("Search returned invalid type %s, expected list", type(stops))
+                    _LOGGER.error("Search returned invalid type %s, expected list. Data: %s", type(stops), stops)
+                    # Clear any invalid cached data
+                    cache_key = self._get_cache_key(self._provider, search_term, "stop")
+                    self._search_cache.pop(cache_key, None)
+                    self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
                     errors["stop_search"] = "api_error"
                 elif not stops:
                     errors["stop_search"] = "no_results"
@@ -124,7 +128,12 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_settings()
                 else:
                     # Multiple results, let user choose
-                    return await self.async_step_stop_select(stops)
+                    # Ensure stops is a list before passing
+                    if isinstance(stops, list):
+                        return await self.async_step_stop_select(stops)
+                    else:
+                        _LOGGER.error("Stops is not a list before passing to stop_select: %s", type(stops))
+                        errors["stop_search"] = "api_error"
 
         schema = vol.Schema(
             {
@@ -157,17 +166,31 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If stops is None, try to load from temporary data
         if stops is None:
-            stops = self.hass.data.get(f"{DOMAIN}_temp_stops", [])
+            temp_stops = self.hass.data.get(f"{DOMAIN}_temp_stops", [])
+            # Validate that temp_stops is a list
+            if isinstance(temp_stops, list):
+                stops = temp_stops
+            else:
+                _LOGGER.error(
+                    "Invalid stops data in temp storage: expected list, got %s. Data: %s", type(temp_stops), temp_stops
+                )
+                # Clear invalid data
+                self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
+                stops = []
 
         # Validate stops is a list
         if not isinstance(stops, list):
-            _LOGGER.error("Invalid stops data: expected list, got %s", type(stops))
+            _LOGGER.error("Invalid stops data: expected list, got %s. Data: %s", type(stops), stops)
             # Clear invalid data
             self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
             return await self.async_step_stop_search(user_input=None)
 
-        # Store stops temporarily
-        self.hass.data[f"{DOMAIN}_temp_stops"] = stops
+        # Store stops temporarily - ensure it's a list
+        if isinstance(stops, list):
+            self.hass.data[f"{DOMAIN}_temp_stops"] = stops
+        else:
+            _LOGGER.error("Cannot store stops: expected list, got %s. Data: %s", type(stops), stops)
+            return await self.async_step_stop_search(user_input=None)
 
         # Create options dict for dropdown - filter out invalid entries
         stop_options = {}
