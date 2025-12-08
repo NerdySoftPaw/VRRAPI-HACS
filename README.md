@@ -53,7 +53,7 @@ A Home Assistant integration for the public transport networks VRR (Verkehrsverb
 4. Add this repository URL: `https://github.com/nerdysoftpaw/VRRAPI-HACS`
 5. Select "Integration" as category
 6. Click "Add"
-7. Search for "VRR" and install the integration
+7. Search for "Public" and install the integration
 8. Restart Home Assistant
 
 ### Manual Installation
