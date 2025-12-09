@@ -1290,6 +1290,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
 
             def parse_fn(stop, tz_param, now_param):
                 return provider_instance.parse_departure(stop, tz_provider, now_param)
+
         else:
             # Fallback to old implementation
             if provider == PROVIDER_VRR:
