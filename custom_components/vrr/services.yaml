@@ -11,3 +11,18 @@ refresh_departures:
         entity:
           integration: vrr
           domain: sensor
+
+update_gtfs_static:
+  name: Update GTFS Static Data
+  description: Manually update GTFS Static data (stop/station information) for GTFS-based providers (NTA Ireland, GTFS-DE). This will download the latest GTFS Static data even if the cache is still valid.
+  fields:
+    provider:
+      name: Provider
+      description: The provider to update (optional - if not provided, all GTFS providers will be updated). Valid values: "nta_ie" or "gtfs_de"
+      required: false
+      example: "gtfs_de"
+      selector:
+        select:
+          options:
+            - nta_ie
+            - gtfs_de

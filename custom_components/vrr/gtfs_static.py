@@ -70,6 +70,25 @@ class GTFSStaticData:
             _LOGGER.error("Error in ensure_loaded: %s", e, exc_info=True)
             return False
 
+    async def force_update(self) -> bool:
+        """Force update GTFS Static data (download even if cache is recent)."""
+        _LOGGER.info("Forcing update of GTFS Static data for provider: %s", self.provider)
+        try:
+            # Force download and load
+            if not await self._download_and_load():
+                _LOGGER.error("Failed to force update GTFS Static data")
+                return False
+
+            if len(self.stops) == 0:
+                _LOGGER.error("GTFS Static data is empty after force update")
+                return False
+
+            _LOGGER.info("Successfully force updated GTFS Static data for provider: %s", self.provider)
+            return True
+        except Exception as e:
+            _LOGGER.error("Error in force_update: %s", e, exc_info=True)
+            return False
+
     async def _should_update(self) -> bool:
         """Check if GTFS Static data should be updated."""
         # If cache doesn't exist, we need to download

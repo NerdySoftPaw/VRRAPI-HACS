@@ -112,6 +112,10 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         self.gtfs_static: Optional[GTFSStaticData] = None
         if provider in [PROVIDER_NTA_IE, PROVIDER_GTFS_DE]:
             self.gtfs_static = GTFSStaticData(hass, provider=provider)
+            # Register GTFS instance for automatic updates
+            hass.data.setdefault(DOMAIN, {})
+            hass.data[DOMAIN].setdefault("gtfs_instances", {})
+            hass.data[DOMAIN]["gtfs_instances"][provider] = self.gtfs_static
             # Get secondary key from config entry if available (only for NTA)
             if provider == PROVIDER_NTA_IE and config_entry:
                 self.api_key_secondary = config_entry.data.get(CONF_NTA_API_KEY_SECONDARY)
