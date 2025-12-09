@@ -287,10 +287,10 @@ class GTFSStaticData:
                     _LOGGER.warning("Failed to delete corrupted cache file: %s", e)
                 return False
 
-            # Check if file is actually a ZIP file by reading the magic bytes
+            # Check if file is actually a ZIP file by reading the magic bytes (async)
             try:
-                with open(self._cache_path, "rb") as f:
-                    magic_bytes = f.read(4)
+                async with aio_open(self._cache_path, "rb") as f:
+                    magic_bytes = await f.read(4)
                     # ZIP files start with PK\x03\x04 or PK\x05\x06 (empty ZIP) or PK\x07\x08 (spanned ZIP)
                     if not magic_bytes.startswith(b"PK"):
                         _LOGGER.error(
@@ -299,8 +299,8 @@ class GTFSStaticData:
                             magic_bytes.hex() if len(magic_bytes) == 4 else "too short",
                         )
                         # Check if it's an HTML page
-                        f.seek(0)
-                        first_bytes = f.read(512)
+                        await f.seek(0)
+                        first_bytes = await f.read(512)
                         if b"<html" in first_bytes.lower() or b"<!doctype" in first_bytes.lower():
                             _LOGGER.error(
                                 "Downloaded file appears to be an HTML page, not a ZIP file. URL may be incorrect."
@@ -314,7 +314,17 @@ class GTFSStaticData:
             except Exception as e:
                 _LOGGER.warning("Could not verify ZIP file magic bytes: %s", e)
 
-            # Open ZIP file directly from disk (more memory efficient)
+            # Run blocking ZIP file operations in a thread pool to avoid blocking the event loop
+            result = await asyncio.to_thread(self._load_zip_contents_sync)
+            return result
+
+        except Exception as e:
+            _LOGGER.error("Error loading GTFS Static from cache: %s", e, exc_info=True)
+            return False
+
+    def _load_zip_contents_sync(self) -> bool:
+        """Load ZIP file contents synchronously (runs in thread pool)."""
+        try:
             with zipfile.ZipFile(self._cache_path, "r") as zip_file:
                 file_list = zip_file.namelist()
                 _LOGGER.debug("GTFS Static ZIP contains %d files: %s", len(file_list), ", ".join(file_list[:10]))
