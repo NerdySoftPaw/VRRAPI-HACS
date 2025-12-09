@@ -224,7 +224,9 @@ class GTFSStaticData:
 
             # Check if file is too small to be a valid ZIP (likely corrupted or incomplete download)
             if file_size < 1000:  # Less than 1KB is definitely not a valid GTFS ZIP
-                _LOGGER.error("GTFS Static cache file is too small (%d bytes) - likely corrupted or incomplete", file_size)
+                _LOGGER.error(
+                    "GTFS Static cache file is too small (%d bytes) - likely corrupted or incomplete", file_size
+                )
                 try:
                     self._cache_path.unlink()
                     _LOGGER.info("Deleted corrupted cache file, will re-download on next attempt")
