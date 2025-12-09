@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
@@ -18,12 +19,12 @@ from .const import (
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    PROVIDER_GTFS_DE,
     PROVIDER_NTA_IE,
     PROVIDER_TRAFIKLAB_SE,
 )
-from .gtfs_static import GTFSStaticData
 from .sensor import VRRDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_REFRESH = "refresh_departures"
 SERVICE_UPDATE_GTFS = "update_gtfs_static"
@@ -50,20 +51,20 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Public Transport DE component."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN]["gtfs_instances"] = {}  # Store GTFS instances for updates
-    
+
     # Start periodic GTFS update task
     async def periodic_gtfs_update():
         """Periodically check and update GTFS Static data."""
         while True:
             try:
                 await asyncio.sleep(GTFS_UPDATE_CHECK_INTERVAL.total_seconds())
-                
+
                 # Get all GTFS instances
                 gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
-                
+
                 if not gtfs_instances:
                     continue
-                
+
                 # Check each GTFS instance and update if needed
                 for provider, gtfs_instance in gtfs_instances.items():
                     try:
@@ -75,16 +76,21 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                             else:
                                 _LOGGER.warning("Failed to auto-update GTFS Static data for provider: %s", provider)
                     except Exception as e:
-                        _LOGGER.error("Error during auto-update of GTFS Static data for provider %s: %s", provider, e, exc_info=True)
+                        _LOGGER.error(
+                            "Error during auto-update of GTFS Static data for provider %s: %s",
+                            provider,
+                            e,
+                            exc_info=True,
+                        )
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 _LOGGER.error("Error in periodic GTFS update task: %s", e, exc_info=True)
                 await asyncio.sleep(3600)  # Wait 1 hour before retrying on error
-    
+
     # Start the periodic update task
     hass.async_create_task(periodic_gtfs_update())
-    
+
     return True
 
 
@@ -176,11 +182,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register service for manual GTFS Static update (only register once)
     if not hass.services.has_service(DOMAIN, SERVICE_UPDATE_GTFS):
+
         async def handle_update_gtfs(call: ServiceCall) -> None:
             """Handle the update GTFS Static service call."""
             provider = call.data.get("provider")
             gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
-            
+
             if provider:
                 # Update specific provider
                 if provider in gtfs_instances:
@@ -203,7 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             _LOGGER.error("Failed to update GTFS Static data for provider: %s", prov)
                     except Exception as e:
                         _LOGGER.error("Error updating GTFS Static data for provider %s: %s", prov, e, exc_info=True)
-        
+
         hass.services.async_register(
             DOMAIN,
             SERVICE_UPDATE_GTFS,

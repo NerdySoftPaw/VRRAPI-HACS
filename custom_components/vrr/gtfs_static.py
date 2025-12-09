@@ -143,11 +143,11 @@ class GTFSStaticData:
             chunk_size = 262144 if self.provider == PROVIDER_GTFS_DE else 65536  # 256KB for GTFS-DE, 64KB otherwise
 
             # Set User-Agent header to avoid being blocked by some servers
-            headers = {
-                "User-Agent": "HomeAssistant-VRR-Integration/1.0"
-            }
+            headers = {"User-Agent": "HomeAssistant-VRR-Integration/1.0"}
 
-            async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=timeout_seconds)) as response:
+            async with session.get(
+                url, headers=headers, timeout=aiohttp.ClientTimeout(total=timeout_seconds)
+            ) as response:
                 if response.status != 200:
                     _LOGGER.error("Failed to download GTFS Static: HTTP %s", response.status)
                     # Try to read error response body for debugging
@@ -158,13 +158,13 @@ class GTFSStaticData:
                     except Exception:
                         pass
                     return False
-                
+
                 # Check Content-Type to ensure we're getting a ZIP file
                 content_type = response.headers.get("Content-Type", "").lower()
                 if content_type and "zip" not in content_type and "octet-stream" not in content_type:
                     _LOGGER.warning(
                         "Unexpected Content-Type for GTFS Static download: %s (expected application/zip or application/octet-stream)",
-                        content_type
+                        content_type,
                     )
                     # Don't fail here, as some servers may not set Content-Type correctly
 
@@ -209,7 +209,11 @@ class GTFSStaticData:
                         try:
                             if self._cache_path.exists():
                                 file_size = self._cache_path.stat().st_size
-                                _LOGGER.debug("Deleting corrupted file (size: %d bytes, %.2f MB)", file_size, file_size / 1024 / 1024)
+                                _LOGGER.debug(
+                                    "Deleting corrupted file (size: %d bytes, %.2f MB)",
+                                    file_size,
+                                    file_size / 1024 / 1024,
+                                )
                                 self._cache_path.unlink()
                             if self._cache_timestamp_path.exists():
                                 self._cache_timestamp_path.unlink()
@@ -292,13 +296,15 @@ class GTFSStaticData:
                         _LOGGER.error(
                             "GTFS Static cache file does not appear to be a ZIP file "
                             "(magic bytes: %s). It may be an HTML error page or corrupted download.",
-                            magic_bytes.hex() if len(magic_bytes) == 4 else "too short"
+                            magic_bytes.hex() if len(magic_bytes) == 4 else "too short",
                         )
                         # Check if it's an HTML page
                         f.seek(0)
                         first_bytes = f.read(512)
                         if b"<html" in first_bytes.lower() or b"<!doctype" in first_bytes.lower():
-                            _LOGGER.error("Downloaded file appears to be an HTML page, not a ZIP file. URL may be incorrect.")
+                            _LOGGER.error(
+                                "Downloaded file appears to be an HTML page, not a ZIP file. URL may be incorrect."
+                            )
                         try:
                             self._cache_path.unlink()
                             _LOGGER.info("Deleted invalid cache file, will re-download on next attempt")
@@ -329,14 +335,14 @@ class GTFSStaticData:
                             _LOGGER.warning("UTF-8 decoding failed for stops.txt, trying latin-1")
                             stops_file.seek(0)
                             reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="latin-1"))
-                        
+
                         stop_count = 0
                         for row in reader:
                             # Validate required field
                             if "stop_id" not in row:
                                 _LOGGER.error("stops.txt missing required field 'stop_id'")
                                 return False
-                            
+
                             # For GTFS-DE, only store essential fields to reduce memory usage
                             if self.provider == PROVIDER_GTFS_DE:
                                 # Only store essential fields: stop_id, stop_name, stop_lat, stop_lon, platform_code
