@@ -38,9 +38,8 @@ API_BASE_URL_TRAFIKLAB = "https://realtime-api.trafiklab.se/v1"
 API_BASE_URL_NTA_GTFSR = "https://api.nationaltransport.ie/gtfsr"
 API_BASE_URL_NTA_GTFS_STATIC = "https://www.transportforireland.ie/transitData/Data/GTFS_Realtime.zip"
 API_BASE_URL_GTFS_DE_GTFSR = "https://realtime.gtfs.de/realtime-free.pb"
-# Note: GTFS Static download URL may need to be updated based on actual download link
-# The page at https://gtfs.de/de/feeds/de_full/ should have a download button/link
-API_BASE_URL_GTFS_DE_GTFS_STATIC = "https://gtfs.de/feeds/de_full.zip"
+# GTFS Static download URL for Germany (free feed)
+API_BASE_URL_GTFS_DE_GTFS_STATIC = "https://download.gtfs.de/germany/free/latest.zip"
 # Mapping für KVV
 KVV_TRANSPORTATION_TYPES = {
     1: "train",  # S-Bahn

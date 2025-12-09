@@ -1,3 +1,7 @@
+import asyncio
+import logging
+from datetime import timedelta
+
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +24,10 @@ from .const import (
 )
 from .sensor import VRRDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 SERVICE_REFRESH = "refresh_departures"
+SERVICE_UPDATE_GTFS = "update_gtfs_static"
 
 SERVICE_REFRESH_SCHEMA = vol.Schema(
     {
@@ -28,11 +35,62 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_UPDATE_GTFS_SCHEMA = vol.Schema(
+    {
+        vol.Optional("provider"): str,
+    }
+)
+
+# Interval for automatic GTFS Static updates (check every 12 hours)
+GTFS_UPDATE_CHECK_INTERVAL = timedelta(hours=12)
+
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Public Transport DE component."""
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN]["gtfs_instances"] = {}  # Store GTFS instances for updates
+
+    # Start periodic GTFS update task
+    async def periodic_gtfs_update():
+        """Periodically check and update GTFS Static data."""
+        while True:
+            try:
+                await asyncio.sleep(GTFS_UPDATE_CHECK_INTERVAL.total_seconds())
+
+                # Get all GTFS instances
+                gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
+
+                if not gtfs_instances:
+                    continue
+
+                # Check each GTFS instance and update if needed
+                for provider, gtfs_instance in gtfs_instances.items():
+                    try:
+                        # Check if update is needed (this checks the timestamp)
+                        if await gtfs_instance._should_update():
+                            _LOGGER.info("Auto-updating GTFS Static data for provider: %s", provider)
+                            if await gtfs_instance._download_and_load():
+                                _LOGGER.info("Successfully auto-updated GTFS Static data for provider: %s", provider)
+                            else:
+                                _LOGGER.warning("Failed to auto-update GTFS Static data for provider: %s", provider)
+                    except Exception as e:
+                        _LOGGER.error(
+                            "Error during auto-update of GTFS Static data for provider %s: %s",
+                            provider,
+                            e,
+                            exc_info=True,
+                        )
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                _LOGGER.error("Error in periodic GTFS update task: %s", e, exc_info=True)
+                await asyncio.sleep(3600)  # Wait 1 hour before retrying on error
+
+    # Start the periodic update task
+    hass.async_create_task(periodic_gtfs_update())
+
     return True
 
 
@@ -122,6 +180,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         schema=SERVICE_REFRESH_SCHEMA,
     )
 
+    # Register service for manual GTFS Static update (only register once)
+    if not hass.services.has_service(DOMAIN, SERVICE_UPDATE_GTFS):
+
+        async def handle_update_gtfs(call: ServiceCall) -> None:
+            """Handle the update GTFS Static service call."""
+            provider = call.data.get("provider")
+            gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
+
+            if provider:
+                # Update specific provider
+                if provider in gtfs_instances:
+                    _LOGGER.info("Manually updating GTFS Static data for provider: %s", provider)
+                    if await gtfs_instances[provider].force_update():
+                        _LOGGER.info("Successfully updated GTFS Static data for provider: %s", provider)
+                    else:
+                        _LOGGER.error("Failed to update GTFS Static data for provider: %s", provider)
+                else:
+                    _LOGGER.warning("Provider %s not found in GTFS instances", provider)
+            else:
+                # Update all providers
+                _LOGGER.info("Manually updating GTFS Static data for all providers")
+                for prov, gtfs_instance in gtfs_instances.items():
+                    try:
+                        _LOGGER.info("Updating GTFS Static data for provider: %s", prov)
+                        if await gtfs_instance.force_update():
+                            _LOGGER.info("Successfully updated GTFS Static data for provider: %s", prov)
+                        else:
+                            _LOGGER.error("Failed to update GTFS Static data for provider: %s", prov)
+                    except Exception as e:
+                        _LOGGER.error("Error updating GTFS Static data for provider %s: %s", prov, e, exc_info=True)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_UPDATE_GTFS,
+            handle_update_gtfs,
+            schema=SERVICE_UPDATE_GTFS_SCHEMA,
+        )
+
     return True
 
 
@@ -132,10 +228,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Remove coordinator from hass.data
     coordinator_key = f"{entry.entry_id}_coordinator"
     if coordinator_key in hass.data.get(DOMAIN, {}):
-        hass.data[DOMAIN].pop(coordinator_key)
+        coordinator = hass.data[DOMAIN].pop(coordinator_key)
+        # Remove GTFS instance if this coordinator had one
+        if coordinator and hasattr(coordinator, "gtfs_static") and coordinator.gtfs_static:
+            provider = coordinator.provider
+            gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
+            if provider in gtfs_instances:
+                # Only remove if no other coordinator uses this provider
+                # Check if any other coordinator uses this provider
+                has_other = False
+                for key, other_coordinator in hass.data.get(DOMAIN, {}).items():
+                    if key.endswith("_coordinator") and key != coordinator_key:
+                        if hasattr(other_coordinator, "provider") and other_coordinator.provider == provider:
+                            has_other = True
+                            break
+                if not has_other:
+                    gtfs_instances.pop(provider, None)
 
-    # Unregister service if no more entries
+    # Unregister services if no more entries
     if not hass.config_entries.async_entries(DOMAIN):
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
+        hass.services.async_remove(DOMAIN, SERVICE_UPDATE_GTFS)
 
     return unload_ok
