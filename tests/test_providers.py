@@ -27,6 +27,9 @@ from custom_components.vrr.providers.vrr import VRRProvider
 def mock_hass():
     """Return a mock Home Assistant instance."""
     hass = MagicMock(spec=HomeAssistant)
+    # Add config attribute for GTFS providers
+    hass.config = MagicMock()
+    hass.config.config_dir = "/tmp/test_config"
     return hass
 
 
