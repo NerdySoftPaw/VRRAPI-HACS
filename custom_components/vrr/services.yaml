@@ -18,9 +18,9 @@ update_gtfs_static:
   fields:
     provider:
       name: Provider
-      description: The provider to update (optional - if not provided, all GTFS providers will be updated). Valid values: "nta_ie" or "gtfs_de"
+      description: The provider to update (optional - if not provided, all GTFS providers will be updated). Valid values: nta_ie or gtfs_de
       required: false
-      example: "gtfs_de"
+      example: gtfs_de
       selector:
         select:
           options:
