@@ -39,6 +39,7 @@ from .const import (
     TRANSPORTATION_TYPES,
 )
 from .gtfs_static import GTFSStaticData
+from .providers import get_provider
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,9 +65,32 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step - select provider."""
         if user_input is not None:
             self._provider = user_input[CONF_PROVIDER]
-            # Trafiklab and NTA require API key
-            if self._provider in [PROVIDER_TRAFIKLAB_SE, PROVIDER_NTA_IE, PROVIDER_GTFS_DE]:
+
+            # Check if provider requires API key
+            provider_instance = get_provider(self._provider, self.hass)
+            if provider_instance and provider_instance.requires_api_key:
                 return await self.async_step_api_key()
+
+            # GTFS-DE doesn't need API key, but needs GTFS Static loaded
+            if self._provider == PROVIDER_GTFS_DE:
+                # Initialize GTFS Static loader for stop search
+                try:
+                    self._gtfs_static = GTFSStaticData(self.hass, provider=PROVIDER_GTFS_DE)
+                    if not await self._gtfs_static.ensure_loaded():
+                        _LOGGER.error("Failed to load GTFS Static data for GTFS-DE")
+                        return self.async_show_form(
+                            step_id="user",
+                            data_schema=self._get_provider_schema(),
+                            errors={"base": "gtfs_static_load_failed"},
+                        )
+                    _LOGGER.info("GTFS Static data loaded successfully for GTFS-DE")
+                except Exception as e:
+                    _LOGGER.error("Exception while loading GTFS Static data: %s", e, exc_info=True)
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=self._get_provider_schema(),
+                        errors={"base": "gtfs_static_load_failed"},
+                    )
             return await self.async_step_stop_search()
 
         schema = vol.Schema(
@@ -78,8 +102,13 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_api_key(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
-        """Handle API key input for Trafiklab or NTA."""
+        """Handle API key input for providers that require it."""
         errors = {}
+
+        provider_instance = get_provider(self._provider, self.hass)
+        if not provider_instance or not provider_instance.requires_api_key:
+            # Should not happen, but handle gracefully
+            return await self.async_step_stop_search()
 
         if user_input is not None:
             if self._provider == PROVIDER_TRAFIKLAB_SE:
@@ -111,6 +140,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "gtfs_static_load_failed"
 
         # Show appropriate schema based on provider
+        provider_instance = get_provider(self._provider, self.hass)
         if self._provider == PROVIDER_TRAFIKLAB_SE:
             schema = vol.Schema(
                 {
@@ -150,17 +180,17 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors={"base": "api_key_required"},
             )
+        # GTFS-DE doesn't need API key, GTFS Static should already be loaded in async_step_user
         if self._provider == PROVIDER_GTFS_DE:
-            # GTFS-DE doesn't need API key, but needs GTFS Static loaded
             if not self._gtfs_static:
+                # Fallback: initialize if not already done
                 self._gtfs_static = GTFSStaticData(self.hass, provider=PROVIDER_GTFS_DE)
-            if not await self._gtfs_static.ensure_loaded():
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self._get_provider_schema(),
-                    errors={"base": "gtfs_static_load_failed"},
-                )
-            return await self.async_step_stop_search()
+                if not await self._gtfs_static.ensure_loaded():
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=self._get_provider_schema(),
+                        errors={"base": "gtfs_static_load_failed"},
+                    )
             return await self.async_step_api_key()
 
         errors = {}
@@ -360,7 +390,23 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Cache miss - fetch from API
         _LOGGER.debug("Cache miss, fetching from API for: %s", search_term)
 
-        # Trafiklab and NTA use different APIs
+        # Use provider instance for stop search if available
+        provider_instance = get_provider(
+            self._provider,
+            self.hass,
+            api_key=self._api_key,
+            api_key_secondary=self._api_key_secondary,
+        )
+        if provider_instance:
+            try:
+                results = await provider_instance.search_stops(search_term)
+                # Store in cache
+                self._store_in_cache(cache_key, results)
+                return results
+            except Exception as e:
+                _LOGGER.error("Error searching stops with provider: %s", e, exc_info=True)
+
+        # Fallback to old implementation
         if self._provider == PROVIDER_TRAFIKLAB_SE:
             return await self._search_stops_trafiklab(search_term)
         if self._provider == PROVIDER_NTA_IE:
