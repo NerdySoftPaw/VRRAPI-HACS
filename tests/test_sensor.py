@@ -1,9 +1,8 @@
 """Tests for VRR sensor platform."""
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+
+from unittest.mock import MagicMock, patch
 
 import pytest
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -84,6 +83,8 @@ async def test_coordinator_api_error(hass: HomeAssistant):
 
 async def test_sensor_state(hass: HomeAssistant, mock_coordinator, mock_config_entry):
     """Test sensor state updates."""
+    # Ensure provider_instance is None to use fallback
+    mock_coordinator.provider_instance = None
     sensor = MultiProviderSensor(
         mock_coordinator,
         mock_config_entry,
@@ -159,7 +160,7 @@ async def test_sensor_no_departures(hass: HomeAssistant, mock_config_entry):
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry, mock_api_response):
     """Test sensor platform setup."""
     # mock_config_entry already added to hass in fixture
-    
+
     # Initialize hass.data[DOMAIN] as __init__.py would do
     hass.data.setdefault(DOMAIN, {})
 
@@ -216,6 +217,7 @@ async def test_sensor_transportation_type_filtering(hass: HomeAssistant, mock_co
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
     coordinator.departures_limit = 10
+    coordinator.provider_instance = None  # Use fallback implementation
 
     # Only allow trams
     sensor = MultiProviderSensor(coordinator, mock_config_entry, ["tram"])

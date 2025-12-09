@@ -1,8 +1,7 @@
 """Tests for VRR binary sensor platform."""
+
 from unittest.mock import MagicMock
 
-import pytest
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from custom_components.vrr.binary_sensor import (
@@ -29,6 +28,7 @@ async def test_binary_sensor_no_delays(hass: HomeAssistant, mock_coordinator, mo
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
+    coordinator.provider_instance = None  # Use fallback implementation
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
@@ -57,7 +57,7 @@ async def test_binary_sensor_with_delays(hass: HomeAssistant, mock_config_entry)
             {
                 "departureTimePlanned": "2025-01-15T10:05:00Z",
                 "departureTimeEstimated": "2025-01-15T10:07:00Z",  # 2 min delay
-            }
+            },
         ]
     }
     coordinator.last_update_success = True
@@ -65,6 +65,7 @@ async def test_binary_sensor_with_delays(hass: HomeAssistant, mock_config_entry)
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
+    coordinator.provider_instance = None  # Use fallback implementation
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
@@ -98,6 +99,7 @@ async def test_binary_sensor_delay_threshold(hass: HomeAssistant, mock_config_en
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
+    coordinator.provider_instance = None  # Use fallback implementation
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
@@ -139,6 +141,7 @@ async def test_binary_sensor_no_departures(hass: HomeAssistant, mock_config_entr
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
+    coordinator.provider_instance = None  # Use fallback implementation
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
