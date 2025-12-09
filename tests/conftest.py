@@ -83,7 +83,7 @@ def mock_coordinator(mock_api_response):
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
     coordinator.departures_limit = 10
-    coordinator.provider_instance = None  # Use fallback implementation for tests
+    # provider_instance will be set in individual tests as needed
     return coordinator
 
 

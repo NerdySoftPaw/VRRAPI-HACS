@@ -28,7 +28,11 @@ async def test_binary_sensor_no_delays(hass: HomeAssistant, mock_coordinator, mo
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
-    coordinator.provider_instance = None  # Use fallback implementation
+
+    # Test with provider instance
+    from custom_components.vrr.providers import get_provider
+
+    coordinator.provider_instance = get_provider(PROVIDER_VRR, hass)
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
@@ -65,7 +69,11 @@ async def test_binary_sensor_with_delays(hass: HomeAssistant, mock_config_entry)
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
-    coordinator.provider_instance = None  # Use fallback implementation
+
+    # Test with provider instance
+    from custom_components.vrr.providers import get_provider
+
+    coordinator.provider_instance = get_provider(PROVIDER_VRR, hass)
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
@@ -99,7 +107,11 @@ async def test_binary_sensor_delay_threshold(hass: HomeAssistant, mock_config_en
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
-    coordinator.provider_instance = None  # Use fallback implementation
+
+    # Test with provider instance
+    from custom_components.vrr.providers import get_provider
+
+    coordinator.provider_instance = get_provider(PROVIDER_VRR, hass)
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,
@@ -141,7 +153,11 @@ async def test_binary_sensor_no_departures(hass: HomeAssistant, mock_config_entr
     coordinator.place_dm = "Düsseldorf"
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
-    coordinator.provider_instance = None  # Use fallback implementation
+
+    # Test with provider instance
+    from custom_components.vrr.providers import get_provider
+
+    coordinator.provider_instance = get_provider(PROVIDER_VRR, hass)
 
     binary_sensor = VRRDelayBinarySensor(
         coordinator,

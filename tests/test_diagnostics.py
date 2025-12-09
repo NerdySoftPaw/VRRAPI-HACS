@@ -1,6 +1,4 @@
 """Tests for VRR diagnostics."""
-import pytest
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from custom_components.vrr.const import DOMAIN
