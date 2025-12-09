@@ -14,7 +14,13 @@ from aiofiles import open as aio_open
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import API_BASE_URL_NTA_GTFS_STATIC, DOMAIN
+from .const import (
+    API_BASE_URL_GTFS_DE_GTFS_STATIC,
+    API_BASE_URL_NTA_GTFS_STATIC,
+    DOMAIN,
+    PROVIDER_GTFS_DE,
+    PROVIDER_NTA_IE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,15 +31,19 @@ GTFS_CACHE_DURATION = timedelta(hours=24)
 class GTFSStaticData:
     """Class to manage GTFS Static data loading and caching."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, provider: str = PROVIDER_NTA_IE):
         """Initialize GTFS Static data loader."""
         self.hass = hass
+        self.provider = provider
         self.stops: Dict[str, Dict[str, str]] = {}  # stop_id -> stop data
         self.routes: Dict[str, Dict[str, str]] = {}  # route_id -> route data
         self.trips: Dict[str, str] = {}  # trip_id -> trip_headsign (only headsign loaded to save memory)
         self.agencies: Dict[str, Dict[str, str]] = {}  # agency_id -> agency data
-        self._cache_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / "gtfs_static.zip"
-        self._cache_timestamp_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / "gtfs_static_timestamp.txt"
+        # Use provider-specific cache files
+        cache_filename = f"gtfs_static_{provider}.zip"
+        timestamp_filename = f"gtfs_static_{provider}_timestamp.txt"
+        self._cache_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / cache_filename
+        self._cache_timestamp_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / timestamp_filename
         self._last_update: Optional[datetime] = None
 
     async def ensure_loaded(self) -> bool:
@@ -82,7 +92,18 @@ class GTFSStaticData:
 
     async def _download_and_load(self) -> bool:
         """Download GTFS Static ZIP and load data."""
-        _LOGGER.info("Downloading GTFS Static data from NTA...")
+        # Determine URL based on provider
+        if self.provider == PROVIDER_NTA_IE:
+            url = API_BASE_URL_NTA_GTFS_STATIC
+            provider_name = "NTA"
+        elif self.provider == PROVIDER_GTFS_DE:
+            url = API_BASE_URL_GTFS_DE_GTFS_STATIC
+            provider_name = "GTFS-DE"
+        else:
+            _LOGGER.error("Unknown provider for GTFS Static: %s", self.provider)
+            return False
+
+        _LOGGER.info("Downloading GTFS Static data from %s...", provider_name)
         session = async_get_clientsession(self.hass)
 
         try:
@@ -97,8 +118,12 @@ class GTFSStaticData:
                 _LOGGER.error("Unexpected error creating cache directory: %s", e)
                 return False
 
-            _LOGGER.info("Downloading GTFS Static from: %s", API_BASE_URL_NTA_GTFS_STATIC)
-            async with session.get(API_BASE_URL_NTA_GTFS_STATIC, timeout=aiohttp.ClientTimeout(total=120)) as response:
+            _LOGGER.info("Downloading GTFS Static from: %s", url)
+            # For GTFS-DE (large files), use longer timeout and larger chunks
+            timeout_seconds = 600 if self.provider == PROVIDER_GTFS_DE else 300  # 10 min for GTFS-DE
+            chunk_size = 262144 if self.provider == PROVIDER_GTFS_DE else 65536  # 256KB for GTFS-DE, 64KB otherwise
+
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=timeout_seconds)) as response:
                 if response.status != 200:
                     _LOGGER.error("Failed to download GTFS Static: HTTP %s", response.status)
                     return False
@@ -106,12 +131,13 @@ class GTFSStaticData:
                 # Download to cache file in chunks to reduce memory usage
                 total_size = 0
                 async with aio_open(self._cache_path, "wb") as f:
-                    async for chunk in response.content.iter_chunked(65536):  # 64KB chunks
+                    async for chunk in response.content.iter_chunked(chunk_size):
                         await f.write(chunk)
                         total_size += len(chunk)
-                        # Log progress every 10MB
-                        if total_size % (10 * 1024 * 1024) < 65536:
-                            _LOGGER.debug("Downloaded %.2f MB...", total_size / 1024 / 1024)
+                        # Log progress every 50MB for large files, 10MB for smaller
+                        log_interval = 50 * 1024 * 1024 if self.provider == PROVIDER_GTFS_DE else 10 * 1024 * 1024
+                        if total_size % log_interval < chunk_size:
+                            _LOGGER.info("Downloaded %.2f MB...", total_size / 1024 / 1024)
 
                 _LOGGER.info("GTFS Static ZIP downloaded successfully (%.2f MB)", total_size / 1024 / 1024)
 
@@ -155,15 +181,30 @@ class GTFSStaticData:
                     return False
 
                 # Load stops.txt in chunks to reduce memory usage
+                # For large files (GTFS-DE), only store essential fields to save memory
                 with zip_file.open("stops.txt") as stops_file:
                     reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="utf-8"))
                     stop_count = 0
                     for row in reader:
-                        self.stops[row["stop_id"]] = row
+                        # For GTFS-DE, only store essential fields to reduce memory usage
+                        if self.provider == PROVIDER_GTFS_DE:
+                            # Only store essential fields: stop_id, stop_name, stop_lat, stop_lon, platform_code
+                            essential_fields = {
+                                "stop_id": row.get("stop_id", ""),
+                                "stop_name": row.get("stop_name", ""),
+                                "stop_lat": row.get("stop_lat", ""),
+                                "stop_lon": row.get("stop_lon", ""),
+                                "platform_code": row.get("platform_code", ""),
+                            }
+                            self.stops[row["stop_id"]] = essential_fields
+                        else:
+                            # For smaller files (NTA), store all fields
+                            self.stops[row["stop_id"]] = row
                         stop_count += 1
-                        # Log progress every 10000 stops
-                        if stop_count % 10000 == 0:
-                            _LOGGER.debug("Loaded %d stops...", stop_count)
+                        # Log progress every 50000 stops for large files, 10000 for smaller
+                        log_interval = 50000 if self.provider == PROVIDER_GTFS_DE else 10000
+                        if stop_count % log_interval == 0:
+                            _LOGGER.info("Loaded %d stops...", stop_count)
                     _LOGGER.info("Loaded %d stops from GTFS Static", stop_count)
 
                 # Load routes.txt (optional but recommended) in chunks
@@ -172,8 +213,22 @@ class GTFSStaticData:
                         reader = csv.DictReader(io.TextIOWrapper(routes_file, encoding="utf-8"))
                         route_count = 0
                         for row in reader:
-                            self.routes[row["route_id"]] = row
+                            # For GTFS-DE, only store essential fields to reduce memory usage
+                            if self.provider == PROVIDER_GTFS_DE:
+                                essential_fields = {
+                                    "route_id": row.get("route_id", ""),
+                                    "route_short_name": row.get("route_short_name", ""),
+                                    "route_long_name": row.get("route_long_name", ""),
+                                    "route_type": row.get("route_type", ""),
+                                    "agency_id": row.get("agency_id", ""),
+                                }
+                                self.routes[row["route_id"]] = essential_fields
+                            else:
+                                self.routes[row["route_id"]] = row
                             route_count += 1
+                            # Log progress every 10000 routes for large files
+                            if self.provider == PROVIDER_GTFS_DE and route_count % 10000 == 0:
+                                _LOGGER.info("Loaded %d routes...", route_count)
                         _LOGGER.info("Loaded %d routes from GTFS Static", route_count)
                 else:
                     _LOGGER.warning("routes.txt not found in GTFS Static ZIP - route names will not be available")
@@ -217,7 +272,24 @@ class GTFSStaticData:
                 return False
 
             self._last_update = datetime.now()
-            _LOGGER.info("Successfully loaded GTFS Static data: %d stops, %d routes", len(self.stops), len(self.routes))
+            # Log memory-efficient summary
+            memory_info = ""
+            if self.provider == PROVIDER_GTFS_DE:
+                # Estimate memory usage (rough calculation)
+                stops_mem = len(self.stops) * 200  # ~200 bytes per stop (essential fields only)
+                routes_mem = len(self.routes) * 150  # ~150 bytes per route
+                trips_mem = len(self.trips) * 50  # ~50 bytes per trip (only headsign)
+                agencies_mem = len(self.agencies) * 100  # ~100 bytes per agency
+                total_mem_mb = (stops_mem + routes_mem + trips_mem + agencies_mem) / 1024 / 1024
+                memory_info = f" (estimated memory: ~{total_mem_mb:.1f} MB)"
+            _LOGGER.info(
+                "Successfully loaded GTFS Static data: %d stops, %d routes, %d trips, %d agencies%s",
+                len(self.stops),
+                len(self.routes),
+                len(self.trips),
+                len(self.agencies),
+                memory_info,
+            )
             return True
 
         except zipfile.BadZipFile as e:
