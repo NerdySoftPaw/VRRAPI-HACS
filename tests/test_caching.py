@@ -1,6 +1,6 @@
 """Tests for API caching in config flow."""
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 

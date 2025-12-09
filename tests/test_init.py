@@ -1,7 +1,6 @@
 """Tests for VRR integration initialization."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -17,7 +16,7 @@ async def test_async_setup(hass: HomeAssistant):
 async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
     """Test setting up a config entry."""
     # mock_config_entry already added to hass in fixture
-    
+
     # Mock the coordinator's first refresh to avoid real API calls
     with patch(
         "custom_components.vrr.VRRDataUpdateCoordinator.async_config_entry_first_refresh",

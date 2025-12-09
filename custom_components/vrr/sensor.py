@@ -58,6 +58,8 @@ from .const import (
 )
 from .data_models import UnifiedDeparture
 from .gtfs_static import GTFSStaticData
+from .parsers import parse_departure_generic
+from .providers import get_provider
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +94,21 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         # We store it ourselves for compatibility with older versions
         self._config_entry = config_entry
 
-        # GTFS Static data loader for NTA and GTFS-DE
+        # Initialize provider instance
+        self.provider_instance = get_provider(
+            provider,
+            hass,
+            api_key=api_key,
+            api_key_secondary=(
+                config_entry.data.get(CONF_NTA_API_KEY_SECONDARY)
+                if config_entry and provider == PROVIDER_NTA_IE
+                else None
+            ),
+        )
+        if not self.provider_instance:
+            _LOGGER.error("Failed to initialize provider: %s", provider)
+
+        # GTFS Static data loader for NTA and GTFS-DE (kept for backward compatibility)
         self.gtfs_static: Optional[GTFSStaticData] = None
         if provider in [PROVIDER_NTA_IE, PROVIDER_GTFS_DE]:
             self.gtfs_static = GTFSStaticData(hass, provider=provider)
@@ -182,15 +198,13 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_departures(self) -> Optional[Dict[str, Any]]:
         """Fetch departure data from the API."""
-        if self.provider == PROVIDER_TRAFIKLAB_SE:
-            return await self._fetch_departures_trafiklab()
+        if self.provider_instance:
+            return await self.provider_instance.fetch_departures(
+                self.station_id, self.place_dm, self.name_dm, self.departures_limit
+            )
 
-        if self.provider == PROVIDER_NTA_IE:
-            return await self._fetch_departures_nta()
-
-        if self.provider == PROVIDER_GTFS_DE:
-            return await self._fetch_departures_gtfs_de()
-
+        # Fallback to old implementation if provider not found
+        _LOGGER.warning("Provider instance not found, using fallback for %s", self.provider)
         if self.provider == PROVIDER_VRR:
             base_url = API_BASE_URL_VRR
         elif self.provider == PROVIDER_KVV:
@@ -1252,7 +1266,9 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         departures = []
         # Use appropriate timezone based on provider
         provider = self.coordinator.provider
-        if provider == PROVIDER_TRAFIKLAB_SE:
+        if self.coordinator.provider_instance:
+            tz = dt_util.get_time_zone(self.coordinator.provider_instance.get_timezone())
+        elif provider == PROVIDER_TRAFIKLAB_SE:
             tz = dt_util.get_time_zone("Europe/Stockholm")
         elif provider == PROVIDER_NTA_IE:
             tz = dt_util.get_time_zone("Europe/Dublin")
@@ -1267,21 +1283,30 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         # Cache transportation_types to avoid repeated lookups
         transport_types_set = set(self.transportation_types)  # Set lookup is O(1) vs list O(n)
 
-        # Select parser function once instead of checking in loop
-        if provider == PROVIDER_VRR:
-            parse_fn = self._parse_departure_vrr
-        elif provider == PROVIDER_KVV:
-            parse_fn = self._parse_departure_kvv
-        elif provider == PROVIDER_HVV:
-            parse_fn = self._parse_departure_hvv
-        elif provider == PROVIDER_TRAFIKLAB_SE:
-            parse_fn = self._parse_departure_trafiklab
-        elif provider == PROVIDER_NTA_IE:
-            parse_fn = self._parse_departure_nta
-        elif self._provider == PROVIDER_GTFS_DE:
-            parse_fn = self._parse_departure_gtfs_de
+        # Use provider instance for parsing if available
+        if self.coordinator.provider_instance:
+            provider_instance = self.coordinator.provider_instance
+            tz_provider = dt_util.get_time_zone(provider_instance.get_timezone())
+
+            def parse_fn(stop, tz_param, now_param):
+                return provider_instance.parse_departure(stop, tz_provider, now_param)
+
         else:
-            parse_fn = None
+            # Fallback to old implementation
+            if provider == PROVIDER_VRR:
+                parse_fn = self._parse_departure_vrr
+            elif provider == PROVIDER_KVV:
+                parse_fn = self._parse_departure_kvv
+            elif provider == PROVIDER_HVV:
+                parse_fn = self._parse_departure_hvv
+            elif provider == PROVIDER_TRAFIKLAB_SE:
+                parse_fn = self._parse_departure_trafiklab
+            elif provider == PROVIDER_NTA_IE:
+                parse_fn = self._parse_departure_nta
+            elif self._provider == PROVIDER_GTFS_DE:
+                parse_fn = self._parse_departure_gtfs_de
+            else:
+                parse_fn = None
 
         if parse_fn:
             for stop in stop_events:
@@ -1478,7 +1503,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         Returns:
             UnifiedDeparture object or None if parsing fails
         """
-        return self._parse_departure_generic(
+        return parse_departure_generic(
             stop,
             tz,
             now,
@@ -1500,7 +1525,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         Returns:
             UnifiedDeparture object or None if parsing fails
         """
-        return self._parse_departure_generic(
+        return parse_departure_generic(
             stop,
             tz,
             now,
@@ -1524,7 +1549,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         Returns:
             UnifiedDeparture object or None if parsing fails
         """
-        return self._parse_departure_generic(
+        return parse_departure_generic(
             stop,
             tz,
             now,
@@ -1555,7 +1580,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         transport_mode = stop.get("transportMode", "BUS")
         transport_type = TRAFIKLAB_TRANSPORTATION_TYPES.get(transport_mode, "bus")
 
-        return self._parse_departure_generic(
+        return parse_departure_generic(
             stop,
             tz,
             now,
@@ -1589,7 +1614,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         # Map GTFS route_type to our transport type
         transport_type = NTA_TRANSPORTATION_TYPES.get(route_type, "bus")
 
-        return self._parse_departure_generic(
+        return parse_departure_generic(
             stop,
             tz,
             now,
@@ -1623,7 +1648,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
         # Map GTFS route_type to our transport type
         transport_type = GTFS_DE_TRANSPORTATION_TYPES.get(route_type, "bus")
 
-        return self._parse_departure_generic(
+        return parse_departure_generic(
             stop,
             tz,
             now,

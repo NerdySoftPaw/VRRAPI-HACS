@@ -175,8 +175,16 @@ class VRRDelayBinarySensor(CoordinatorEntity, BinarySensorEntity):
                 self.transportation_types,
             )
 
-            # Select parser function (same as sensor)
-            if provider == PROVIDER_VRR:
+            # Use provider instance for parsing if available
+            if self.coordinator.provider_instance:
+                provider_instance = self.coordinator.provider_instance
+                tz_provider = dt_util.get_time_zone(provider_instance.get_timezone())
+
+                def parse_fn(stop, tz_param, now_param):
+                    return provider_instance.parse_departure(stop, tz_provider, now_param)
+
+            # Fallback to old implementation
+            elif provider == PROVIDER_VRR:
                 parse_fn = temp_sensor._parse_departure_vrr
             elif provider == PROVIDER_KVV:
                 parse_fn = temp_sensor._parse_departure_kvv

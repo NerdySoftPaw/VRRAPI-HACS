@@ -1,8 +1,8 @@
 """Fixtures for VRR integration tests."""
-from unittest.mock import MagicMock, patch
+
+from unittest.mock import MagicMock
 
 import pytest
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -83,6 +83,7 @@ def mock_coordinator(mock_api_response):
     coordinator.name_dm = "Hauptbahnhof"
     coordinator.station_id = None
     coordinator.departures_limit = 10
+    # provider_instance will be set in individual tests as needed
     return coordinator
 
 
