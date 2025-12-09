@@ -61,6 +61,14 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._search_cache: Dict[str, Dict[str, Any]] = {}
         self._cache_ttl: int = 300  # Cache TTL in seconds (5 minutes)
 
+    def _get_provider_schema(self) -> vol.Schema:
+        """Get the provider selection schema."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_PROVIDER, default=PROVIDER_VRR): vol.In(PROVIDERS),
+            }
+        )
+
     async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle the initial step - select provider."""
         if user_input is not None:
@@ -93,13 +101,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
             return await self.async_step_stop_search()
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_PROVIDER, default=PROVIDER_VRR): vol.In(PROVIDERS),
-            }
-        )
-
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id="user", data_schema=self._get_provider_schema())
 
     async def async_step_api_key(self, user_input: Optional[Dict[str, Any]] = None) -> FlowResult:
         """Handle API key input for providers that require it."""
@@ -191,7 +193,8 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data_schema=self._get_provider_schema(),
                         errors={"base": "gtfs_static_load_failed"},
                     )
-            return await self.async_step_api_key()
+            # GTFS-DE doesn't need API key, proceed directly to stop search
+            return await self.async_step_stop_search()
 
         errors = {}
 
