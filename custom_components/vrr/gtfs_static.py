@@ -130,32 +130,84 @@ class GTFSStaticData:
 
                 # Download to cache file in chunks to reduce memory usage
                 total_size = 0
-                async with aio_open(self._cache_path, "wb") as f:
-                    async for chunk in response.content.iter_chunked(chunk_size):
-                        await f.write(chunk)
-                        total_size += len(chunk)
-                        # Log progress every 50MB for large files, 10MB for smaller
-                        log_interval = 50 * 1024 * 1024 if self.provider == PROVIDER_GTFS_DE else 10 * 1024 * 1024
-                        if total_size % log_interval < chunk_size:
-                            _LOGGER.info("Downloaded %.2f MB...", total_size / 1024 / 1024)
+                try:
+                    async with aio_open(self._cache_path, "wb") as f:
+                        async for chunk in response.content.iter_chunked(chunk_size):
+                            await f.write(chunk)
+                            total_size += len(chunk)
+                            # Log progress every 50MB for large files, 10MB for smaller
+                            log_interval = 50 * 1024 * 1024 if self.provider == PROVIDER_GTFS_DE else 10 * 1024 * 1024
+                            if total_size % log_interval < chunk_size:
+                                _LOGGER.info("Downloaded %.2f MB...", total_size / 1024 / 1024)
 
-                _LOGGER.info("GTFS Static ZIP downloaded successfully (%.2f MB)", total_size / 1024 / 1024)
+                    # Verify file was written successfully
+                    if total_size == 0:
+                        _LOGGER.error("Downloaded file is empty")
+                        try:
+                            if self._cache_path.exists():
+                                self._cache_path.unlink()
+                        except Exception:
+                            pass
+                        return False
 
-                # Save timestamp
-                async with aio_open(self._cache_timestamp_path, "w") as f:
-                    await f.write(datetime.now().isoformat())
+                    _LOGGER.info("GTFS Static ZIP downloaded successfully (%.2f MB)", total_size / 1024 / 1024)
 
-                # Load from cache
-                return await self._load_from_cache()
+                    # Save timestamp
+                    async with aio_open(self._cache_timestamp_path, "w") as f:
+                        await f.write(datetime.now().isoformat())
+
+                    # Load from cache
+                    load_result = await self._load_from_cache()
+                    if not load_result:
+                        # If loading failed, delete the corrupted file
+                        _LOGGER.warning("Failed to load downloaded file, will retry on next attempt")
+                        try:
+                            if self._cache_path.exists():
+                                self._cache_path.unlink()
+                            if self._cache_timestamp_path.exists():
+                                self._cache_timestamp_path.unlink()
+                        except Exception:
+                            pass
+                    return load_result
+                except Exception as write_error:
+                    _LOGGER.error("Error writing GTFS Static file: %s", write_error, exc_info=True)
+                    # Clean up partial file
+                    try:
+                        if self._cache_path.exists():
+                            self._cache_path.unlink()
+                    except Exception:
+                        pass
+                    return False
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout downloading GTFS Static data (60s limit)")
+            _LOGGER.error("Timeout downloading GTFS Static data")
+            # Clean up any partial download
+            try:
+                if self._cache_path.exists():
+                    self._cache_path.unlink()
+                    _LOGGER.info("Deleted partial/incomplete download")
+            except Exception:
+                pass
             return False
         except aiohttp.ClientError as e:
             _LOGGER.error("Network error downloading GTFS Static data: %s", e)
+            # Clean up any partial download
+            try:
+                if self._cache_path.exists():
+                    self._cache_path.unlink()
+                    _LOGGER.info("Deleted partial/incomplete download")
+            except Exception:
+                pass
             return False
         except Exception as e:
             _LOGGER.error("Unexpected error downloading GTFS Static data: %s", e, exc_info=True)
+            # Clean up any partial download
+            try:
+                if self._cache_path.exists():
+                    self._cache_path.unlink()
+                    _LOGGER.info("Deleted partial/incomplete download")
+            except Exception:
+                pass
             return False
 
     async def _load_from_cache(self) -> bool:
@@ -169,6 +221,18 @@ class GTFSStaticData:
             _LOGGER.debug("Reading GTFS Static cache file: %s", self._cache_path)
             file_size = self._cache_path.stat().st_size
             _LOGGER.debug("GTFS Static ZIP file size: %d bytes (%.2f MB)", file_size, file_size / 1024 / 1024)
+
+            # Check if file is too small to be a valid ZIP (likely corrupted or incomplete download)
+            if file_size < 1000:  # Less than 1KB is definitely not a valid GTFS ZIP
+                _LOGGER.error(
+                    "GTFS Static cache file is too small (%d bytes) - likely corrupted or incomplete", file_size
+                )
+                try:
+                    self._cache_path.unlink()
+                    _LOGGER.info("Deleted corrupted cache file, will re-download on next attempt")
+                except Exception as e:
+                    _LOGGER.warning("Failed to delete corrupted cache file: %s", e)
+                return False
 
             # Open ZIP file directly from disk (more memory efficient)
             with zipfile.ZipFile(self._cache_path, "r") as zip_file:
@@ -294,9 +358,15 @@ class GTFSStaticData:
 
         except zipfile.BadZipFile as e:
             _LOGGER.error("GTFS Static cache file is not a valid ZIP file: %s", e)
-            # Try to delete corrupted cache
+            # Try to delete corrupted cache and timestamp
             try:
                 self._cache_path.unlink()
+                _LOGGER.info("Deleted corrupted GTFS Static cache file")
+            except Exception as del_e:
+                _LOGGER.warning("Failed to delete corrupted cache file: %s", del_e)
+            try:
+                if self._cache_timestamp_path.exists():
+                    self._cache_timestamp_path.unlink()
             except Exception:
                 pass
             return False
