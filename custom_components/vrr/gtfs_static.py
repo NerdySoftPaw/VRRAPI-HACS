@@ -123,10 +123,31 @@ class GTFSStaticData:
             timeout_seconds = 600 if self.provider == PROVIDER_GTFS_DE else 300  # 10 min for GTFS-DE
             chunk_size = 262144 if self.provider == PROVIDER_GTFS_DE else 65536  # 256KB for GTFS-DE, 64KB otherwise
 
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=timeout_seconds)) as response:
+            # Set User-Agent header to avoid being blocked by some servers
+            headers = {
+                "User-Agent": "HomeAssistant-VRR-Integration/1.0"
+            }
+
+            async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=timeout_seconds)) as response:
                 if response.status != 200:
                     _LOGGER.error("Failed to download GTFS Static: HTTP %s", response.status)
+                    # Try to read error response body for debugging
+                    try:
+                        error_body = await response.text()
+                        if len(error_body) < 500:  # Only log if reasonable size
+                            _LOGGER.debug("Error response body: %s", error_body[:200])
+                    except Exception:
+                        pass
                     return False
+                
+                # Check Content-Type to ensure we're getting a ZIP file
+                content_type = response.headers.get("Content-Type", "").lower()
+                if content_type and "zip" not in content_type and "octet-stream" not in content_type:
+                    _LOGGER.warning(
+                        "Unexpected Content-Type for GTFS Static download: %s (expected application/zip or application/octet-stream)",
+                        content_type
+                    )
+                    # Don't fail here, as some servers may not set Content-Type correctly
 
                 # Download to cache file in chunks to reduce memory usage
                 total_size = 0
@@ -157,17 +178,26 @@ class GTFSStaticData:
                         await f.write(datetime.now().isoformat())
 
                     # Load from cache
+                    _LOGGER.info("Attempting to load GTFS Static data from downloaded file...")
                     load_result = await self._load_from_cache()
                     if not load_result:
                         # If loading failed, delete the corrupted file
-                        _LOGGER.warning("Failed to load downloaded file, will retry on next attempt")
+                        _LOGGER.error(
+                            "Failed to load downloaded GTFS Static file. "
+                            "The file may be corrupted or in an unexpected format. "
+                            "Will retry on next attempt."
+                        )
                         try:
                             if self._cache_path.exists():
+                                file_size = self._cache_path.stat().st_size
+                                _LOGGER.debug("Deleting corrupted file (size: %d bytes, %.2f MB)", file_size, file_size / 1024 / 1024)
                                 self._cache_path.unlink()
                             if self._cache_timestamp_path.exists():
                                 self._cache_timestamp_path.unlink()
-                        except Exception:
-                            pass
+                        except Exception as del_e:
+                            _LOGGER.warning("Failed to delete corrupted files: %s", del_e)
+                    else:
+                        _LOGGER.info("Successfully loaded GTFS Static data from downloaded file")
                     return load_result
                 except Exception as write_error:
                     _LOGGER.error("Error writing GTFS Static file: %s", write_error, exc_info=True)
@@ -234,6 +264,31 @@ class GTFSStaticData:
                     _LOGGER.warning("Failed to delete corrupted cache file: %s", e)
                 return False
 
+            # Check if file is actually a ZIP file by reading the magic bytes
+            try:
+                with open(self._cache_path, "rb") as f:
+                    magic_bytes = f.read(4)
+                    # ZIP files start with PK\x03\x04 or PK\x05\x06 (empty ZIP) or PK\x07\x08 (spanned ZIP)
+                    if not magic_bytes.startswith(b"PK"):
+                        _LOGGER.error(
+                            "GTFS Static cache file does not appear to be a ZIP file "
+                            "(magic bytes: %s). It may be an HTML error page or corrupted download.",
+                            magic_bytes.hex() if len(magic_bytes) == 4 else "too short"
+                        )
+                        # Check if it's an HTML page
+                        f.seek(0)
+                        first_bytes = f.read(512)
+                        if b"<html" in first_bytes.lower() or b"<!doctype" in first_bytes.lower():
+                            _LOGGER.error("Downloaded file appears to be an HTML page, not a ZIP file. URL may be incorrect.")
+                        try:
+                            self._cache_path.unlink()
+                            _LOGGER.info("Deleted invalid cache file, will re-download on next attempt")
+                        except Exception as e:
+                            _LOGGER.warning("Failed to delete invalid cache file: %s", e)
+                        return False
+            except Exception as e:
+                _LOGGER.warning("Could not verify ZIP file magic bytes: %s", e)
+
             # Open ZIP file directly from disk (more memory efficient)
             with zipfile.ZipFile(self._cache_path, "r") as zip_file:
                 file_list = zip_file.namelist()
@@ -246,30 +301,46 @@ class GTFSStaticData:
 
                 # Load stops.txt in chunks to reduce memory usage
                 # For large files (GTFS-DE), only store essential fields to save memory
-                with zip_file.open("stops.txt") as stops_file:
-                    reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="utf-8"))
-                    stop_count = 0
-                    for row in reader:
-                        # For GTFS-DE, only store essential fields to reduce memory usage
-                        if self.provider == PROVIDER_GTFS_DE:
-                            # Only store essential fields: stop_id, stop_name, stop_lat, stop_lon, platform_code
-                            essential_fields = {
-                                "stop_id": row.get("stop_id", ""),
-                                "stop_name": row.get("stop_name", ""),
-                                "stop_lat": row.get("stop_lat", ""),
-                                "stop_lon": row.get("stop_lon", ""),
-                                "platform_code": row.get("platform_code", ""),
-                            }
-                            self.stops[row["stop_id"]] = essential_fields
-                        else:
-                            # For smaller files (NTA), store all fields
-                            self.stops[row["stop_id"]] = row
-                        stop_count += 1
-                        # Log progress every 50000 stops for large files, 10000 for smaller
-                        log_interval = 50000 if self.provider == PROVIDER_GTFS_DE else 10000
-                        if stop_count % log_interval == 0:
-                            _LOGGER.info("Loaded %d stops...", stop_count)
-                    _LOGGER.info("Loaded %d stops from GTFS Static", stop_count)
+                try:
+                    with zip_file.open("stops.txt") as stops_file:
+                        # Try UTF-8 first, fallback to latin-1 if needed
+                        try:
+                            reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="utf-8"))
+                        except UnicodeDecodeError:
+                            _LOGGER.warning("UTF-8 decoding failed for stops.txt, trying latin-1")
+                            stops_file.seek(0)
+                            reader = csv.DictReader(io.TextIOWrapper(stops_file, encoding="latin-1"))
+                        
+                        stop_count = 0
+                        for row in reader:
+                            # Validate required field
+                            if "stop_id" not in row:
+                                _LOGGER.error("stops.txt missing required field 'stop_id'")
+                                return False
+                            
+                            # For GTFS-DE, only store essential fields to reduce memory usage
+                            if self.provider == PROVIDER_GTFS_DE:
+                                # Only store essential fields: stop_id, stop_name, stop_lat, stop_lon, platform_code
+                                essential_fields = {
+                                    "stop_id": row.get("stop_id", ""),
+                                    "stop_name": row.get("stop_name", ""),
+                                    "stop_lat": row.get("stop_lat", ""),
+                                    "stop_lon": row.get("stop_lon", ""),
+                                    "platform_code": row.get("platform_code", ""),
+                                }
+                                self.stops[row["stop_id"]] = essential_fields
+                            else:
+                                # For smaller files (NTA), store all fields
+                                self.stops[row["stop_id"]] = row
+                            stop_count += 1
+                            # Log progress every 50000 stops for large files, 10000 for smaller
+                            log_interval = 50000 if self.provider == PROVIDER_GTFS_DE else 10000
+                            if stop_count % log_interval == 0:
+                                _LOGGER.info("Loaded %d stops...", stop_count)
+                        _LOGGER.info("Loaded %d stops from GTFS Static", stop_count)
+                except Exception as e:
+                    _LOGGER.error("Error reading stops.txt: %s", e, exc_info=True)
+                    return False
 
                 # Load routes.txt (optional but recommended) in chunks
                 if "routes.txt" in file_list:
