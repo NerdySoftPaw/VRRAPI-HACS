@@ -57,7 +57,6 @@ from .const import (
     TRANSPORTATION_TYPES,
 )
 from .data_models import UnifiedDeparture
-from .gtfs_static import GTFSStaticData
 from .parsers import parse_departure_generic
 from .providers import get_provider
 
@@ -108,17 +107,9 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
         if not self.provider_instance:
             _LOGGER.error("Failed to initialize provider: %s", provider)
 
-        # GTFS Static data loader for NTA and GTFS-DE (kept for backward compatibility)
-        self.gtfs_static: Optional[GTFSStaticData] = None
-        if provider in [PROVIDER_NTA_IE, PROVIDER_GTFS_DE]:
-            self.gtfs_static = GTFSStaticData(hass, provider=provider)
-            # Register GTFS instance for automatic updates
-            hass.data.setdefault(DOMAIN, {})
-            hass.data[DOMAIN].setdefault("gtfs_instances", {})
-            hass.data[DOMAIN]["gtfs_instances"][provider] = self.gtfs_static
-            # Get secondary key from config entry if available (only for NTA)
-            if provider == PROVIDER_NTA_IE and config_entry:
-                self.api_key_secondary = config_entry.data.get(CONF_NTA_API_KEY_SECONDARY)
+        # Get secondary key from config entry if available (only for NTA)
+        if provider == PROVIDER_NTA_IE and config_entry:
+            self.api_key_secondary = config_entry.data.get(CONF_NTA_API_KEY_SECONDARY)
 
         super().__init__(
             hass,
@@ -126,6 +117,33 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
             name=f"{provider.upper()} {place_dm} - {name_dm}",
             update_interval=timedelta(seconds=scan_interval),
         )
+
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator and cleanup resources.
+
+        This method should be called when the config entry is being unloaded
+        to ensure proper cleanup of provider resources (e.g., GTFS data).
+        """
+        _LOGGER.debug("Shutting down coordinator for %s", self.provider)
+
+        # Cleanup provider resources (including GTFS data reference)
+        if self.provider_instance and hasattr(self.provider_instance, "cleanup"):
+            try:
+                await self.provider_instance.cleanup()
+                _LOGGER.debug("Provider cleanup completed for %s", self.provider)
+            except Exception as e:
+                _LOGGER.warning("Error during provider cleanup for %s: %s", self.provider, e)
+
+    @property
+    def gtfs_static(self):
+        """Get GTFS static data from provider (for backward compatibility).
+
+        Returns:
+            GTFSStaticData instance from the provider, or None if not available
+        """
+        if self.provider_instance and hasattr(self.provider_instance, "gtfs_static"):
+            return self.provider_instance.gtfs_static
+        return None
 
     def _check_rate_limit(self) -> bool:
         """Check if we're within API rate limits."""

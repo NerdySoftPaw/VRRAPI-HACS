@@ -1,4 +1,4 @@
-"""GTFS Static data loader for NTA Ireland."""
+"""GTFS Static data loader for NTA Ireland and GTFS-DE Germany."""
 
 import asyncio
 import csv
@@ -7,7 +7,7 @@ import logging
 import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 import aiohttp
 from aiofiles import open as aio_open
@@ -22,6 +22,9 @@ from .const import (
     PROVIDER_NTA_IE,
 )
 
+if TYPE_CHECKING:
+    from .gtfs_manager import GTFSManager
+
 _LOGGER = logging.getLogger(__name__)
 
 # Cache GTFS Static data for 24 hours
@@ -31,10 +34,22 @@ GTFS_CACHE_DURATION = timedelta(hours=24)
 class GTFSStaticData:
     """Class to manage GTFS Static data loading and caching."""
 
-    def __init__(self, hass: HomeAssistant, provider: str = PROVIDER_NTA_IE):
-        """Initialize GTFS Static data loader."""
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        provider: str = PROVIDER_NTA_IE,
+        manager: Optional["GTFSManager"] = None,
+    ):
+        """Initialize GTFS Static data loader.
+
+        Args:
+            hass: Home Assistant instance
+            provider: Provider identifier (e.g., "nta_ie", "gtfs_de")
+            manager: Optional GTFSManager reference for coordinated shutdown
+        """
         self.hass = hass
         self.provider = provider
+        self._manager = manager
         self.stops: Dict[str, Dict[str, str]] = {}  # stop_id -> stop data
         self.routes: Dict[str, Dict[str, str]] = {}  # route_id -> route data
         self.trips: Dict[str, str] = {}  # trip_id -> trip_headsign (only headsign loaded to save memory)
@@ -45,46 +60,77 @@ class GTFSStaticData:
         self._cache_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / cache_filename
         self._cache_timestamp_path = Path(hass.config.config_dir) / ".storage" / DOMAIN / timestamp_filename
         self._last_update: Optional[datetime] = None
+        # Lock to prevent concurrent downloads
+        self._download_lock = asyncio.Lock()
+        self._is_loading = False
 
     async def ensure_loaded(self) -> bool:
         """Ensure GTFS Static data is loaded (download if needed)."""
+        # Check if manager is shutting down
+        if self._manager and self._manager.is_shutting_down():
+            _LOGGER.warning("GTFSManager is shutting down, skipping ensure_loaded")
+            return False
+
         try:
-            # Check if we need to download/update
-            if await self._should_update():
-                if not await self._download_and_load():
-                    _LOGGER.error("Failed to download GTFS Static data")
+            async with self._download_lock:
+                # Check again after acquiring lock (manager might have started shutdown)
+                if self._manager and self._manager.is_shutting_down():
                     return False
 
-            # Load from cache if not already loaded
-            if not self.stops and self._cache_path.exists():
-                if not await self._load_from_cache():
-                    _LOGGER.error("Failed to load GTFS Static data from cache")
-                    return False
+                # If already loaded, return immediately
+                if self.stops:
+                    return True
 
-            if len(self.stops) == 0:
-                _LOGGER.error("GTFS Static data is empty after loading")
-                return False
+                self._is_loading = True
+                try:
+                    # Check if we need to download/update
+                    if await self._should_update():
+                        if not await self._download_and_load():
+                            _LOGGER.error("Failed to download GTFS Static data")
+                            return False
 
-            return True
+                    # Load from cache if not already loaded
+                    if not self.stops and self._cache_path.exists():
+                        if not await self._load_from_cache():
+                            _LOGGER.error("Failed to load GTFS Static data from cache")
+                            return False
+
+                    if len(self.stops) == 0:
+                        _LOGGER.error("GTFS Static data is empty after loading")
+                        return False
+
+                    return True
+                finally:
+                    self._is_loading = False
         except Exception as e:
             _LOGGER.error("Error in ensure_loaded: %s", e, exc_info=True)
             return False
 
     async def force_update(self) -> bool:
         """Force update GTFS Static data (download even if cache is recent)."""
+        # Check if manager is shutting down
+        if self._manager and self._manager.is_shutting_down():
+            _LOGGER.warning("GTFSManager is shutting down, skipping force_update")
+            return False
+
         _LOGGER.info("Forcing update of GTFS Static data for provider: %s", self.provider)
         try:
-            # Force download and load
-            if not await self._download_and_load():
-                _LOGGER.error("Failed to force update GTFS Static data")
-                return False
+            async with self._download_lock:
+                self._is_loading = True
+                try:
+                    # Force download and load
+                    if not await self._download_and_load():
+                        _LOGGER.error("Failed to force update GTFS Static data")
+                        return False
 
-            if len(self.stops) == 0:
-                _LOGGER.error("GTFS Static data is empty after force update")
-                return False
+                    if len(self.stops) == 0:
+                        _LOGGER.error("GTFS Static data is empty after force update")
+                        return False
 
-            _LOGGER.info("Successfully force updated GTFS Static data for provider: %s", self.provider)
-            return True
+                    _LOGGER.info("Successfully force updated GTFS Static data for provider: %s", self.provider)
+                    return True
+                finally:
+                    self._is_loading = False
         except Exception as e:
             _LOGGER.error("Error in force_update: %s", e, exc_info=True)
             return False
@@ -572,3 +618,49 @@ class GTFSStaticData:
                     break
 
         return results
+
+    async def clear_data(self) -> None:
+        """Clear all loaded GTFS data to free memory.
+
+        This method should be called during cleanup to release memory
+        used by stops, routes, trips, and agencies dictionaries.
+        """
+        stops_count = len(self.stops)
+        routes_count = len(self.routes)
+        trips_count = len(self.trips)
+        agencies_count = len(self.agencies)
+
+        # Clear all data dictionaries
+        self.stops.clear()
+        self.routes.clear()
+        self.trips.clear()
+        self.agencies.clear()
+
+        self._last_update = None
+        self._is_loading = False
+
+        _LOGGER.info(
+            "Cleared GTFS Static data for %s: %d stops, %d routes, %d trips, %d agencies",
+            self.provider,
+            stops_count,
+            routes_count,
+            trips_count,
+            agencies_count,
+        )
+
+    def get_stats(self) -> Dict[str, any]:
+        """Get statistics about loaded GTFS data.
+
+        Returns:
+            Dictionary with data statistics
+        """
+        return {
+            "provider": self.provider,
+            "stops_count": len(self.stops),
+            "routes_count": len(self.routes),
+            "trips_count": len(self.trips),
+            "agencies_count": len(self.agencies),
+            "last_update": self._last_update.isoformat() if self._last_update else None,
+            "is_loading": self._is_loading,
+            "cache_path": str(self._cache_path),
+        }

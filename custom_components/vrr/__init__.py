@@ -1,11 +1,13 @@
 import asyncio
 import logging
 from datetime import timedelta
+from typing import Optional
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
@@ -19,6 +21,7 @@ from .const import (
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    PROVIDER_GTFS_DE,
     PROVIDER_NTA_IE,
     PROVIDER_TRAFIKLAB_SE,
 )
@@ -46,32 +49,39 @@ GTFS_UPDATE_CHECK_INTERVAL = timedelta(hours=12)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+# Key for storing the periodic update task
+GTFS_UPDATE_TASK_KEY = "gtfs_update_task"
+# Key for storing the stop event listener unsub
+STOP_LISTENER_KEY = "stop_listener_unsub"
+
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Public Transport DE component."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN]["gtfs_instances"] = {}  # Store GTFS instances for updates
 
-    # Start periodic GTFS update task
     async def periodic_gtfs_update():
-        """Periodically check and update GTFS Static data."""
+        """Periodically check and update GTFS Static data via GTFSManager."""
+        from .gtfs_manager import GTFSManager
+
         while True:
             try:
                 await asyncio.sleep(GTFS_UPDATE_CHECK_INTERVAL.total_seconds())
 
-                # Get all GTFS instances
-                gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
-
-                if not gtfs_instances:
+                # Get the GTFSManager instance
+                manager = GTFSManager.get_instance_sync(hass)
+                if not manager or manager.is_shutting_down():
+                    _LOGGER.debug("GTFSManager not available or shutting down, skipping periodic update")
                     continue
 
-                # Check each GTFS instance and update if needed
-                for provider, gtfs_instance in gtfs_instances.items():
+                # Check each active provider and update if needed
+                # Copy the list to avoid modification during iteration
+                for provider in list(manager.active_providers):
+                    gtfs_data = None
                     try:
-                        # Check if update is needed (this checks the timestamp)
-                        if await gtfs_instance._should_update():
+                        gtfs_data = await manager.get_gtfs_data(provider)
+                        if gtfs_data and await gtfs_data._should_update():
                             _LOGGER.info("Auto-updating GTFS Static data for provider: %s", provider)
-                            if await gtfs_instance._download_and_load():
+                            if await gtfs_data.force_update():
                                 _LOGGER.info("Successfully auto-updated GTFS Static data for provider: %s", provider)
                             else:
                                 _LOGGER.warning("Failed to auto-update GTFS Static data for provider: %s", provider)
@@ -82,14 +92,47 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                             e,
                             exc_info=True,
                         )
+                    finally:
+                        # Always release the reference, even on error
+                        if gtfs_data is not None:
+                            try:
+                                await manager.release_gtfs_data(provider)
+                            except Exception:
+                                pass
             except asyncio.CancelledError:
+                _LOGGER.debug("Periodic GTFS update task cancelled")
                 break
             except Exception as e:
                 _LOGGER.error("Error in periodic GTFS update task: %s", e, exc_info=True)
                 await asyncio.sleep(3600)  # Wait 1 hour before retrying on error
 
-    # Start the periodic update task
-    hass.async_create_task(periodic_gtfs_update())
+    async def _async_cleanup_integration(_event: Optional[Event] = None) -> None:
+        """Cleanup integration resources on Home Assistant stop."""
+        _LOGGER.info("Cleaning up VRR integration resources...")
+
+        # Cancel periodic update task
+        task = hass.data.get(DOMAIN, {}).get(GTFS_UPDATE_TASK_KEY)
+        if task and not task.done():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            _LOGGER.debug("Cancelled periodic GTFS update task")
+
+        # Shutdown GTFSManager
+        from .gtfs_manager import shutdown_gtfs_manager
+
+        await shutdown_gtfs_manager(hass)
+        _LOGGER.info("VRR integration cleanup complete")
+
+    # Start the periodic update task and store the reference
+    update_task = hass.async_create_task(periodic_gtfs_update())
+    hass.data[DOMAIN][GTFS_UPDATE_TASK_KEY] = update_task
+
+    # Register cleanup on Home Assistant stop
+    unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_cleanup_integration)
+    hass.data[DOMAIN][STOP_LISTENER_KEY] = unsub
 
     return True
 
@@ -137,6 +180,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception as err:
+        # Cleanup coordinator resources before removing from hass.data
+        try:
+            await coordinator.async_shutdown()
+        except Exception as shutdown_err:
+            _LOGGER.warning("Error during coordinator shutdown after failed setup: %s", shutdown_err)
         # Remove coordinator from hass.data if setup fails
         hass.data[DOMAIN].pop(coordinator_key, None)
         raise ConfigEntryNotReady(f"Failed to initialize VRR API: {err}") from err
@@ -185,31 +233,58 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def handle_update_gtfs(call: ServiceCall) -> None:
             """Handle the update GTFS Static service call."""
+            from .gtfs_manager import GTFSManager
+
             provider = call.data.get("provider")
-            gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
+            manager = GTFSManager.get_instance_sync(hass)
+
+            if not manager:
+                _LOGGER.warning("GTFSManager not initialized, cannot update GTFS data")
+                return
 
             if provider:
                 # Update specific provider
-                if provider in gtfs_instances:
+                if provider in manager.active_providers:
                     _LOGGER.info("Manually updating GTFS Static data for provider: %s", provider)
-                    if await gtfs_instances[provider].force_update():
-                        _LOGGER.info("Successfully updated GTFS Static data for provider: %s", provider)
-                    else:
-                        _LOGGER.error("Failed to update GTFS Static data for provider: %s", provider)
+                    gtfs_data = None
+                    try:
+                        gtfs_data = await manager.get_gtfs_data(provider)
+                        if gtfs_data:
+                            if await gtfs_data.force_update():
+                                _LOGGER.info("Successfully updated GTFS Static data for provider: %s", provider)
+                            else:
+                                _LOGGER.error("Failed to update GTFS Static data for provider: %s", provider)
+                    finally:
+                        # Always release reference
+                        if gtfs_data is not None:
+                            try:
+                                await manager.release_gtfs_data(provider)
+                            except Exception:
+                                pass
                 else:
-                    _LOGGER.warning("Provider %s not found in GTFS instances", provider)
+                    _LOGGER.warning("Provider %s not found in active GTFS providers", provider)
             else:
                 # Update all providers
                 _LOGGER.info("Manually updating GTFS Static data for all providers")
-                for prov, gtfs_instance in gtfs_instances.items():
+                for prov in list(manager.active_providers):
+                    gtfs_data = None
                     try:
                         _LOGGER.info("Updating GTFS Static data for provider: %s", prov)
-                        if await gtfs_instance.force_update():
-                            _LOGGER.info("Successfully updated GTFS Static data for provider: %s", prov)
-                        else:
-                            _LOGGER.error("Failed to update GTFS Static data for provider: %s", prov)
+                        gtfs_data = await manager.get_gtfs_data(prov)
+                        if gtfs_data:
+                            if await gtfs_data.force_update():
+                                _LOGGER.info("Successfully updated GTFS Static data for provider: %s", prov)
+                            else:
+                                _LOGGER.error("Failed to update GTFS Static data for provider: %s", prov)
                     except Exception as e:
                         _LOGGER.error("Error updating GTFS Static data for provider %s: %s", prov, e, exc_info=True)
+                    finally:
+                        # Always release reference
+                        if gtfs_data is not None:
+                            try:
+                                await manager.release_gtfs_data(prov)
+                            except Exception:
+                                pass
 
         hass.services.async_register(
             DOMAIN,
@@ -225,29 +300,46 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Public Transport DE config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, ["sensor", "binary_sensor"])
 
-    # Remove coordinator from hass.data
+    # Remove coordinator from hass.data and call shutdown
     coordinator_key = f"{entry.entry_id}_coordinator"
     if coordinator_key in hass.data.get(DOMAIN, {}):
         coordinator = hass.data[DOMAIN].pop(coordinator_key)
-        # Remove GTFS instance if this coordinator had one
-        if coordinator and hasattr(coordinator, "gtfs_static") and coordinator.gtfs_static:
-            provider = coordinator.provider
-            gtfs_instances = hass.data.get(DOMAIN, {}).get("gtfs_instances", {})
-            if provider in gtfs_instances:
-                # Only remove if no other coordinator uses this provider
-                # Check if any other coordinator uses this provider
-                has_other = False
-                for key, other_coordinator in hass.data.get(DOMAIN, {}).items():
-                    if key.endswith("_coordinator") and key != coordinator_key:
-                        if hasattr(other_coordinator, "provider") and other_coordinator.provider == provider:
-                            has_other = True
-                            break
-                if not has_other:
-                    gtfs_instances.pop(provider, None)
+        # Call coordinator shutdown to release GTFS resources
+        if coordinator and hasattr(coordinator, "async_shutdown"):
+            try:
+                await coordinator.async_shutdown()
+                _LOGGER.debug("Coordinator shutdown completed for entry: %s", entry.entry_id)
+            except Exception as e:
+                _LOGGER.warning("Error during coordinator shutdown: %s", e)
 
-    # Unregister services if no more entries
+    # Unregister services and cleanup if no more entries
     if not hass.config_entries.async_entries(DOMAIN):
+        # Remove services
         hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
         hass.services.async_remove(DOMAIN, SERVICE_UPDATE_GTFS)
+
+        # Cancel periodic update task
+        task = hass.data.get(DOMAIN, {}).get(GTFS_UPDATE_TASK_KEY)
+        if task and not task.done():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+            _LOGGER.debug("Cancelled periodic GTFS update task on last entry unload")
+
+        # Unsubscribe from stop event
+        unsub = hass.data.get(DOMAIN, {}).pop(STOP_LISTENER_KEY, None)
+        if unsub:
+            unsub()
+
+        # Shutdown GTFSManager
+        from .gtfs_manager import shutdown_gtfs_manager
+
+        await shutdown_gtfs_manager(hass)
+
+        # Clean up domain data
+        hass.data.pop(DOMAIN, None)
+        _LOGGER.info("VRR integration fully unloaded")
 
     return unload_ok

@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -13,11 +13,24 @@ from homeassistant.util import dt as dt_util
 
 from ..const import API_BASE_URL_GTFS_DE_GTFSR, GTFS_DE_TRANSPORTATION_TYPES, PROVIDER_GTFS_DE
 from ..data_models import UnifiedDeparture
-from ..gtfs_static import GTFSStaticData
 from ..parsers import parse_departure_generic
 from .base import BaseProvider
 
+if TYPE_CHECKING:
+    from ..gtfs_manager import GTFSManager
+    from ..gtfs_static import GTFSStaticData
+
 _LOGGER = logging.getLogger(__name__)
+
+# Import protobuf at module level for better performance
+try:
+    from google.transit import gtfs_realtime_pb2
+
+    GTFS_RT_AVAILABLE = True
+except ImportError:
+    GTFS_RT_AVAILABLE = False
+    gtfs_realtime_pb2 = None
+    _LOGGER.warning("gtfs-realtime-bindings not installed. GTFS-DE provider will not work.")
 
 
 class GTFSDEProvider(BaseProvider):
@@ -26,7 +39,9 @@ class GTFSDEProvider(BaseProvider):
     def __init__(self, hass, api_key: Optional[str] = None, api_key_secondary: Optional[str] = None):
         """Initialize GTFS-DE provider."""
         super().__init__(hass, api_key=api_key, api_key_secondary=api_key_secondary)
-        self.gtfs_static: Optional[GTFSStaticData] = GTFSStaticData(hass, provider=PROVIDER_GTFS_DE)
+        self.gtfs_static: Optional["GTFSStaticData"] = None
+        self._manager: Optional["GTFSManager"] = None
+        self._gtfs_initialized = False
 
     @property
     def provider_id(self) -> str:
@@ -42,6 +57,49 @@ class GTFSDEProvider(BaseProvider):
         """Return the timezone for GTFS-DE."""
         return "Europe/Berlin"
 
+    async def _ensure_gtfs_initialized(self) -> bool:
+        """Ensure GTFS data is initialized via GTFSManager.
+
+        Returns:
+            True if GTFS data is available, False otherwise
+        """
+        if self._gtfs_initialized and self.gtfs_static:
+            return True
+
+        try:
+            from ..gtfs_manager import get_gtfs_manager
+
+            self._manager = await get_gtfs_manager(self.hass)
+            self.gtfs_static = await self._manager.get_gtfs_data(PROVIDER_GTFS_DE)
+
+            if self.gtfs_static:
+                self._gtfs_initialized = True
+                _LOGGER.debug("GTFS-DE: Initialized GTFS data via manager")
+                return True
+
+            _LOGGER.error("GTFS-DE: Failed to get GTFS data from manager")
+            return False
+        except Exception as e:
+            _LOGGER.error("GTFS-DE: Error initializing GTFS data: %s", e)
+            return False
+
+    async def cleanup(self) -> None:
+        """Cleanup provider resources.
+
+        Releases GTFS data reference through the manager.
+        """
+        # Capture and clear state atomically to prevent double-release
+        manager = self._manager
+        was_initialized = self._gtfs_initialized
+
+        self.gtfs_static = None
+        self._gtfs_initialized = False
+        self._manager = None
+
+        if manager and was_initialized:
+            _LOGGER.debug("GTFS-DE: Releasing GTFS data reference")
+            await manager.release_gtfs_data(PROVIDER_GTFS_DE)
+
     async def fetch_departures(
         self,
         station_id: Optional[str],
@@ -54,15 +112,19 @@ class GTFSDEProvider(BaseProvider):
             _LOGGER.error("GTFS-DE requires a station ID (stop_id)")
             return None
 
+        # Check for protobuf availability (module-level import)
+        if not GTFS_RT_AVAILABLE or gtfs_realtime_pb2 is None:
+            _LOGGER.error("gtfs-realtime-bindings not installed. Please install it: pip install gtfs-realtime-bindings")
+            return None
+
+        # Ensure GTFS Static data is initialized via manager
+        if not await self._ensure_gtfs_initialized():
+            _LOGGER.error("Failed to initialize GTFS Static data for GTFS-DE")
+            return None
+
         # Ensure GTFS Static data is loaded
         if self.gtfs_static and not await self.gtfs_static.ensure_loaded():
             _LOGGER.error("Failed to load GTFS Static data for GTFS-DE")
-            return None
-
-        try:
-            from google.transit import gtfs_realtime_pb2
-        except ImportError:
-            _LOGGER.error("gtfs-realtime-bindings not installed. Please install it: pip install gtfs-realtime-bindings")
             return None
 
         url = API_BASE_URL_GTFS_DE_GTFSR
@@ -301,10 +363,12 @@ class GTFSDEProvider(BaseProvider):
 
     async def search_stops(self, search_term: str) -> List[Dict[str, Any]]:
         """Search for stops using GTFS Static data."""
-        if not self.gtfs_static:
-            self.gtfs_static = GTFSStaticData(self.hass, provider=PROVIDER_GTFS_DE)
+        # Ensure GTFS Static data is initialized via manager
+        if not await self._ensure_gtfs_initialized():
+            _LOGGER.error("Failed to initialize GTFS Static data for GTFS-DE stop search")
+            return []
 
-        if not await self.gtfs_static.ensure_loaded():
+        if not self.gtfs_static or not await self.gtfs_static.ensure_loaded():
             _LOGGER.error("Failed to load GTFS Static data for GTFS-DE stop search")
             return []
 

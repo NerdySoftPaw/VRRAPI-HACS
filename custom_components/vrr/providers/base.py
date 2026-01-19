@@ -102,3 +102,13 @@ class BaseProvider(ABC):
             Dictionary mapping provider-specific transport types to unified types
         """
         return {}
+
+    async def cleanup(self) -> None:
+        """Cleanup provider resources.
+
+        This method is called when the provider is being unloaded.
+        Override in subclasses to release resources like GTFS data references.
+
+        Default implementation does nothing.
+        """
+        pass
