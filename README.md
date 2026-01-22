@@ -17,24 +17,36 @@ All development continues at:
 
 ## 📦 Migration Guide
 
-Migrating is easy and your configuration will be **automatically preserved**:
+Your configuration will be **automatically preserved**. Just follow these steps:
 
-### Step 1: Update Repository URL in HACS
+### Step 1: Add the New Repository
 
 1. Open **HACS** → **Integrations**
-2. Find "VRR" or "Public Transport"
-3. Click the three dots (⋮) → **Redownload**
-4. Change the repository URL to:
+2. Click the three dots (⋮) in the top right corner
+3. Select **Custom repositories**
+4. Add the URL:
    ```
    https://github.com/NerdySoftPaw/hacs-publictransport
    ```
-5. Click **Download**
+5. Select type: **Integration**
+6. Click **ADD**
 
-### Step 2: Restart Home Assistant
+### Step 2: Download the New Version
+
+1. Search for "Public Transport" in HACS
+2. Click on **Public Transport Departures**
+3. Click **Download**
+
+### Step 3: Remove the Old Repository (Optional)
+
+1. In HACS, find the old "VRR" entry
+2. Click the three dots (⋮) → **Remove**
+
+### Step 4: Restart Home Assistant
 
 Go to **Settings** → **System** → **Restart**
 
-### Step 3: Done! ✅
+### Done! ✅
 
 Your sensors, configuration, and history are preserved automatically.
 
