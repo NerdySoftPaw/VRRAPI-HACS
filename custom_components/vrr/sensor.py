@@ -838,7 +838,7 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             name=f"{place_dm} - {name_dm}",
             manufacturer=f"{provider.upper()} Public Transport",
             model="Departure Monitor",
-            sw_version="2025.12.7",
+            sw_version="2026.01.22",
             configuration_url="https://github.com/NerdySoftPaw/VRRAPI-HACS",
             suggested_area=place_dm,
         )
