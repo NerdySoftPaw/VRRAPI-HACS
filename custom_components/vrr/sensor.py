@@ -21,7 +21,6 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    API_BASE_URL_GTFS_DE_GTFSR,
     API_BASE_URL_HVV,
     API_BASE_URL_KVV,
     API_BASE_URL_NTA_GTFSR,
@@ -42,12 +41,10 @@ from .const import (
     DEFAULT_PLACE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    GTFS_DE_TRANSPORTATION_TYPES,
     HVV_TRANSPORTATION_TYPES,
     KVV_TRANSPORTATION_TYPES,
     NTA_TRANSPORTATION_TYPES,
     PROVIDER_ENTITY_PICTURES,
-    PROVIDER_GTFS_DE,
     PROVIDER_HVV,
     PROVIDER_KVV,
     PROVIDER_NTA_IE,
@@ -133,17 +130,6 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Provider cleanup completed for %s", self.provider)
             except Exception as e:
                 _LOGGER.warning("Error during provider cleanup for %s: %s", self.provider, e)
-
-    @property
-    def gtfs_static(self):
-        """Get GTFS static data from provider (for backward compatibility).
-
-        Returns:
-            GTFSStaticData instance from the provider, or None if not available
-        """
-        if self.provider_instance and hasattr(self.provider_instance, "gtfs_static"):
-            return self.provider_instance.gtfs_static
-        return None
 
     def _check_rate_limit(self) -> bool:
         """Check if we're within API rate limits."""
@@ -476,11 +462,6 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("NTA requires a station ID (stop_id)")
             return None
 
-        # Ensure GTFS Static data is loaded
-        if self.gtfs_static and not await self.gtfs_static.ensure_loaded():
-            _LOGGER.error("Failed to load GTFS Static data for NTA")
-            return None
-
         url = f"{API_BASE_URL_NTA_GTFSR}/v2/TripUpdates"
         params = {"format": "json"}
         session = async_get_clientsession(self.hass)
@@ -578,42 +559,12 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                     "stop_id", target_stop_id
                                 )  # Use stop_id from update if available
 
-                                # Get route info from GTFS Static
-                                route_short_name = ""
-                                route_type = None  # Will be determined from GTFS Static
-                                agency_name = None
-                                platform_code = None
-                                if self.gtfs_static:
-                                    route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
-                                    route_type = self.gtfs_static.get_route_type(route_id)
-                                    agency_name = self.gtfs_static.get_agency_name(route_id)
-                                    platform_code = self.gtfs_static.get_stop_platform_code(stop_id)
-
-                                    if route_type is None:
-                                        _LOGGER.warning(
-                                            "NTA: route_type not found for route_id=%s (route_short_name=%s), "
-                                            "this may indicate missing data in GTFS Static routes.txt",
-                                            route_id,
-                                            route_short_name,
-                                        )
-                                        # Try to infer from route name (Luas lines are often "Red", "Green")
-                                        if route_short_name and route_short_name.lower() in ["red", "green"]:
-                                            route_type = 0  # Tram/Light rail for Luas
-                                            _LOGGER.info(
-                                                "NTA: Inferred route_type=0 (tram) for Luas line '%s'",
-                                                route_short_name,
-                                            )
-                                        else:
-                                            route_type = 3  # Default to bus if unknown
-                                    else:
-                                        _LOGGER.debug(
-                                            "NTA: route_id=%s, route_short_name=%s, route_type=%d",
-                                            route_id,
-                                            route_short_name,
-                                            route_type,
-                                        )
-                                else:
-                                    route_type = 3  # Default to bus if GTFS Static not loaded
+                                # Extract route info from route_id (without GTFS Static)
+                                route_short_name = route_id.split("_")[0] if route_id else ""
+                                route_type = 3  # Default to bus
+                                # Try to detect Luas (tram) from route_id
+                                if route_short_name and route_short_name.lower() in ["red", "green", "luas"]:
+                                    route_type = 0  # Tram/Light rail for Luas
 
                                 # Get delay (in seconds)
                                 departure = stop_time_update.get("departure", {})
@@ -627,16 +578,8 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                                 if schedule_relationship in ["CANCELED", "SKIPPED"]:
                                     continue
 
-                                # Get destination from GTFS Static trips.txt (trip_headsign)
-                                destination = "Unknown"
-                                if self.gtfs_static:
-                                    trip_headsign = self.gtfs_static.get_trip_headsign(trip_id)
-                                    if trip_headsign:
-                                        destination = trip_headsign
-                                    else:
-                                        # Fallback to route long name if trip_headsign not available
-                                        route = self.gtfs_static.routes.get(route_id, {})
-                                        destination = route.get("route_long_name") or route_short_name or "Unknown"
+                                # Use route_short_name as destination placeholder (without GTFS Static)
+                                destination = route_short_name or "Unknown"
 
                                 # Calculate time from GTFS-RT data
                                 now = dt_util.now()
@@ -784,259 +727,6 @@ class VRRDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.error("NTA API connection failed after %d attempts: %s", max_retries, e)
             except Exception as e:
                 _LOGGER.warning("NTA API attempt %d/%d failed: %s", attempt, max_retries, e)
-                if attempt < max_retries:
-                    await asyncio.sleep(2**attempt)
-                    continue
-
-        return None
-
-    async def _fetch_departures_gtfs_de(self) -> Optional[Dict[str, Any]]:
-        """Fetch departure data from GTFS-DE GTFS-RT API (Protobuf format)."""
-        if not self.station_id:
-            _LOGGER.error("GTFS-DE requires a station ID (stop_id)")
-            return None
-
-        # Ensure GTFS Static data is loaded
-        if self.gtfs_static and not await self.gtfs_static.ensure_loaded():
-            _LOGGER.error("Failed to load GTFS Static data for GTFS-DE")
-            return None
-
-        try:
-            # Import gtfs-realtime-bindings for Protobuf parsing
-            from google.transit import gtfs_realtime_pb2
-        except ImportError:
-            _LOGGER.error("gtfs-realtime-bindings not installed. Please install it: pip install gtfs-realtime-bindings")
-            return None
-
-        url = API_BASE_URL_GTFS_DE_GTFSR
-        session = async_get_clientsession(self.hass)
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (compatible; HomeAssistant GTFS-DE Integration)",
-        }
-
-        max_retries = 3
-        for attempt in range(1, max_retries + 1):
-            try:
-                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
-                    if response.status == 200:
-                        try:
-                            # Read Protobuf data
-                            protobuf_data = await response.read()
-
-                            # Parse Protobuf FeedMessage
-                            feed_message = gtfs_realtime_pb2.FeedMessage()
-                            feed_message.ParseFromString(protobuf_data)
-
-                            entities = feed_message.entity
-                            entity_count = len(entities)
-                            if entity_count == 0:
-                                _LOGGER.debug("GTFS-DE API returned empty entities list")
-                                return {"stopEvents": []}
-
-                            _LOGGER.info(
-                                "GTFS-DE API returned %d entities (processing for stop %s)",
-                                entity_count,
-                                self.station_id,
-                            )
-
-                            # Filter entities for our stop_id and convert to stopEvents format
-                            stop_events = []
-                            target_stop_id = self.station_id
-                            max_departures = self.departures_limit * 3  # Get more than needed for filtering
-                            processed_entities = 0
-                            # For GTFS-DE (large datasets), use early exit optimization
-                            max_entities_to_check = (
-                                100000 if entity_count > 50000 else entity_count
-                            )  # Limit processing for very large feeds
-
-                            for idx, entity in enumerate(entities):
-                                # Early exit if we've checked enough entities (performance optimization for large feeds)
-                                if idx >= max_entities_to_check and len(stop_events) > 0:
-                                    _LOGGER.debug(
-                                        "GTFS-DE: Early exit after checking %d entities, found %d departures",
-                                        idx,
-                                        len(stop_events),
-                                    )
-                                    break
-                                if processed_entities >= max_departures:
-                                    break
-
-                                if not entity.HasField("trip_update"):
-                                    continue
-
-                                trip_update = entity.trip_update
-
-                                # Quick check: does this entity have stop_time_updates for our stop?
-                                stop_time_updates = trip_update.stop_time_update
-                                if not stop_time_updates:
-                                    continue
-
-                                # Early filter: check if any stop_time_update matches our stop_id
-                                matching_stop_time = None
-                                for stop_time_update in stop_time_updates:
-                                    if stop_time_update.stop_id == target_stop_id:
-                                        matching_stop_time = stop_time_update
-                                        break
-
-                                # Skip this entity if no matching stop_time_update found
-                                if matching_stop_time is None:
-                                    continue
-
-                                # Get trip info
-                                trip = trip_update.trip
-                                route_id = trip.route_id
-                                trip_id = trip.trip_id
-
-                                # Get route info from GTFS Static
-                                route_short_name = ""
-                                route_type = None
-                                agency_name = None
-                                platform_code = None
-                                if self.gtfs_static:
-                                    route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
-                                    route_type = self.gtfs_static.get_route_type(route_id)
-                                    agency_name = self.gtfs_static.get_agency_name(route_id)
-                                    platform_code = self.gtfs_static.get_stop_platform_code(target_stop_id)
-
-                                    if route_type is None:
-                                        route_type = 3  # Default to bus if unknown
-
-                                # Get delay (in seconds)
-                                delay_seconds = 0
-                                if matching_stop_time.HasField("departure"):
-                                    if matching_stop_time.departure.HasField("delay"):
-                                        delay_seconds = matching_stop_time.departure.delay
-                                elif matching_stop_time.HasField("arrival"):
-                                    if matching_stop_time.arrival.HasField("delay"):
-                                        delay_seconds = matching_stop_time.arrival.delay
-
-                                # Get scheduled time
-                                schedule_relationship = matching_stop_time.schedule_relationship
-                                if schedule_relationship == gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.CANCELED:
-                                    continue
-
-                                # Get destination from GTFS Static trips.txt
-                                destination = "Unknown"
-                                if self.gtfs_static:
-                                    trip_headsign = self.gtfs_static.get_trip_headsign(trip_id)
-                                    if trip_headsign:
-                                        destination = trip_headsign
-                                    else:
-                                        route = self.gtfs_static.routes.get(route_id, {})
-                                        destination = route.get("route_long_name") or route_short_name or "Unknown"
-
-                                # Calculate time from GTFS-RT data
-                                now = dt_util.now()
-
-                                # Get time from departure/arrival if available
-                                planned_time = now
-                                estimated_time = now
-
-                                if matching_stop_time.HasField("departure"):
-                                    if matching_stop_time.departure.HasField("time"):
-                                        try:
-                                            planned_time = datetime.fromtimestamp(
-                                                matching_stop_time.departure.time, tz=now.tzinfo
-                                            )
-                                            estimated_time = planned_time + timedelta(seconds=delay_seconds)
-                                        except (ValueError, OSError):
-                                            planned_time = now
-                                            estimated_time = now + timedelta(seconds=delay_seconds)
-                                elif matching_stop_time.HasField("arrival"):
-                                    if matching_stop_time.arrival.HasField("time"):
-                                        try:
-                                            planned_time = datetime.fromtimestamp(
-                                                matching_stop_time.arrival.time, tz=now.tzinfo
-                                            )
-                                            estimated_time = planned_time + timedelta(seconds=delay_seconds)
-                                        except (ValueError, OSError):
-                                            planned_time = now
-                                            estimated_time = now + timedelta(seconds=delay_seconds)
-
-                                # Format times
-                                planned_time_str = planned_time.strftime("%Y-%m-%dT%H:%M:%S%z")
-                                estimated_time_str = estimated_time.strftime("%Y-%m-%dT%H:%M:%S%z")
-
-                                # Get platform from stop_time_update if available
-                                platform = platform_code or ""
-                                if matching_stop_time.HasField("departure"):
-                                    if matching_stop_time.departure.HasField("platform"):
-                                        platform = matching_stop_time.departure.platform.name or platform
-
-                                stop_event = {
-                                    "departureTimePlanned": planned_time_str,
-                                    "departureTimeEstimated": estimated_time_str,
-                                    "transportation": {
-                                        "number": route_short_name,
-                                        "description": agency_name or "",
-                                        "destination": {"name": destination},
-                                        "product": {"class": route_type or 3},
-                                    },
-                                    "platform": {"name": platform},
-                                    "realtimeStatus": ["MONITORED"] if delay_seconds != 0 else [],
-                                    "route_id": route_id,
-                                    "trip_id": trip_id,
-                                    "stop_id": target_stop_id,
-                                    "delay_seconds": delay_seconds,
-                                    "agency": agency_name,
-                                }
-                                stop_events.append(stop_event)
-                                processed_entities += 1
-
-                                # Early exit if we have enough departures
-                                if len(stop_events) >= max_departures:
-                                    break
-
-                            _LOGGER.info(
-                                "GTFS-DE: Processed %d/%d entities, found %d departures for stop %s",
-                                processed_entities,
-                                entity_count,
-                                len(stop_events),
-                                target_stop_id,
-                            )
-                            return {"stopEvents": stop_events}
-
-                        except Exception as e:
-                            _LOGGER.warning("GTFS-DE Protobuf parsing failed: %s", e, exc_info=True)
-                            return None
-                    elif response.status == 404:
-                        _LOGGER.warning("GTFS-DE API endpoint not found (404)")
-                        return None
-                    elif response.status >= 500:
-                        _LOGGER.warning(
-                            "GTFS-DE API server error (status %s) on attempt %d/%d",
-                            response.status,
-                            attempt,
-                            max_retries,
-                        )
-                        if attempt < max_retries:
-                            await asyncio.sleep(2**attempt)
-                            continue
-                        return None
-                    else:
-                        _LOGGER.warning(
-                            "GTFS-DE API returned status %s on attempt %d/%d",
-                            response.status,
-                            attempt,
-                            max_retries,
-                        )
-                        if attempt < max_retries:
-                            await asyncio.sleep(2**attempt)
-                            continue
-
-            except asyncio.TimeoutError:
-                _LOGGER.warning("GTFS-DE API timeout on attempt %d/%d", attempt, max_retries)
-                if attempt < max_retries:
-                    await asyncio.sleep(2**attempt)
-                    continue
-            except ClientConnectorError as e:
-                _LOGGER.warning("GTFS-DE API connection error on attempt %d/%d: %s", attempt, max_retries, e)
-                if attempt < max_retries:
-                    await asyncio.sleep(2**attempt)
-                    continue
-            except Exception as e:
-                _LOGGER.warning("GTFS-DE API attempt %d/%d failed: %s", attempt, max_retries, e)
                 if attempt < max_retries:
                     await asyncio.sleep(2**attempt)
                     continue
@@ -1294,8 +984,6 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
             tz = dt_util.get_time_zone("Europe/Stockholm")
         elif provider == PROVIDER_NTA_IE:
             tz = dt_util.get_time_zone("Europe/Dublin")
-        elif provider == PROVIDER_GTFS_DE:
-            tz = dt_util.get_time_zone("Europe/Berlin")
         elif provider == PROVIDER_HVV:
             tz = dt_util.get_time_zone("Europe/Berlin")
         else:
@@ -1325,8 +1013,6 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
                 parse_fn = self._parse_departure_trafiklab
             elif provider == PROVIDER_NTA_IE:
                 parse_fn = self._parse_departure_nta
-            elif self._provider == PROVIDER_GTFS_DE:
-                parse_fn = self._parse_departure_gtfs_de
             else:
                 parse_fn = None
 
@@ -1635,40 +1321,6 @@ class MultiProviderSensor(CoordinatorEntity, SensorEntity):
 
         # Map GTFS route_type to our transport type
         transport_type = NTA_TRANSPORTATION_TYPES.get(route_type, "bus")
-
-        return parse_departure_generic(
-            stop,
-            tz,
-            now,
-            get_transport_type_fn=lambda t: transport_type,
-            get_platform_fn=lambda s: (
-                s.get("platform", {}).get("name", "")
-                if isinstance(s.get("platform"), dict)
-                else str(s.get("platform", ""))
-            ),
-            get_realtime_fn=lambda s, est, plan: "MONITORED" in s.get("realtimeStatus", []),
-        )
-
-    def _parse_departure_gtfs_de(
-        self, stop: Dict[str, Any], tz: Union[ZoneInfo, Any], now: datetime
-    ) -> Optional[UnifiedDeparture]:
-        """Parse a single departure from GTFS-DE GTFS-RT API response.
-
-        Args:
-            stop: Stop event data from GTFS-DE API (already normalized)
-            tz: Timezone object (Europe/Berlin)
-            now: Current datetime
-
-        Returns:
-            UnifiedDeparture object or None if parsing fails
-        """
-        # Get route_type from transportation.product.class
-        transportation = stop.get("transportation", {})
-        product = transportation.get("product", {})
-        route_type = product.get("class", 3)  # Default to bus (3)
-
-        # Map GTFS route_type to our transport type
-        transport_type = GTFS_DE_TRANSPORTATION_TYPES.get(route_type, "bus")
 
         return parse_departure_generic(
             stop,

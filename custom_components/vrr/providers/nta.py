@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from zoneinfo import ZoneInfo
 
 import aiohttp
@@ -16,10 +16,6 @@ from ..data_models import UnifiedDeparture
 from ..parsers import parse_departure_generic
 from .base import BaseProvider
 
-if TYPE_CHECKING:
-    from ..gtfs_manager import GTFSManager
-    from ..gtfs_static import GTFSStaticData
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,9 +25,6 @@ class NTAProvider(BaseProvider):
     def __init__(self, hass, api_key: Optional[str] = None, api_key_secondary: Optional[str] = None):
         """Initialize NTA provider."""
         super().__init__(hass, api_key=api_key, api_key_secondary=api_key_secondary)
-        self.gtfs_static: Optional["GTFSStaticData"] = None
-        self._manager: Optional["GTFSManager"] = None
-        self._gtfs_initialized = False
 
     @property
     def provider_id(self) -> str:
@@ -52,48 +45,9 @@ class NTAProvider(BaseProvider):
         """Return the timezone for NTA."""
         return "Europe/Dublin"
 
-    async def _ensure_gtfs_initialized(self) -> bool:
-        """Ensure GTFS data is initialized via GTFSManager.
-
-        Returns:
-            True if GTFS data is available, False otherwise
-        """
-        if self._gtfs_initialized and self.gtfs_static:
-            return True
-
-        try:
-            from ..gtfs_manager import get_gtfs_manager
-
-            self._manager = await get_gtfs_manager(self.hass)
-            self.gtfs_static = await self._manager.get_gtfs_data(PROVIDER_NTA_IE)
-
-            if self.gtfs_static:
-                self._gtfs_initialized = True
-                _LOGGER.debug("NTA: Initialized GTFS data via manager")
-                return True
-
-            _LOGGER.error("NTA: Failed to get GTFS data from manager")
-            return False
-        except Exception as e:
-            _LOGGER.error("NTA: Error initializing GTFS data: %s", e)
-            return False
-
     async def cleanup(self) -> None:
-        """Cleanup provider resources.
-
-        Releases GTFS data reference through the manager.
-        """
-        # Capture and clear state atomically to prevent double-release
-        manager = self._manager
-        was_initialized = self._gtfs_initialized
-
-        self.gtfs_static = None
-        self._gtfs_initialized = False
-        self._manager = None
-
-        if manager and was_initialized:
-            _LOGGER.debug("NTA: Releasing GTFS data reference")
-            await manager.release_gtfs_data(PROVIDER_NTA_IE)
+        """Cleanup provider resources."""
+        pass
 
     async def fetch_departures(
         self,
@@ -109,16 +63,6 @@ class NTAProvider(BaseProvider):
 
         if not station_id:
             _LOGGER.error("NTA requires a station ID (stop_id)")
-            return None
-
-        # Ensure GTFS Static data is initialized via manager
-        if not await self._ensure_gtfs_initialized():
-            _LOGGER.error("Failed to initialize GTFS Static data for NTA")
-            return None
-
-        # Ensure GTFS Static data is loaded
-        if self.gtfs_static and not await self.gtfs_static.ensure_loaded():
-            _LOGGER.error("Failed to load GTFS Static data for NTA")
             return None
 
         url = f"{API_BASE_URL_NTA_GTFSR}/v2/TripUpdates"
@@ -202,22 +146,15 @@ class NTAProvider(BaseProvider):
                                 trip_id = trip.get("trip_id", "")
                                 stop_id = stop_time_update.get("stop_id", target_stop_id)
 
-                                # Get route info from GTFS Static
-                                route_short_name = ""
-                                route_type = None
-                                agency_name = None
-                                platform_code = None
-                                if self.gtfs_static:
-                                    route_short_name = self.gtfs_static.get_route_short_name(route_id) or ""
-                                    route_type = self.gtfs_static.get_route_type(route_id)
-                                    agency_name = self.gtfs_static.get_agency_name(route_id)
-                                    platform_code = self.gtfs_static.get_stop_platform_code(stop_id)
+                                # Extract route info from route_id (without GTFS Static)
+                                # Route IDs in NTA often contain the route number
+                                route_short_name = route_id.split("_")[0] if route_id else ""
 
-                                    if route_type is None:
-                                        if route_short_name and route_short_name.lower() in ["red", "green"]:
-                                            route_type = 0  # Tram/Light rail for Luas
-                                        else:
-                                            route_type = 3  # Default to bus if unknown
+                                # Default route type to bus (3) - can be improved later
+                                route_type = 3
+                                # Try to detect Luas (tram) from route_id
+                                if route_short_name and route_short_name.lower() in ["red", "green", "luas"]:
+                                    route_type = 0  # Tram/Light rail for Luas
 
                                 # Get delay (in seconds)
                                 departure = stop_time_update.get("departure", {})
@@ -229,15 +166,8 @@ class NTAProvider(BaseProvider):
                                 if schedule_relationship in ["CANCELED", "SKIPPED"]:
                                     continue
 
-                                # Get destination from GTFS Static trips.txt
-                                destination = "Unknown"
-                                if self.gtfs_static:
-                                    trip_headsign = self.gtfs_static.get_trip_headsign(trip_id)
-                                    if trip_headsign:
-                                        destination = trip_headsign
-                                    else:
-                                        route = self.gtfs_static.routes.get(route_id, {})
-                                        destination = route.get("route_long_name") or route_short_name or "Unknown"
+                                # Use route_id as destination placeholder (without GTFS Static)
+                                destination = route_short_name or "Unknown"
 
                                 # Calculate time from GTFS-RT data
                                 now = dt_util.now()
@@ -268,17 +198,14 @@ class NTAProvider(BaseProvider):
                                 estimated_time_str = estimated_time.strftime("%Y-%m-%dT%H:%M:%S%z")
 
                                 # Get platform
-                                platform_from_rt = stop_time_update.get("platform_code") or stop_time_update.get(
-                                    "platform"
-                                )
-                                platform = platform_from_rt or platform_code or ""
+                                platform = stop_time_update.get("platform_code") or stop_time_update.get("platform") or ""
 
                                 stop_event = {
                                     "departureTimePlanned": planned_time_str,
                                     "departureTimeEstimated": estimated_time_str,
                                     "transportation": {
                                         "number": route_short_name,
-                                        "description": agency_name or "",
+                                        "description": "",
                                         "destination": {"name": destination},
                                         "product": {"class": route_type},
                                     },
@@ -288,7 +215,6 @@ class NTAProvider(BaseProvider):
                                     "trip_id": trip_id,
                                     "stop_id": stop_id,
                                     "delay_seconds": delay_seconds,
-                                    "agency": agency_name,
                                 }
                                 stop_events.append(stop_event)
                                 processed_entities += 1
@@ -382,35 +308,9 @@ class NTAProvider(BaseProvider):
         )
 
     async def search_stops(self, search_term: str) -> List[Dict[str, Any]]:
-        """Search for stops using GTFS Static data."""
-        # Ensure GTFS Static data is initialized via manager
-        if not await self._ensure_gtfs_initialized():
-            _LOGGER.error("Failed to initialize GTFS Static data for NTA stop search")
-            return []
+        """Search for stops - not supported without GTFS Static.
 
-        if not self.gtfs_static or not await self.gtfs_static.ensure_loaded():
-            _LOGGER.error("Failed to load GTFS Static data for stop search")
-            return []
-
-        results = self.gtfs_static.search_stops(search_term, limit=20)
-
-        stops = []
-        for stop in results:
-            stop_name = stop.get("stop_name", "")
-            place = ""
-            if "," in stop_name:
-                parts = stop_name.rsplit(",", 1)
-                stop_name = parts[0].strip()
-                place = parts[1].strip() if len(parts) > 1 else ""
-
-            stops.append(
-                {
-                    "id": stop["stop_id"],
-                    "name": stop_name,
-                    "place": place,
-                    "area_type": "",
-                    "transport_modes": [],
-                }
-            )
-
-        return stops
+        Users need to enter the stop_id directly.
+        """
+        _LOGGER.warning("NTA stop search is not available without GTFS Static data. Please enter the stop_id directly.")
+        return []

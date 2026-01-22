@@ -8,7 +8,7 @@
           "provider": "Anbieter"
         },
         "data_description": {
-          "provider": "VRR (NRW), KVV (Karlsruhe), HVV (Hamburg), Trafiklab (Schweden), NTA (Irland) oder GTFS-DE (Deutschland)"
+          "provider": "VRR (NRW), KVV (Karlsruhe), HVV (Hamburg), Trafiklab (Schweden) oder NTA (Irland)"
         }
       },
       "location": {
@@ -76,8 +76,7 @@
       "no_results": "Keine Ergebnisse gefunden. Bitte versuchen Sie einen anderen Suchbegriff.",
       "api_key_required": "API-Schlüssel ist erforderlich",
       "trafiklab_api_key_required": "Trafiklab API-Schlüssel ist erforderlich",
-      "nta_api_key_required": "NTA API-Schlüssel ist erforderlich",
-      "gtfs_static_load_failed": "Fehler beim Laden der GTFS Static Daten. Bitte Logs prüfen. Mögliche Ursachen: Netzwerkprobleme oder temporär nicht verfügbare GTFS-Datei."
+      "nta_api_key_required": "NTA API-Schlüssel ist erforderlich"
     }
   },
   "options": {

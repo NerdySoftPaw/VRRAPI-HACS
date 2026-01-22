@@ -29,7 +29,6 @@ from .const import (
     DEFAULT_DEPARTURES,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    PROVIDER_GTFS_DE,
     PROVIDER_HVV,
     PROVIDER_KVV,
     PROVIDER_NTA_IE,
@@ -38,7 +37,6 @@ from .const import (
     PROVIDERS,
     TRANSPORTATION_TYPES,
 )
-from .gtfs_manager import get_gtfs_manager
 from .providers import get_provider
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,57 +53,10 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._selected_stop: Optional[Dict[str, Any]] = None
         self._api_key: Optional[str] = None  # For Trafiklab or NTA (Primary)
         self._api_key_secondary: Optional[str] = None  # For NTA (Secondary, optional)
-        self._gtfs_static = None  # Will be GTFSStaticData from manager
-        self._gtfs_acquired = False  # Track if we acquired a reference
 
         # API response cache to avoid duplicate requests
         self._search_cache: Dict[str, Dict[str, Any]] = {}
         self._cache_ttl: int = 300  # Cache TTL in seconds (5 minutes)
-
-    async def _get_gtfs_static(self, provider: str):
-        """Get GTFS Static data via GTFSManager.
-
-        This acquires a reference from the manager which should be released
-        when the config flow completes.
-        """
-        # If we already have GTFS for a different provider, release it first
-        if self._gtfs_static is not None and self._gtfs_acquired:
-            if hasattr(self, '_gtfs_provider') and self._gtfs_provider != provider:
-                await self._release_gtfs_static()
-            else:
-                return self._gtfs_static
-
-        try:
-            manager = await get_gtfs_manager(self.hass)
-            self._gtfs_static = await manager.get_gtfs_data(provider)
-            if self._gtfs_static:
-                self._gtfs_acquired = True
-                self._gtfs_provider = provider  # Track which provider we acquired
-                return self._gtfs_static
-        except Exception as e:
-            _LOGGER.error("Failed to get GTFS data from manager: %s", e)
-
-        return None
-
-    async def _release_gtfs_static(self):
-        """Release GTFS Static data reference if acquired."""
-        if self._gtfs_acquired and self._gtfs_static:
-            provider = getattr(self, '_gtfs_provider', None)
-            if provider:
-                try:
-                    from .gtfs_manager import GTFSManager
-
-                    manager = GTFSManager.get_instance_sync(self.hass)
-                    if manager:
-                        await manager.release_gtfs_data(provider)
-                        _LOGGER.debug("Released GTFS reference for config flow (provider: %s)", provider)
-                except Exception as e:
-                    _LOGGER.warning("Failed to release GTFS reference: %s", e)
-
-        self._gtfs_static = None
-        self._gtfs_acquired = False
-        if hasattr(self, '_gtfs_provider'):
-            del self._gtfs_provider
 
     def _get_provider_schema(self) -> vol.Schema:
         """Get the provider selection schema."""
@@ -125,26 +76,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if provider_instance and provider_instance.requires_api_key:
                 return await self.async_step_api_key()
 
-            # GTFS-DE doesn't need API key, but needs GTFS Static loaded
-            if self._provider == PROVIDER_GTFS_DE:
-                # Initialize GTFS Static loader for stop search via manager
-                try:
-                    gtfs = await self._get_gtfs_static(PROVIDER_GTFS_DE)
-                    if not gtfs or not await gtfs.ensure_loaded():
-                        _LOGGER.error("Failed to load GTFS Static data for GTFS-DE")
-                        return self.async_show_form(
-                            step_id="user",
-                            data_schema=self._get_provider_schema(),
-                            errors={"base": "gtfs_static_load_failed"},
-                        )
-                    _LOGGER.info("GTFS Static data loaded successfully for GTFS-DE")
-                except Exception as e:
-                    _LOGGER.error("Exception while loading GTFS Static data: %s", e, exc_info=True)
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=self._get_provider_schema(),
-                        errors={"base": "gtfs_static_load_failed"},
-                    )
             return await self.async_step_stop_search()
 
         return self.async_show_form(step_id="user", data_schema=self._get_provider_schema())
@@ -174,18 +105,7 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     self._api_key = api_key
                     self._api_key_secondary = api_key_secondary if api_key_secondary else None
-                    # Initialize GTFS Static loader for stop search via manager
-                    try:
-                        gtfs = await self._get_gtfs_static(PROVIDER_NTA_IE)
-                        if not gtfs or not await gtfs.ensure_loaded():
-                            _LOGGER.error("Failed to load GTFS Static data for NTA")
-                            errors["base"] = "gtfs_static_load_failed"
-                        else:
-                            _LOGGER.info("GTFS Static data loaded successfully for NTA")
-                            return await self.async_step_stop_search()
-                    except Exception as e:
-                        _LOGGER.error("Exception while loading GTFS Static data: %s", e, exc_info=True)
-                        errors["base"] = "gtfs_static_load_failed"
+                    return await self.async_step_stop_search()
 
         # Show appropriate schema based on provider
         provider_instance = get_provider(self._provider, self.hass)
@@ -228,20 +148,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 errors={"base": "api_key_required"},
             )
-        # GTFS-DE doesn't need API key, GTFS Static should already be loaded in async_step_user
-        if self._provider == PROVIDER_GTFS_DE:
-            if not self._gtfs_static:
-                # Fallback: initialize via manager if not already done
-                gtfs = await self._get_gtfs_static(PROVIDER_GTFS_DE)
-                if not gtfs or not await gtfs.ensure_loaded():
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=self._get_provider_schema(),
-                        errors={"base": "gtfs_static_load_failed"},
-                    )
-            # GTFS-DE doesn't need API key, proceed directly to stop search
-            return await self.async_step_stop_search()
-
         errors = {}
 
         if user_input is not None:
@@ -404,9 +310,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data.pop(f"{DOMAIN}_temp_locations", None)
             self.hass.data.pop(f"{DOMAIN}_temp_stops", None)
 
-            # Release GTFS reference before creating entry
-            await self._release_gtfs_static()
-
             return self.async_create_entry(title=title, data=data)
 
         stop_name = self._selected_stop.get("name", "Unknown") if self._selected_stop else "Unknown"
@@ -463,8 +366,6 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._search_stops_trafiklab(search_term)
         if self._provider == PROVIDER_NTA_IE:
             return await self._search_stops_nta(search_term)
-        elif self._provider == PROVIDER_GTFS_DE:
-            return await self._search_stops_gtfs_de(search_term)
 
         api_url = self._get_stopfinder_url()
 
@@ -526,50 +427,30 @@ class VRRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return []
 
     async def _search_stops_nta(self, search_term: str) -> List[Dict[str, Any]]:
-        """Search for stops using GTFS Static data.
+        """Search for stops - NTA requires direct stop_id input.
 
         Args:
-            search_term: Search term for stops
+            search_term: Search term (treated as stop_id for NTA)
 
         Returns:
-            List of stop dictionaries in expected format
+            List with single stop if valid stop_id format
         """
-        if not self._gtfs_static:
-            # Get GTFS data via manager (should already be acquired, but fallback)
-            gtfs = await self._get_gtfs_static(PROVIDER_NTA_IE)
-            if not gtfs:
-                _LOGGER.error("Failed to get GTFS Static data for NTA stop search")
-                return []
-
-        if not await self._gtfs_static.ensure_loaded():
-            _LOGGER.error("Failed to load GTFS Static data for stop search")
-            return []
-
-        # Search stops using GTFS Static
-        results = self._gtfs_static.search_stops(search_term, limit=20)
-
-        # Convert to expected format (id, name, place)
-        stops = []
-        for stop in results:
-            stop_name = stop.get("stop_name", "")
-            # Try to extract place from stop name (e.g., "Stop Name, Dublin")
-            place = ""
-            if "," in stop_name:
-                parts = stop_name.rsplit(",", 1)
-                stop_name = parts[0].strip()
-                place = parts[1].strip() if len(parts) > 1 else ""
-
-            stops.append(
+        # NTA doesn't have a stop search API without GTFS Static
+        # User needs to enter the stop_id directly
+        # If the search term looks like a stop_id, return it as a result
+        search_term = search_term.strip()
+        if search_term:
+            # Return the search term as a potential stop_id
+            return [
                 {
-                    "id": stop["stop_id"],
-                    "name": stop_name,
-                    "place": place,
+                    "id": search_term,
+                    "name": f"Stop {search_term}",
+                    "place": "Ireland",
                     "area_type": "",
                     "transport_modes": [],
                 }
-            )
-
-        return stops
+            ]
+        return []
 
     def _get_stopfinder_url(self) -> str:
         """Get the STOPFINDER API URL based on provider."""

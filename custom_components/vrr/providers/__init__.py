@@ -5,7 +5,6 @@ from typing import Dict, Optional, Type
 from homeassistant.core import HomeAssistant
 
 from ..const import (
-    PROVIDER_GTFS_DE,
     PROVIDER_HVV,
     PROVIDER_KVV,
     PROVIDER_NTA_IE,
@@ -13,7 +12,6 @@ from ..const import (
     PROVIDER_VRR,
 )
 from .base import BaseProvider
-from .gtfs_de import GTFSDEProvider
 from .hvv import HVVProvider
 from .kvv import KVVProvider
 from .nta import NTAProvider
@@ -52,4 +50,3 @@ register_provider(PROVIDER_KVV, KVVProvider)
 register_provider(PROVIDER_HVV, HVVProvider)
 register_provider(PROVIDER_TRAFIKLAB_SE, TrafiklabProvider)
 register_provider(PROVIDER_NTA_IE, NTAProvider)
-register_provider(PROVIDER_GTFS_DE, GTFSDEProvider)

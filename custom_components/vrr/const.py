@@ -21,8 +21,7 @@ PROVIDER_KVV = "kvv"
 PROVIDER_HVV = "hvv"
 PROVIDER_TRAFIKLAB_SE = "trafiklab_se"
 PROVIDER_NTA_IE = "nta_ie"
-PROVIDER_GTFS_DE = "gtfs_de"
-PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV, PROVIDER_TRAFIKLAB_SE, PROVIDER_NTA_IE, PROVIDER_GTFS_DE]
+PROVIDERS = [PROVIDER_VRR, PROVIDER_KVV, PROVIDER_HVV, PROVIDER_TRAFIKLAB_SE, PROVIDER_NTA_IE]
 
 # Transportation types mapping
 TRANSPORTATION_TYPES = {"bus": "Bus", "tram": "Tram", "subway": "U-Bahn", "train": "S-Bahn/Train"}
@@ -36,10 +35,6 @@ API_BASE_URL_KVV = "https://projekte.kvv-efa.de/sl3-alone/XSLT_DM_REQUEST"
 API_BASE_URL_HVV = "https://hvv.efa.de/efa/XML_DM_REQUEST"
 API_BASE_URL_TRAFIKLAB = "https://realtime-api.trafiklab.se/v1"
 API_BASE_URL_NTA_GTFSR = "https://api.nationaltransport.ie/gtfsr"
-API_BASE_URL_NTA_GTFS_STATIC = "https://www.transportforireland.ie/transitData/Data/GTFS_Realtime.zip"
-API_BASE_URL_GTFS_DE_GTFSR = "https://realtime.gtfs.de/realtime-free.pb"
-# GTFS Static download URL for Germany (free feed)
-API_BASE_URL_GTFS_DE_GTFS_STATIC = "https://download.gtfs.de/germany/free/latest.zip"
 # Mapping für KVV
 KVV_TRANSPORTATION_TYPES = {
     1: "train",  # S-Bahn
@@ -81,9 +76,6 @@ NTA_TRANSPORTATION_TYPES = {
     7: "train",  # Funicular
 }
 
-# Mapping für GTFS-DE (GTFS route_type) - gleiche Mapping wie NTA
-GTFS_DE_TRANSPORTATION_TYPES = NTA_TRANSPORTATION_TYPES
-
 # Provider-specific icons (MDI icons as fallback)
 PROVIDER_ICONS = {
     "vrr": "mdi:bus-clock",
@@ -91,7 +83,6 @@ PROVIDER_ICONS = {
     "hvv": "mdi:ferry",
     "trafiklab_se": "mdi:train",
     "nta_ie": "mdi:bus-multiple",
-    "gtfs_de": "mdi:map-marker-multiple",
 }
 
 # Provider-specific entity pictures (logos)
@@ -103,5 +94,4 @@ PROVIDER_ENTITY_PICTURES = {
     "hvv": "https://www.hvv.de/favicon.ico",
     "trafiklab_se": "https://www.trafiklab.se/favicon.ico",
     "nta_ie": "https://www.transportforireland.ie/favicon.ico",
-    "gtfs_de": "https://gtfs.de/favicon.ico",
 }
